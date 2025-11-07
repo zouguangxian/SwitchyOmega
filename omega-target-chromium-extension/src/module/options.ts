@@ -1,6 +1,7 @@
 /** @module omega-target-chromium-extension/options */
 
 import * as OmegaTarget from 'omega-target';
+import type { Profile, SwitchRule } from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
 const Promise = OmegaTarget.Promise;
 import * as querystring from 'querystring';
@@ -10,27 +11,43 @@ import fetchUrl = require('./fetch_url');
 import * as Url from 'url';
 
 interface BadgeOptions {
-  text: string;
-  color: string;
-  title?: string;
+  readonly text: string;
+  readonly color: string;
+  readonly title?: string;
 }
 
 interface PageInfoRequest {
-  tabId: number;
-  url?: string;
+  readonly tabId: number;
+  readonly url?: string;
 }
 
 interface PageInfoResult {
-  url?: string;
-  domain?: string;
-  tempRuleProfileName?: string | null;
-  errorCount?: number;
+  readonly url?: string;
+  readonly domain?: string;
+  readonly tempRuleProfileName?: string | null;
+  readonly errorCount?: number;
+}
+
+interface InspectModule {
+  enabled(): boolean;
+  enable(): void;
+  disable(): void;
+}
+
+interface SwitchySharpModule {
+  listen(): void;
+}
+
+interface ExternalApiModule {
+  enabled(): boolean;
+  enable(): void;
+  disable(): void;
 }
 
 class ChromeOptions extends OmegaTarget.Options {
-  _inspect: any = null;
-  switchySharp?: any;
-  externalApi: any;
+  private _inspect: InspectModule | null = null;
+  switchySharp?: SwitchySharpModule;
+  externalApi: ExternalApiModule | null = null;
   
   private _proxyNotControllable: string | null = null;
   private _badgeTitle: string | null = null;
@@ -44,11 +61,11 @@ class ChromeOptions extends OmegaTarget.Options {
 
   fetchUrl = fetchUrl;
 
-  updateProfile(name?: string | string[] | null, opt_bypass_cache?: boolean): Promise<Record<string, any>> {
+  updateProfile(name?: string | string[] | null, opt_bypass_cache?: boolean): Promise<Record<string, Profile | Error>> {
     return super.updateProfile(name, opt_bypass_cache).then((results) => {
       let error = false;
       for (const profileName in results) {
-        if (results.hasOwnProperty(profileName)) {
+        if (Object.prototype.hasOwnProperty.call(results, profileName)) {
           const result = results[profileName];
           if (result instanceof Error) {
             error = true;
@@ -195,7 +212,7 @@ class ChromeOptions extends OmegaTarget.Options {
     
     if (enabled && !this._requestMonitor) {
       this._tabRequestInfoPorts = {};
-      const wildcardForReq = (req: any) => OmegaPac.wildcardForUrl(req.url);
+      const wildcardForReq = (req: { url: string }) => OmegaPac.wildcardForUrl(req.url);
       this._requestMonitor = new WebRequestMonitor(wildcardForReq);
       
       this._requestMonitor.watchTabs((tabId, info) => {
@@ -227,7 +244,7 @@ class ChromeOptions extends OmegaTarget.Options {
         let tabId: number | null = null;
         const port = new ChromePort(rawPort);
         
-        port.onMessage.addListener((msg: any) => {
+        port.onMessage.addListener((msg: { tabId: number }) => {
           tabId = msg.tabId;
           this._tabRequestInfoPorts![tabId] = port;
           const info = this._requestMonitor!.tabInfo[tabId];
@@ -273,13 +290,14 @@ class ChromeOptions extends OmegaTarget.Options {
     return Promise.resolve();
   }
 
-  printFixedProfile(profile: any): string | null {
+  printFixedProfile(profile: Profile): string | null {
     if (profile.profileType !== 'FixedProfile') return null;
     
     let result = '';
     for (const scheme of OmegaPac.Profiles.schemes) {
-      if (profile[scheme.prop]) {
-        const pacResult = OmegaPac.Profiles.pacResult(profile[scheme.prop]);
+      const profileData = profile as Record<string, unknown>;
+      if (profileData[scheme.prop]) {
+        const pacResult = OmegaPac.Profiles.pacResult(profileData[scheme.prop]);
         if (scheme.scheme) {
           result += `${scheme.scheme}: ${pacResult}\n`;
         } else {
@@ -292,7 +310,7 @@ class ChromeOptions extends OmegaTarget.Options {
     return result;
   }
 
-  printProfile(profile: any): string | null {
+  printProfile(profile: Profile): string | null {
     let type = profile.profileType;
     if (type.indexOf('RuleListProfile') >= 0) {
       type = 'RuleListProfile';
@@ -300,21 +318,24 @@ class ChromeOptions extends OmegaTarget.Options {
 
     if (type === 'FixedProfile') {
       return this.printFixedProfile(profile);
-    } else if (type === 'PacProfile' && profile.pacUrl) {
-      return profile.pacUrl;
+    } else if (type === 'PacProfile' && 'pacUrl' in profile) {
+      return profile.pacUrl || null;
     } else {
       return chrome.i18n.getMessage('browserAction_profileDetails_' + type) || null;
     }
   }
 
-  upgrade(options: any, changes?: Record<string, any>): Promise<[any, Record<string, any>]> {
-    return super.upgrade(options, changes).catch((err) => {
+  upgrade(
+    options: OmegaTarget.Mutable<OmegaTarget.OmegaOptions> | null, 
+    changes?: Record<string, unknown>
+  ): Promise<[OmegaTarget.OmegaOptions, Record<string, unknown>]> {
+    return super.upgrade(options, changes).catch((err: unknown) => {
       if (options?.['schemaVersion']) {
         return Promise.reject(err);
       }
       
       let getOldOptions = this.switchySharp
-        ? this.switchySharp.getOptions().timeout(1000)
+        ? (this.switchySharp as { getOptions(): Promise<unknown> }).getOptions().timeout(1000)
         : Promise.reject();
 
       getOldOptions = getOldOptions.catch(() => {
@@ -327,15 +348,15 @@ class ChromeOptions extends OmegaTarget.Options {
         }
       });
 
-      return getOldOptions.then((oldOptions: any) => {
+      return getOldOptions.then((oldOptions: unknown) => {
         const i18n = {
           upgrade_profile_auto: chrome.i18n.getMessage('upgrade_profile_auto')
         };
         
-        let upgraded: any;
+        let upgraded: OmegaTarget.Mutable<OmegaTarget.OmegaOptions>;
         try {
           // Upgrade from SwitchySharp.
-          upgraded = require('./upgrade')(oldOptions, i18n);
+          upgraded = require('./upgrade')(oldOptions, i18n) as OmegaTarget.Mutable<OmegaTarget.OmegaOptions>;
         } catch (ex) {
           this.log.error(ex);
           return Promise.reject(ex);

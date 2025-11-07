@@ -6,27 +6,46 @@ import Log = require('./log');
 /**
  * A set of operations to be performed on a Storage.
  */
-export interface WriteOperations {
+export interface WriteOperations<T = unknown> {
   /** A map from keys to new values of the items to set */
-  set: Record<string, any>;
+  readonly set: Readonly<Record<string, T>>;
   /** An array of keys to remove */
-  remove: string[];
+  readonly remove: readonly string[];
 }
 
-export interface OperationsArgs {
+export interface OperationsArgs<T = unknown> {
   /** The original items in the storage */
-  base?: Record<string, any>;
+  readonly base?: Readonly<Record<string, T>>;
   /** A function that merges the newVal and oldVal */
-  merge?: (key: string, newVal: any, oldVal: any) => any;
+  readonly merge?: (key: string, newVal: T, oldVal: T | undefined) => T;
 }
 
-type StorageKeys = string | string[] | null | Record<string, any>;
+/**
+ * Storage key types - supporting various query patterns
+ */
+export type StorageKeys = 
+  | string 
+  | readonly string[] 
+  | null 
+  | Readonly<Record<string, unknown>>;
+
+/**
+ * Storage change detail
+ */
+export interface StorageChange<T = unknown> {
+  readonly oldValue?: T;
+  readonly newValue?: T;
+}
+
+export type StorageChanges<T = unknown> = Readonly<Record<string, StorageChange<T>>>;
+export type StorageChangeCallback<T = unknown> = (changes: StorageChanges<T>) => void;
 
 /**
  * Abstract base class for storage implementations
+ * Use generics for type-safe storage operations
  */
-class Storage {
-  _items?: Record<string, any>;
+class Storage<T = unknown> {
+  protected _items?: Record<string, T>;
 
   /**
    * Any operation that fails due to rate limiting should reject with an instance
@@ -68,28 +87,30 @@ class Storage {
    * @param args Extra arguments
    * @returns The operations that should be performed.
    */
-  static operationsForChanges(
-    changes: Record<string, any>,
-    args: OperationsArgs = {}
-  ): WriteOperations {
+  static operationsForChanges<T = unknown>(
+    changes: Readonly<Record<string, T | undefined>>,
+    args: OperationsArgs<T> = {}
+  ): WriteOperations<T> {
     const { base, merge } = args;
-    const set: Record<string, any> = {};
+    const set: Record<string, T> = {};
     const remove: string[] = [];
 
     for (const key in changes) {
-      if (!changes.hasOwnProperty(key)) continue;
+      if (!Object.prototype.hasOwnProperty.call(changes, key)) continue;
       
       let newVal = changes[key];
-      const oldVal = base != null ? base[key] : newVal;
+      const oldVal = base?.[key];
       
+      // Always call merge if provided, even for deletions (undefined values)
+      // The merge function decides whether to accept the deletion or keep the value
       if (merge) {
         newVal = merge(key, newVal, oldVal);
       }
       
       if (base != null && newVal === oldVal) continue;
       
-      if (typeof newVal === 'undefined') {
-        if (typeof oldVal !== 'undefined' || base == null) {
+      if (newVal === undefined) {
+        if (oldVal !== undefined || base == null) {
           remove.push(key);
         }
       } else {
@@ -105,14 +126,14 @@ class Storage {
    * @param keys The keys to retrieve, or null for all.
    * @returns A map from keys to values
    */
-  get(keys: StorageKeys): Promise<Record<string, any>> {
+  get(keys: StorageKeys): Promise<Readonly<Record<string, T | undefined>>> {
     Log.method('Storage#get', this, arguments);
     
     if (!this._items) {
       return Promise.resolve({});
     }
     
-    const map: Record<string, any> = {};
+    const map: Record<string, T | undefined> = {};
     
     if (keys == null) {
       Object.assign(map, this._items);
@@ -124,8 +145,9 @@ class Storage {
       }
     } else if (typeof keys === 'object') {
       for (const key in keys) {
-        if (keys.hasOwnProperty(key)) {
-          map[key] = this._items[key] != null ? this._items[key] : keys[key];
+        if (Object.prototype.hasOwnProperty.call(keys, key)) {
+          const defaultValue = keys[key] as T | undefined;
+          map[key] = this._items[key] ?? defaultValue;
         }
       }
     }
@@ -138,7 +160,7 @@ class Storage {
    * @param items A map from key to value to set.
    * @returns A map of key-value pairs just set.
    */
-  set(items: Record<string, any>): Promise<Record<string, any>> {
+  set(items: Readonly<Record<string, T>>): Promise<Readonly<Record<string, T>>> {
     Log.method('Storage#set', this, arguments);
     
     if (!this._items) {
@@ -146,7 +168,7 @@ class Storage {
     }
     
     for (const key in items) {
-      if (items.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(items, key)) {
         this._items[key] = items[key];
       }
     }
@@ -159,7 +181,7 @@ class Storage {
    * @param keys The keys to remove, or null for all.
    * @returns A promise that fulfills on successful removal.
    */
-  remove(keys?: string | string[] | null): Promise<void> {
+  remove(keys?: string | readonly string[] | null): Promise<void> {
     Log.method('Storage#remove', this, arguments);
     
     if (this._items != null) {
@@ -185,7 +207,7 @@ class Storage {
    */
   watch(
     keys: StorageKeys,
-    callback: (changes: Record<string, any>) => void
+    callback: StorageChangeCallback<T>
   ): () => void {
     Log.method('Storage#watch', this, arguments);
     return () => {};
@@ -197,8 +219,8 @@ class Storage {
    * @returns A promise that fulfills on operation success.
    */
   apply(
-    operations: WriteOperations | (OperationsArgs & { changes: Record<string, any> })
-  ): Promise<WriteOperations> {
+    operations: WriteOperations<T> | (OperationsArgs<T> & { changes: Readonly<Record<string, T | undefined>> })
+  ): Promise<WriteOperations<T>> {
     if ('changes' in operations) {
       const ops = Storage.operationsForChanges(operations.changes, operations);
       return this.set(ops.set)

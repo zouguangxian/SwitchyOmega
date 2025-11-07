@@ -1,12 +1,13 @@
 /** @module omega-target-chromium-extension/proxy/proxy_impl */
 
 import * as OmegaTarget from 'omega-target';
+import type { Profile, OmegaOptions, VirtualProfile } from 'omega-target';
 const Promise = OmegaTarget.Promise;
 const OmegaPac = OmegaTarget.OmegaPac;
 import ProxyAuth = require('./proxy_auth');
 
 interface ProxyImplFeatures {
-  [key: string]: boolean;
+  readonly [key: string]: boolean;
 }
 
 class ProxyImpl {
@@ -22,35 +23,35 @@ class ProxyImpl {
     return false;
   }
 
-  applyProfile(profile: any, meta?: any, options?: any): Promise<void> {
+  applyProfile(profile: Profile, meta?: Profile, options?: OmegaOptions): Promise<void> {
     return Promise.reject(new Error('Not implemented'));
   }
 
-  watchProxyChange(callback: (details: any) => void): void | null {
+  watchProxyChange(callback: (details: unknown) => void): void | null {
     return null;
   }
 
-  parseExternalProfile(details: any, options: any): any {
+  parseExternalProfile(details: unknown, options: OmegaOptions): Profile | null {
     return null;
   }
 
-  protected _profileNotFound(name: string): any {
+  protected _profileNotFound(name: string): VirtualProfile {
     this.log.error(`Profile ${name} not found! Things may go very, very wrong.`);
     return OmegaPac.Profiles.create({
       name,
       profileType: 'VirtualProfile',
       defaultProfileName: 'direct'
-    });
+    }) as VirtualProfile;
   }
 
-  setProxyAuth(profile: any, options: any): Promise<void> {
+  setProxyAuth(profile: Profile, options: OmegaOptions): Promise<void> {
     return Promise.try(() => {
       if (!this._proxyAuth) {
         this._proxyAuth = new ProxyAuth(this.log);
       }
       this._proxyAuth.listen();
       
-      const referenced_profiles: any[] = [];
+      const referenced_profiles: Profile[] = [];
       const ref_set = OmegaPac.Profiles.allReferenceSet(
         profile,
         options,
@@ -58,9 +59,9 @@ class ProxyImpl {
       );
       
       for (const key in ref_set) {
-        if (ref_set.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(ref_set, key)) {
           const name = ref_set[key];
-          const referencedProfile = OmegaPac.Profiles.byName(name, options);
+          const referencedProfile = OmegaPac.Profiles.byName(name, options) as Profile | null;
           if (referencedProfile) {
             referenced_profiles.push(referencedProfile);
           }
@@ -71,7 +72,7 @@ class ProxyImpl {
     });
   }
 
-  getProfilePacScript(profile: any, meta: any, options: any): string {
+  getProfilePacScript(profile: Profile, meta: Profile, options: OmegaOptions): string {
     if (!meta) {
       meta = profile;
     }

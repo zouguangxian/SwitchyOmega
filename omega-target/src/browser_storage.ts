@@ -1,24 +1,36 @@
 /** @module omega-target/browser_storage */
 
-import Storage = require('./storage');
+import Storage, { StorageKeys } from './storage';
 import Promise = require('bluebird');
 
-type StorageKeys = string | string[] | Record<string, any> | null;
+/**
+ * Browser storage interface (localStorage/sessionStorage)
+ */
+interface BrowserStorageAPI {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  clear(): void;
+  key(index: number): string | null;
+  readonly length: number;
+}
 
-class BrowserStorage extends Storage {
-  storage: Storage;
-  prefix: string;
-  proto: any;
+/**
+ * Storage implementation using browser's localStorage/sessionStorage
+ * with optional key prefix support
+ */
+class BrowserStorage<T = unknown> extends Storage<T> {
+  private readonly storageAPI: BrowserStorageAPI;
+  private readonly prefix: string;
 
-  constructor(storage: Storage, prefix: string = '') {
+  constructor(storage: BrowserStorageAPI, prefix: string = '') {
     super();
-    this.storage = storage;
+    this.storageAPI = storage;
     this.prefix = prefix;
-    this.proto = Object.getPrototypeOf(this.storage);
   }
 
-  get(keys: StorageKeys): Promise<Record<string, any>> {
-    let map: Record<string, any> = {};
+  get(keys: StorageKeys): Promise<Readonly<Record<string, T | undefined>>> {
+    let map: Record<string, T | undefined> = {};
     
     if (typeof keys === 'string') {
       map[keys] = undefined;
@@ -27,62 +39,71 @@ class BrowserStorage extends Storage {
         map[key] = undefined;
       }
     } else if (typeof keys === 'object' && keys !== null) {
-      map = keys;
+      // Clone the defaults object
+      const keysRecord = keys as Readonly<Record<string, unknown>>;
+      for (const key in keysRecord) {
+        if (Object.prototype.hasOwnProperty.call(keysRecord, key)) {
+          map[key] = keysRecord[key] as T | undefined;
+        }
+      }
     }
     
     for (const key in map) {
-      if (map.hasOwnProperty(key)) {
-        try {
-          const value = JSON.parse(
-            this.proto.getItem.call(this.storage, this.prefix + key)
-          );
-          if (value != null) {
-            map[key] = value;
+      if (!Object.prototype.hasOwnProperty.call(map, key)) continue;
+      
+      try {
+        const rawValue = this.storageAPI.getItem(this.prefix + key);
+        if (rawValue !== null) {
+          const parsedValue = JSON.parse(rawValue) as T;
+          if (parsedValue != null) {
+            map[key] = parsedValue;
           }
-          if (typeof map[key] === 'undefined') {
-            delete map[key];
-          }
-        } catch (e) {
-          // Ignore parse errors
         }
+        // Remove undefined values from result
+        if (map[key] === undefined) {
+          delete map[key];
+        }
+      } catch (e) {
+        // Ignore JSON parse errors - keep default value
       }
     }
     
     return Promise.resolve(map);
   }
 
-  set(items: Record<string, any>): Promise<Record<string, any>> {
+  set(items: Readonly<Record<string, T>>): Promise<Readonly<Record<string, T>>> {
     for (const key in items) {
-      if (items.hasOwnProperty(key)) {
-        const value = JSON.stringify(items[key]);
-        this.proto.setItem.call(this.storage, this.prefix + key, value);
-      }
+      if (!Object.prototype.hasOwnProperty.call(items, key)) continue;
+      
+      const value = JSON.stringify(items[key]);
+      this.storageAPI.setItem(this.prefix + key, value);
     }
     return Promise.resolve(items);
   }
 
-  remove(keys?: string | string[] | null): Promise<void> {
+  remove(keys?: string | readonly string[] | null): Promise<void> {
     if (keys == null) {
+      // Remove all items with this prefix
       if (!this.prefix) {
-        this.proto.clear.call(this.storage);
+        this.storageAPI.clear();
       } else {
         let index = 0;
         while (true) {
-          const key = this.proto.key.call(this.storage, index);
+          const key = this.storageAPI.key(index);
           if (key === null) break;
           
-          if (key.substr(0, this.prefix.length) === this.prefix) {
-            this.proto.removeItem.call(this.storage, key);
+          if (key.startsWith(this.prefix)) {
+            this.storageAPI.removeItem(key);
           } else {
             index++;
           }
         }
       }
     } else if (typeof keys === 'string') {
-      this.proto.removeItem.call(this.storage, this.prefix + keys);
+      this.storageAPI.removeItem(this.prefix + keys);
     } else if (Array.isArray(keys)) {
       for (const key of keys) {
-        this.proto.removeItem.call(this.storage, this.prefix + key);
+        this.storageAPI.removeItem(this.prefix + key);
       }
     }
     
