@@ -1,7 +1,7 @@
 /** @module omega-target/browser_storage */
 
 import Storage, { StorageKeys } from './storage';
-import Promise = require('bluebird');
+import Promise from 'bluebird';
 
 /**
  * Browser storage interface (localStorage/sessionStorage)
@@ -111,5 +111,5 @@ class BrowserStorage<T = unknown> extends Storage<T> {
   }
 }
 
-export = BrowserStorage;
+export default BrowserStorage;
 

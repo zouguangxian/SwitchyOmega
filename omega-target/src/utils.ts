@@ -1,6 +1,6 @@
 /** @module omega-target/utils */
 
-import Promise = require('bluebird');
+import Promise from 'bluebird';
 
 export { Promise };
 

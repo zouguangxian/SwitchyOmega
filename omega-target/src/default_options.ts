@@ -1,6 +1,6 @@
 /** @module omega-target/default_options */
 
-export = function defaultOptions(): any {
+export default function defaultOptions(): any {
   return {
     schemaVersion: 2,
     "-enableQuickSwitch": false,

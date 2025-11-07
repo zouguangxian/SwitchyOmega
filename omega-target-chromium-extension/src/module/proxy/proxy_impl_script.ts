@@ -2,7 +2,7 @@
 
 import * as OmegaTarget from 'omega-target';
 const Promise = OmegaTarget.Promise;
-import ProxyImpl = require('./proxy_impl');
+import ProxyImpl from './proxy_impl';
 
 class ScriptProxyImpl extends ProxyImpl {
   features = ['socks5Auth'];
@@ -146,5 +146,5 @@ class ScriptProxyImpl extends ProxyImpl {
   }
 }
 
-export = ScriptProxyImpl;
+export default ScriptProxyImpl;
 

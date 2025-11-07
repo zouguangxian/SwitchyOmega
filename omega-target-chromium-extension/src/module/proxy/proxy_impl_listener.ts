@@ -5,7 +5,7 @@ const OmegaPac = OmegaTarget.OmegaPac;
 // The browser only accepts native promises as onRequest return values.
 // DO NOT USE Bluebird Promises here!
 const NativePromise = Promise;
-import ProxyImpl = require('./proxy_impl');
+import ProxyImpl from './proxy_impl';
 
 interface ProxyInfo {
   type: string;
@@ -144,5 +144,5 @@ class ListenerProxyImpl extends ProxyImpl {
   }
 }
 
-export = ListenerProxyImpl;
+export default ListenerProxyImpl;
 

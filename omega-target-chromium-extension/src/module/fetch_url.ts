@@ -124,5 +124,5 @@ const hintHandlers: Record<string, HintHandler> = {
   }
 };
 
-export = fetchUrl;
+export default fetchUrl;
 

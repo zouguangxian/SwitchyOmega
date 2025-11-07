@@ -173,5 +173,5 @@ class ChromeStorage extends OmegaTarget.Storage {
   }
 }
 
-export = ChromeStorage;
+export default ChromeStorage;
 

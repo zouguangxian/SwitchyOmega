@@ -4,7 +4,7 @@ import * as OmegaTarget from 'omega-target';
 import type { Profile, OmegaOptions, VirtualProfile } from 'omega-target';
 const Promise = OmegaTarget.Promise;
 const OmegaPac = OmegaTarget.OmegaPac;
-import ProxyAuth = require('./proxy_auth');
+import ProxyAuth from './proxy_auth';
 
 interface ProxyImplFeatures {
   readonly [key: string]: boolean;
@@ -92,5 +92,5 @@ class ProxyImpl {
   }
 }
 
-export = ProxyImpl;
+export default ProxyImpl;
 

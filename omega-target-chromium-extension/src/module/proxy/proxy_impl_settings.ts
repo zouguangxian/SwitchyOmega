@@ -4,7 +4,7 @@ import * as OmegaTarget from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
 const Promise = OmegaTarget.Promise;
 import { chromeApiPromisify } from '../chrome_api';
-import ProxyImpl = require('./proxy_impl');
+import ProxyImpl from './proxy_impl';
 
 interface ProxyConfig {
   mode?: string;
@@ -313,5 +313,5 @@ class SettingsProxyImpl extends ProxyImpl {
   }
 }
 
-export = SettingsProxyImpl;
+export default SettingsProxyImpl;
 

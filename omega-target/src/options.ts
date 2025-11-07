@@ -1,11 +1,11 @@
 /** @module omega-target/options */
 
-import Promise = require('bluebird');
-import Log = require('./log');
-import Storage = require('./storage');
+import Promise from 'bluebird';
+import Log from './log';
+import Storage from './storage';
 import * as OmegaPac from 'omega-pac';
 import * as jsondiffpatch from 'jsondiffpatch';
-import OptionsSync = require('./options_sync');
+import OptionsSync from './options_sync';
 import type {
   Profile,
   SwitchProfile,
@@ -1469,5 +1469,5 @@ class Options {
   }
 }
 
-export = Options;
+export default Options;
 

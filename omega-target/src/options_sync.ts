@@ -1,8 +1,8 @@
 /** @module omega-target/options_sync */
 
-import Promise = require('bluebird');
-import Storage = require('./storage');
-import Log = require('./log');
+import Promise from 'bluebird';
+import Storage from './storage';
+import Log from './log';
 import { Revision } from 'omega-pac';
 import * as jsondiffpatch from 'jsondiffpatch';
 import { TokenBucket } from 'limiter';
@@ -285,5 +285,5 @@ class OptionsSync {
   }
 }
 
-export = OptionsSync;
+export default OptionsSync;
 

@@ -306,5 +306,5 @@ class WebRequestMonitor {
   }
 }
 
-export = WebRequestMonitor;
+export default WebRequestMonitor;
 

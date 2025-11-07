@@ -152,5 +152,5 @@ class ProxyAuth {
   }
 }
 
-export = ProxyAuth;
+export default ProxyAuth;
 

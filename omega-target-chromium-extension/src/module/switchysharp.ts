@@ -3,7 +3,7 @@
 import * as OmegaTarget from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
 const Promise = OmegaTarget.Promise;
-import ChromePort = require('./chrome_port');
+import ChromePort from './chrome_port';
 
 class SwitchySharp {
   static extId: string = 'dpplabbmogkhghncfbfdeeokoefdjegm';
@@ -82,5 +82,5 @@ class SwitchySharp {
   }
 }
 
-export = SwitchySharp;
+export default SwitchySharp;
 

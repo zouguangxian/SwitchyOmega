@@ -315,5 +315,5 @@ const upgrade = (oldOptions: Record<string, any>, i18n: I18nMessages): Record<st
   return options;
 };
 
-export = upgrade;
+export default upgrade;
 

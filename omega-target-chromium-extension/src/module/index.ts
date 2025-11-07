@@ -1,12 +1,12 @@
 /** @module omega-target-chromium-extension */
 
-import Storage = require('./storage');
-import Options = require('./options');
-import ChromeTabs = require('./tabs');
-import SwitchySharp = require('./switchysharp');
-import ExternalApi = require('./external_api');
-import WebRequestMonitor = require('./web_request_monitor');
-import Inspect = require('./inspect');
+import Storage from './storage';
+import Options from './options';
+import ChromeTabs from './tabs';
+import SwitchySharp from './switchysharp';
+import ExternalApi from './external_api';
+import WebRequestMonitor from './web_request_monitor';
+import Inspect from './inspect';
 import * as Url from 'url';
 import * as proxy from './proxy';
 

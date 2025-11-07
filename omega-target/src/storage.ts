@@ -1,7 +1,7 @@
 /** @module omega-target/storage */
 
-import Promise = require('bluebird');
-import Log = require('./log');
+import Promise from 'bluebird';
+import Log from './log';
 
 /**
  * A set of operations to be performed on a Storage.
@@ -234,5 +234,5 @@ class Storage<T = unknown> {
   }
 }
 
-export = Storage;
+export default Storage;
 
