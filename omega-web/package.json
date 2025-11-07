@@ -18,9 +18,13 @@
     "grunt-mocha-test": "~0.11.0",
     "grunt-ng-annotate": "^0.3.2",
     "load-grunt-config": "^0.13.1",
-    "omega-pac": "../omega-pac"
+    "omega-pac": "../omega-pac",
+    "typescript": "^4.9.5",
+    "@types/chrome": "^0.0.246"
   },
   "scripts": {
-    "dev": "npm link omega-pac && npm link"
+    "dev": "npm link omega-pac && npm link",
+    "build": "tsc",
+    "watch": "tsc --watch"
   }
 }

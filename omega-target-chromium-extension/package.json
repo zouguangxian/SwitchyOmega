@@ -18,7 +18,10 @@
     "grunt-mocha-test": "~0.11.0",
     "load-grunt-config": "^0.13.1",
     "minifyify": "^4.1.1",
-    "po2json": "^0.3.2"
+    "po2json": "^0.3.2",
+    "typescript": "^4.9.5",
+    "@types/chrome": "^0.0.246",
+    "@types/node": "^18.0.0"
   },
   "dependencies": {
     "heap": "^0.2.6",
@@ -31,6 +34,8 @@
     "omega-target": "./omega_target_shim.js"
   },
   "scripts": {
-    "dev": "npm link omega-target && npm link omega-web && npm link omega-pac"
+    "dev": "npm link omega-target && npm link omega-web && npm link omega-pac",
+    "build": "tsc",
+    "watch": "tsc --watch"
   }
 }
