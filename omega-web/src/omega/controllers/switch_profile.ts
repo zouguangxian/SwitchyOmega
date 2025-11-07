@@ -6,10 +6,10 @@ declare const jsondiffpatch: any;
 declare const $script: any;
 
 angular.module('omega').controller('SwitchProfileCtrl', [
-  '$scope', '$rootScope', '$location', '$timeout', '$q', '$modal', 'profileIcons', 'getAttachedName', 'omegaTarget',
+  '$scope', '$rootScope', '$location', '$timeout', '$q', '$uibModal', 'profileIcons', 'getAttachedName', 'omegaTarget',
   'trFilter', 'downloadFile',
   function(
-    $scope: any, $rootScope: any, $location: any, $timeout: any, $q: any, $modal: any, profileIcons: any,
+    $scope: any, $rootScope: any, $location: any, $timeout: any, $q: any, $uibModal: any, profileIcons: any,
     getAttachedName: any, omegaTarget: any, trFilter: any, downloadFile: any
   ) {
     // == Rule list ==
@@ -284,7 +284,7 @@ ${regexpRules}
         scope.ruleProfile = $scope.profileByName(scope.rule.profileName);
         scope.dispNameFilter = $scope.dispNameFilter;
         scope.options = $scope.options;
-        $modal.open({
+        $uibModal.open({
           templateUrl: 'partials/rule_remove_confirm.html',
           scope
         }).result.then(removeForReal);
@@ -320,7 +320,7 @@ ${regexpRules}
       scope.ruleProfile = $scope.profileByName($scope.attachedOptions.defaultProfileName);
       scope.dispNameFilter = $scope.dispNameFilter;
       scope.options = $scope.options;
-      $modal.open({
+      $uibModal.open({
         templateUrl: 'partials/rule_reset_confirm.html',
         scope
       }).result.then(() => {
@@ -433,7 +433,7 @@ ${regexpRules}
       scope.attached = $scope.attached;
       scope.dispNameFilter = $scope.dispNameFilter;
       scope.options = $scope.options;
-      $modal.open({
+      $uibModal.open({
         templateUrl: 'partials/delete_attached.html',
         scope
       }).result.then(() => {

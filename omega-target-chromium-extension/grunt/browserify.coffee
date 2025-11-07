@@ -2,30 +2,26 @@ path = require('path')
 module.exports =
   index:
     files:
-      'index.js': 'index.coffee'
+      'index.js': 'dist/index.js'
     options:
-      transform: ['coffeeify']
       exclude: ['bluebird', 'omega-pac', 'omega-target']
       browserifyOptions:
-        extensions: '.coffee'
         builtins: []
-        standalone: 'index.coffee'
+        standalone: 'index'
         debug: true
   browser:
     files:
-      'omega_target_chromium_extension.min.js': 'index.coffee'
+      'omega_target_chromium_extension.min.js': 'dist/index.js'
     options:
       alias: [
-        './index.coffee:OmegaTargetChromium'
+        './dist/index.js:OmegaTargetChromium'
       ]
-      transform: ['coffeeify']
       plugin:
         if process.env.BUILD == 'release'
           [['minifyify', {map: false}]]
         else
           []
       browserifyOptions:
-        extensions: '.coffee'
         standalone: 'OmegaTargetChromium'
   omega_webext_proxy_script:
     files:

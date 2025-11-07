@@ -7,11 +7,11 @@ declare const jsondiffpatch: any;
 declare const $script: any;
 
 angular.module('omega').controller('MasterCtrl', [
-  '$scope', '$rootScope', '$window', '$q', '$modal', '$state', 'profileColors', 'profileIcons', 'omegaTarget',
+  '$scope', '$rootScope', '$window', '$q', '$uibModal', '$state', 'profileColors', 'profileIcons', 'omegaTarget',
   '$timeout', '$location', '$filter', 'getAttachedName', 'isProfileNameReserved',
   'isProfileNameHidden', 'dispNameFilter', 'downloadFile',
   function(
-    $scope: any, $rootScope: any, $window: any, $q: any, $modal: any, $state: any, profileColors: any,
+    $scope: any, $rootScope: any, $window: any, $q: any, $uibModal: any, $state: any, profileColors: any,
     profileIcons: any, omegaTarget: any, $timeout: any, $location: any, $filter: any, getAttachedName: any,
     isProfileNameReserved: any, isProfileNameHidden: any, dispNameFilter: any, downloadFile: any
   ) {
@@ -149,7 +149,7 @@ angular.module('omega').controller('MasterCtrl', [
     $rootScope.applyOptionsConfirm = () => {
       if (!checkFormValid()) return $q.reject('form_invalid');
       if (!$rootScope.optionsDirty) return $q.when(true);
-      return $modal.open({ templateUrl: 'partials/apply_options_confirm.html' }).result
+      return $uibModal.open({ templateUrl: 'partials/apply_options_confirm.html' }).result
         .then(() => $rootScope.applyOptions());
     };
 
@@ -168,7 +168,7 @@ angular.module('omega').controller('MasterCtrl', [
       scope.options = $scope.options;
       scope.pacProfilesUnsupported = $scope.pacProfilesUnsupported;
       
-      $modal.open({
+      $uibModal.open({
         templateUrl: 'partials/new_profile.html',
         scope
       }).result.then((profile: any) => {
@@ -199,7 +199,7 @@ angular.module('omega').controller('MasterCtrl', [
           `;
         };
         
-        $modal.open({
+        $uibModal.open({
           templateUrl: 'partials/replace_profile.html',
           scope
         }).result.then(({ fromName, toName }: { fromName: string; toName: string }) => {
@@ -234,7 +234,7 @@ angular.module('omega').controller('MasterCtrl', [
         scope.dispNameFilter = $scope.dispNameFilter;
         scope.options = $scope.options;
         
-        $modal.open({
+        $uibModal.open({
           templateUrl: 'partials/rename_profile.html',
           scope
         }).result.then((toName: string) => {
@@ -422,7 +422,7 @@ angular.module('omega').controller('MasterCtrl', [
 
         const scope = $rootScope.$new('isolate');
         scope.upgrade = (firstRun === 'upgrade');
-        $modal.open({
+        $uibModal.open({
           templateUrl: 'partials/options_welcome.html',
           keyboard: false,
           scope,

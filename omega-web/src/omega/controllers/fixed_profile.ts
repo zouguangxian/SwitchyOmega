@@ -3,8 +3,8 @@
 declare const angular: any;
 declare const browser: any;
 
-angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$modal', 'trFilter',
-  function($scope: any, $modal: any, trFilter: any) {
+angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$uibModal', 'trFilter',
+  function($scope: any, $uibModal: any, trFilter: any) {
     $scope.urlSchemes = ['', 'http', 'https', 'ftp'];
     $scope.urlSchemeDefault = 'fallbackProxy';
     
@@ -68,7 +68,7 @@ angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$modal', 'trF
       scope.authSupported = $scope.authSupported[proxy.scheme];
       scope.protocolDisp = proxy.scheme;
       
-      $modal.open({
+      $uibModal.open({
         templateUrl: 'partials/fixed_auth_edit.html',
         scope,
         size: scope.authSupported ? 'sm' : 'lg'

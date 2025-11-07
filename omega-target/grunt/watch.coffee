@@ -4,7 +4,7 @@ module.exports =
       reload: true
     files:
       'grunt/*'
-    tasks: ['coffeelint:tasks', 'default']
+    tasks: ['default']
   src:
-    files: ['src/**/*.coffee', 'test/**/*.coffee']
+    files: ['src/**/*.ts', 'test/**/*.ts', 'index.ts']
     tasks: ['default']

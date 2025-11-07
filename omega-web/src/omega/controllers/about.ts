@@ -2,13 +2,13 @@
 
 declare const angular: any;
 
-angular.module('omega').controller('AboutCtrl', ['$scope', '$rootScope', '$modal', 'omegaDebug',
-  function($scope: any, $rootScope: any, $modal: any, omegaDebug: any) {
+angular.module('omega').controller('AboutCtrl', ['$scope', '$rootScope', '$uibModal', 'omegaDebug',
+  function($scope: any, $rootScope: any, $uibModal: any, omegaDebug: any) {
     $scope.downloadLog = omegaDebug.downloadLog;
     $scope.reportIssue = omegaDebug.reportIssue;
 
     $scope.showResetOptionsModal = () => {
-      $modal.open({ templateUrl: 'partials/reset_options_confirm.html' }).result
+      $uibModal.open({ templateUrl: 'partials/reset_options_confirm.html' }).result
         .then(() => omegaDebug.resetOptions());
     };
 

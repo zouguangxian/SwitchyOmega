@@ -6,16 +6,14 @@
   "types": "./dist/index.d.ts",
   "devDependencies": {
     "@types/bluebird": "^3.5.38",
+    "@types/mocha": "^10.0.0",
     "@types/node": "^18.0.0",
     "chai": "^4.3.6",
-    "grunt": "^1.5.3",
-    "grunt-browserify": "^6.0.0",
-    "grunt-contrib-watch": "^1.1.0",
-    "grunt-mocha-test": "^0.13.3",
-    "load-grunt-config": "^4.0.1",
-    "minifyify": "^7.3.5",
+    "coffeescript": "^2.7.0",
+    "mocha": "^10.0.0",
     "sinon": "^15.0.0",
     "sinon-chai": "^3.7.0",
+    "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {
@@ -28,10 +26,10 @@
     "omega-pac": "./omega_pac_shim.js"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
+    "build": "tsup",
+    "watch": "tsup --watch",
     "dev": "npm link omega-pac && npm link",
-    "test": "npm run build && grunt test",
+    "test": "npm run build && mocha --require coffeescript/register test/**/*.coffee",
     "clean": "rm -rf dist"
   }
 }

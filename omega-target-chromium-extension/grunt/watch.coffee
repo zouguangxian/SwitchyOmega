@@ -4,7 +4,7 @@ module.exports =
       reload: true
     files:
       'grunt/*'
-    tasks: ['coffeelint:tasks', 'default']
+    tasks: ['default']
   po2crx_locales:
     files: ['../omega-locales/**/*']
     tasks: ['po2crx:locales']
@@ -20,9 +20,9 @@ module.exports =
   copy_target_popup:
     files: ['src/js/omega_target_popup.js']
     tasks: ['copy:target_popup']
-  coffee:
-    files: ['src/**/*.coffee']
-    tasks: ['coffeelint:src', 'browserify', 'coffee', 'copy:target_self']
+  typescript:
+    files: ['src/**/*.ts', 'index.ts']
+    tasks: ['browserify', 'copy:target_self']
   browserify_omega_webext_proxy_script:
     files: ['src/js/omega_webext_proxy_script.js']
     tasks: ['browserify:omega_webext_proxy_script']

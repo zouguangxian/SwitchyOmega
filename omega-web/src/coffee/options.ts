@@ -21,7 +21,7 @@ $script('lib/spin.js/spin.js', () => {
 $script.ready(['angular-loader'], () => {
   angular.module('omega', [
     'ngLocale', 'ngAnimate', 'ngSanitize',
-    'ui.bootstrap', 'ui.router', 'ngProgress', 'ui.sortable',
+    'ui.bootstrap', 'ui.router', 'ui.router.state.events', 'ngProgress', 'ui.sortable',
     'angularSpectrumColorpicker', 'ui.validate', 'angular-ladda', 'omegaTarget',
     'omegaDecoration'
   ]);
@@ -56,7 +56,10 @@ $script.ready(['angular-loader', 'jquery'], () => {
 });
 
 $script.ready(['angular'], () => {
-  $script('lib/angular-ui-router/angular-ui-router.min.js', 'angular-ui-router');
+  $script('lib/angular-ui-router/angular-ui-router.min.js', () => {
+    // Load UI Router 1.0 legacy state events compatibility module
+    $script('lib/angular-ui-router/stateEvents.min.js', 'angular-ui-router');
+  });
   $script('lib/angular-sanitize/angular-sanitize.min.js', 'angular-sanitize');
 
   const locales: Record<string, string> = {

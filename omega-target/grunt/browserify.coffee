@@ -1,28 +1,24 @@
 module.exports =
   index:
     files:
-      'index.js': 'index.coffee'
+      'index.js': 'dist/index.js'
     options:
-      transform: ['coffeeify']
       exclude: ['bluebird', 'jsondiffpatch', 'omega-pac']
       browserifyOptions:
-        extensions: '.coffee'
         builtins: []
-        standalone: 'index.coffee'
+        standalone: 'index'
         debug: true
   browser:
     files:
-      'omega_target.min.js': 'index.coffee'
+      'omega_target.min.js': 'dist/index.js'
     options:
       alias: [
-        './index.coffee:OmegaTarget'
+        './dist/index.js:OmegaTarget'
       ]
-      transform: ['coffeeify']
       plugin:
         if process.env.BUILD == 'release'
           [['minifyify', {map: false}]]
         else
           []
       browserifyOptions:
-        extensions: '.coffee'
         standalone: 'OmegaTarget'

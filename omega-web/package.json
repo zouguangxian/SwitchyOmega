@@ -3,13 +3,18 @@
   "version": "0.0.1",
   "private": true,
   "devDependencies": {
+    "@types/angular": "^1.8.5",
+    "@types/angular-animate": "^1.5.11",
+    "@types/angular-sanitize": "^1.8.2",
+    "@types/angular-ui-bootstrap": "^0.13.57",
+    "@types/angular-ui-router": "^1.1.40",
+    "@types/chrome": "^0.0.246",
+    "@types/node": "^18.0.0",
     "chai": "~1.9.1",
-    "coffeelint": "^1.16.0",
+    "esbuild": "^0.20.0",
     "grunt": "^0.4.5",
     "grunt-autoprefixer": "^1.0.1",
     "grunt-bower-task": "^0.5.0",
-    "grunt-coffeelint": "^0.0.13",
-    "grunt-contrib-coffee": "^0.11.1",
     "grunt-contrib-concat": "^0.5.0",
     "grunt-contrib-copy": "^0.5.0",
     "grunt-contrib-jade": "^0.12.0",
@@ -19,12 +24,15 @@
     "grunt-ng-annotate": "^0.3.2",
     "load-grunt-config": "^0.13.1",
     "omega-pac": "../omega-pac",
-    "typescript": "^4.9.5",
-    "@types/chrome": "^0.0.246"
+    "tsx": "^4.7.0",
+    "typescript": "^4.9.5"
   },
   "scripts": {
     "dev": "npm link omega-pac && npm link",
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "tsx build.ts && grunt jade && grunt less && grunt autoprefixer && grunt copy && grunt bower",
+    "watch": "tsx build.ts --watch",
+    "build:js": "tsx build.ts",
+    "build:assets": "grunt jade && grunt less && grunt autoprefixer && grunt copy && grunt bower",
+    "clean": "rm -rf build dist"
   }
 }

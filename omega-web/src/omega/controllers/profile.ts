@@ -4,10 +4,10 @@ declare const angular: any;
 declare const OmegaPac: any;
 
 angular.module('omega').controller('ProfileCtrl', [
-  '$scope', '$stateParams', '$location', '$rootScope', '$timeout', '$state', '$modal', 'profileColorPalette',
+  '$scope', '$stateParams', '$location', '$rootScope', '$timeout', '$state', '$uibModal', 'profileColorPalette',
   'getAttachedName', 'getParentName', 'getVirtualTarget',
   function(
-    $scope: any, $stateParams: any, $location: any, $rootScope: any, $timeout: any, $state: any, $modal: any,
+    $scope: any, $stateParams: any, $location: any, $rootScope: any, $timeout: any, $state: any, $uibModal: any,
     profileColorPalette: any, getAttachedName: any, getParentName: any, getVirtualTarget: any
   ) {
     const name = $stateParams.name;
@@ -73,13 +73,13 @@ angular.module('omega').controller('ProfileCtrl', [
           }
         }
         scope.refs = refProfiles;
-        $modal.open({
+        $uibModal.open({
           templateUrl: 'partials/cannot_delete_profile.html',
           scope
         });
         return;
       } else {
-        $modal.open({
+        $uibModal.open({
           templateUrl: 'partials/delete_profile.html',
           scope
         }).result.then(() => {

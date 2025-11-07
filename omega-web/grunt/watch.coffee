@@ -4,7 +4,7 @@ module.exports =
       reload: true
     files:
       'grunt/*'
-    tasks: ['coffeelint:tasks', 'default']
+    tasks: ['default']
   copy_pac:
     files:
       'node_modules/omega-pac/omega_pac.min.js'
@@ -28,12 +28,9 @@ module.exports =
     files:
       'src/less/**/*.less'
     tasks: ['less', 'autoprefixer']
-  coffeelint:
-    files: 'src/**/*.coffee'
-    tasks: ['coffeelint']
-  coffee:
+  ts:
     files: [
-      'src/coffee/**/*.coffee'
-      'src/omega/**/*.coffee'
+      'src/coffee/**/*.ts'
+      'src/omega/**/*.ts'
     ]
-    tasks: ['coffee']
+    tasks: ['ts']

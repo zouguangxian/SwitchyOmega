@@ -3,8 +3,8 @@
 declare const angular: any;
 declare const OmegaPac: any;
 
-angular.module('omega').controller('PacProfileCtrl', ['$scope', '$modal',
-  function($scope: any, $modal: any) {
+angular.module('omega').controller('PacProfileCtrl', ['$scope', '$uibModal',
+  function($scope: any, $uibModal: any) {
     // https://github.com/angular/angular.js/blob/master/src/ng/directive/input.js#L13
     $scope.urlRegex = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
     // With the file: scheme added to the pattern:
@@ -44,7 +44,7 @@ angular.module('omega').controller('PacProfileCtrl', ['$scope', '$modal',
       const scope = $scope.$new('isolate');
       scope.auth = auth && angular.copy(auth);
       
-      $modal.open({
+      $uibModal.open({
         templateUrl: 'partials/fixed_auth_edit.html',
         scope,
         size: 'sm'
