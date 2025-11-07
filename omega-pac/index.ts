@@ -5,7 +5,8 @@ const RuleList = require('./src/rule_list');
 const ShexpUtils = require('./src/shexp_utils');
 const utils = require('./src/utils');
 
-const api: Record<string, unknown> = {
+// Export with explicit typing
+export {
   Conditions,
   PacGenerator,
   Profiles,
@@ -13,7 +14,8 @@ const api: Record<string, unknown> = {
   ShexpUtils
 };
 
-Object.assign(api, utils);
-
-export = api;
+// Re-export utils
+export const Revision = utils.Revision;
+export const AttachedCache = utils.AttachedCache;
+export const parseUrl = utils.parseUrl;
 

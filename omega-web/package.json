@@ -7,7 +7,7 @@
     "@types/angular": "^1.8.5",
     "@types/angular-animate": "^1.5.11",
     "@types/angular-sanitize": "^1.8.2",
-    "@types/angular-ui-bootstrap": "^0.13.57",
+    "@types/angular-ui-bootstrap": "^0.13.47",
     "@types/angular-ui-router": "^1.1.40",
     "@types/chrome": "^0.0.246",
     "@types/node": "^18.0.0",

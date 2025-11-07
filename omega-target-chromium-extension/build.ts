@@ -16,9 +16,12 @@ const commonOptions: esbuild.BuildOptions = {
   define: {
     'process.env.NODE_ENV': JSON.stringify(isProd ? 'production' : 'development'),
   },
+  alias: {
+    'querystring': 'querystring-es3',
+  },
 };
 
-async function build() {
+async function buildEsbuild() {
   // Ensure build directory exists
   if (!fs.existsSync('build/js')) {
     fs.mkdirSync('build/js', { recursive: true });
@@ -89,8 +92,7 @@ async function build() {
   }
 }
 
-build().catch((err) => {
+buildEsbuild().catch((err) => {
   console.error('❌ Build failed:', err);
   process.exit(1);
 });
-

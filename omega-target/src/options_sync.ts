@@ -1,7 +1,7 @@
 /** @module omega-target/options_sync */
 
 import Promise from 'bluebird';
-import Storage from './storage';
+import Storage, { WriteOperations } from './storage';
 import Log from './log';
 import { Revision } from 'omega-pac';
 import * as jsondiffpatch from 'jsondiffpatch';
@@ -37,14 +37,11 @@ class OptionsSync {
 
   constructor(storage: Storage, bucket?: TokenBucket) {
     this.storage = storage;
-    this._bucket = bucket || new TokenBucket(10, 10, 'minute', null);
-    
-    // Add clear method if it doesn't exist
-    if (!this._bucket.clear) {
-      this._bucket.clear = () => {
-        this._bucket.tryRemoveTokens(this._bucket.content);
-      };
-    }
+    this._bucket = bucket || new TokenBucket({
+      bucketSize: 10,
+      tokensPerInterval: 10,
+      interval: 'minute'
+    });
   }
 
   /**
@@ -137,7 +134,7 @@ class OptionsSync {
     if (this._waiting) return;
     
     this._waiting = true;
-    this._bucket.removeTokens(1, () => {
+    this._bucket.removeTokens(1).then(() => {
       this.storage.get(null)
         .then((base) => {
           const changes = this._pending;
@@ -163,6 +160,7 @@ class OptionsSync {
                 return Promise.reject('bucket');
               }
             }
+            return Promise.resolve();
           }).catch((e) => {
             // Re-submit the changes for syncing, but with lower priority.
             for (const key in set) {
@@ -178,12 +176,13 @@ class OptionsSync {
 
             if (e === 'bucket') {
               this._doPush();
+              return Promise.resolve();
             } else if (e instanceof Storage.RateLimitExceededError) {
               Log.log('OptionsSync::rateLimitExceeded');
-              // Try to clear the _bucket to wait more time before retrying.
-              this._bucket.clear();
+              // Try to drain the bucket to wait more time before retrying.
+              this._drainBucket();
               this.requestPush({});
-              return;
+              return Promise.resolve();
             } else if (e instanceof Storage.QuotaExceededError) {
               // For now, we just disable syncing for all changed profiles.
               // TODO(catus): Remove the largest profile each time and retry.
@@ -203,16 +202,24 @@ class OptionsSync {
               } else {
                 this._pending = {};
               }
-              return;
+              return Promise.resolve();
             } else {
               return Promise.reject(e);
             }
           });
         });
+    }).catch((error) => {
+      this._waiting = false;
+      Log.log('OptionsSync::removeTokensError', error);
+      this.requestPush({});
     });
   }
 
-  private _logOperations(text: string, operations: Storage.WriteOperations): void {
+  private _drainBucket(): void {
+    this._bucket.tryRemoveTokens(this._bucket.content);
+  }
+
+  private _logOperations(text: string, operations: WriteOperations): void {
     if (Object.keys(operations.set).length) {
       Log.log(text + '::set', operations.set);
     }
@@ -231,10 +238,12 @@ class OptionsSync {
       local.get(null),
       this.storage.get(null),
       (base, changes) => {
+        const mutableChanges = changes as Record<string, any>;
         for (const key in base) {
-          if (base.hasOwnProperty(key) && !(key in changes)) {
-            if (key[0] === '+' && base[key]?.syncOptions !== 'disabled') {
-              changes[key] = undefined;
+          if (base.hasOwnProperty(key) && !(key in mutableChanges)) {
+            const baseValue = base[key] as any;
+            if (key[0] === '+' && baseValue?.syncOptions !== 'disabled') {
+              mutableChanges[key] = undefined;
             }
           }
         }

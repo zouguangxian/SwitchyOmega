@@ -1,5 +1,17 @@
 /** @module omega-web/app */
 
+import './directives';
+import './filters';
+import './controllers/about';
+import './controllers/fixed_profile';
+import './controllers/io';
+import './controllers/master';
+import './controllers/pac_profile';
+import './controllers/profile';
+import './controllers/quick_switch';
+import './controllers/rule_list_profile';
+import './controllers/switch_profile';
+
 declare const angular: any;
 declare const OmegaPac: any;
 declare const browser: any;

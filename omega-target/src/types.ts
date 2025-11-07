@@ -218,6 +218,7 @@ export interface SwitchRule {
   readonly condition: Condition;
   readonly profileName: string;
   readonly note?: string;
+  readonly isTempRule?: boolean;
 }
 
 // ============================================================================
@@ -428,25 +429,5 @@ export interface ApplyProfileOptions {
   readonly update?: boolean;
   readonly system?: boolean;
   readonly reason?: string;
-}
-
-/** Result of a profile update operation */
-export interface ProfileUpdateResult {
-  readonly profile: Profile;
-  readonly updated: boolean;
-  readonly error?: Error;
-}
-
-/** Options for updating a profile */
-export interface UpdateProfileOptions {
-  readonly bypassCache?: boolean;
-  readonly forced?: boolean;
-}
-
-/** Features that a ProxyImpl may support */
-export interface ProxyImplFeatures {
-  readonly watchProxyChange?: boolean;
-  readonly parseExternalProfile?: boolean;
-  readonly setProxyAuth?: boolean;
 }
 

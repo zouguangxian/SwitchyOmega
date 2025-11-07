@@ -103,7 +103,7 @@ class Storage<T = unknown> {
       
       // Always call merge if provided, even for deletions (undefined values)
       // The merge function decides whether to accept the deletion or keep the value
-      if (merge) {
+      if (merge && newVal !== undefined) {
         newVal = merge(key, newVal, oldVal);
       }
       
@@ -143,10 +143,11 @@ class Storage<T = unknown> {
       for (const key of keys) {
         map[key] = this._items[key];
       }
-    } else if (typeof keys === 'object') {
-      for (const key in keys) {
-        if (Object.prototype.hasOwnProperty.call(keys, key)) {
-          const defaultValue = keys[key] as T | undefined;
+    } else if (typeof keys === 'object' && !Array.isArray(keys)) {
+      const keysObj = keys as Readonly<Record<string, unknown>>;
+      for (const key in keysObj) {
+        if (Object.prototype.hasOwnProperty.call(keysObj, key)) {
+          const defaultValue = keysObj[key] as T | undefined;
           map[key] = this._items[key] ?? defaultValue;
         }
       }
@@ -191,7 +192,7 @@ class Storage<T = unknown> {
         for (const key of keys) {
           delete this._items[key];
         }
-      } else {
+      } else if (typeof keys === 'string') {
         delete this._items[keys];
       }
     }

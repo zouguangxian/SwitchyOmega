@@ -12,8 +12,8 @@ export { Log, Storage, BrowserStorage, Options, OptionsSync, OmegaPac };
 // Re-export core domain types
 export * from './src/types';
 
-// Re-export storage types
-export * from './src/storage';
+// Re-export storage types (excluding types already exported from types.ts)
+export type { WriteOperations, OperationsArgs, StorageKeys, StorageChange } from './src/storage';
 
 // Re-export utils
 export * from './src/utils';

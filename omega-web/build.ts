@@ -200,7 +200,7 @@ function setupAssetWatchers() {
 }
 
 async function createEsbuildContexts() {
-  const builds: Array<{ entryPoints: string[]; outfile: string }> = [
+  const builds: Array<{ entryPoints: string | string[] | Record<string, string>; outfile?: string; outdir?: string }> = [
     { entryPoints: ['src/coffee/options.ts'], outfile: path.join(jsDir, 'options.js') },
     { entryPoints: ['src/coffee/options_guide.ts'], outfile: path.join(jsDir, 'options_guide.js') },
     { entryPoints: ['src/coffee/switch_profile_guide.ts'], outfile: path.join(jsDir, 'switch_profile_guide.js') },
@@ -208,20 +208,7 @@ async function createEsbuildContexts() {
     { entryPoints: ['src/coffee/log_error.ts'], outfile: path.join(jsDir, 'log_error.js') },
     { entryPoints: ['src/coffee/omega_decoration.ts'], outfile: path.join(jsDir, 'omega_decoration.js') },
     {
-      entryPoints: [
-        'src/omega/app.ts',
-        'src/omega/directives.ts',
-        'src/omega/filters.ts',
-        'src/omega/controllers/about.ts',
-        'src/omega/controllers/fixed_profile.ts',
-        'src/omega/controllers/io.ts',
-        'src/omega/controllers/master.ts',
-        'src/omega/controllers/pac_profile.ts',
-        'src/omega/controllers/profile.ts',
-        'src/omega/controllers/quick_switch.ts',
-        'src/omega/controllers/rule_list_profile.ts',
-        'src/omega/controllers/switch_profile.ts',
-      ],
+      entryPoints: ['src/omega/app.ts'],
       outfile: path.join(jsDir, 'omega.js'),
     },
   ];

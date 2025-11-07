@@ -19,6 +19,8 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
+    "@types/tldjs": "^2.3.4",
+    "@types/uglify-js": "^3.17.5",
     "ip-address": "^4.0.0",
     "tldjs": "^1.5.2",
     "uglify-js": "^2.4.15"

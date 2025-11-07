@@ -247,7 +247,7 @@ class Options {
               });
             });
           } else {
-            this.log.error(e.stack);
+            this.log.error((e as Error).stack);
             // Some serious error happened when loading options. Disable syncing
             // and use fallback options.
             this._state.remove(['syncOptions']);
@@ -299,7 +299,10 @@ class Options {
           if (st['isSystemProfile']) {
             return this.applyProfile('system');
           } else {
-            return this.applyProfile(st['currentProfileName'] || this.fallbackProfileName);
+            const profileName = st['currentProfileName'];
+            return this.applyProfile(
+              typeof profileName === 'string' ? profileName : this.fallbackProfileName
+            );
           }
         });
       }
@@ -318,12 +321,13 @@ class Options {
       }
 
       this._state.get({ 'firstRun': '' }).then(({ firstRun }) => {
-        if (firstRun) {
+        if (typeof firstRun === 'string' && firstRun) {
           this.onFirstRun(firstRun);
         }
       });
 
-      if (this._options['-downloadInterval'] > 0) {
+      const downloadInterval = this._options['-downloadInterval'];
+      if (typeof downloadInterval === 'number' && downloadInterval > 0) {
         this.updateProfile();
       }
     });
@@ -391,27 +395,32 @@ class Options {
    * @returns The parsed options.
    */
   parseOptions(options: OmegaOptions | string): OmegaOptions {
+    let parsed: OmegaOptions;
+    
     if (typeof options === 'string') {
-      if (options[0] !== '{') {
+      let str = options;
+      if (str[0] !== '{') {
         try {
           const Buffer = require('buffer').Buffer;
-          options = new Buffer(options, 'base64').toString('utf8');
+          str = new Buffer(str, 'base64').toString('utf8');
         } catch (e) {
           throw new Error('Invalid options!');
         }
       }
       try {
-        options = JSON.parse(options);
+        parsed = JSON.parse(str) as OmegaOptions;
       } catch (e) {
         throw new Error('Invalid options!');
       }
+    } else {
+      parsed = options;
     }
     
-    if (!options) {
+    if (!parsed) {
       throw new Error('Invalid options!');
     }
 
-    return options;
+    return parsed;
   }
 
   /**
@@ -657,13 +666,12 @@ class Options {
    */
   reloadQuickSwitch(): Promise<void> {
     let profiles = this._options['-quickSwitchProfiles'];
-    if (profiles.length < 2) {
-      profiles = null;
-    }
+    let profilesOrNull: string[] | null = profiles && profiles.length >= 2 ? profiles as string[] : null;
+    
     if (this._options['-enableQuickSwitch']) {
-      return this.setQuickSwitch(profiles, !!profiles);
-    } else {
-      return this.setQuickSwitch(null, !!profiles);
+      return this.setQuickSwitch(profilesOrNull, !!profilesOrNull);
+    } else{
+      return this.setQuickSwitch(null, !!profilesOrNull);
     }
   }
 
@@ -752,7 +760,7 @@ class Options {
               })
             : {};
         }
-        if (allReferenceSet[key]) {
+        if (allReferenceSet && allReferenceSet[key]) {
           profiles[key].validResultProfiles = OmegaPac.Profiles
             .validResultProfilesFor(p, this._options)
             .map((result: any) => result.name);
@@ -852,9 +860,9 @@ class Options {
         { profileNotFound: this._profileNotFound.bind(this) }
       );
 
-      applyProxy = this.proxyImpl.applyProfile(this._tempProfile, profile, this._options);
+      applyProxy = this.proxyImpl.applyProfile(this._tempProfile, profile!, this._options);
     } else {
-      applyProxy = this.proxyImpl.applyProfile(profile, profile, this._options);
+      applyProxy = this.proxyImpl.applyProfile(profile!, profile!, this._options);
     }
 
     if (options && options.update === false) {
@@ -862,8 +870,9 @@ class Options {
     }
 
     applyProxy.then(() => {
-      if (this._options['-downloadInterval'] <= 0) return;
-      if (this._currentProfileName !== profile.name) return;
+      const downloadInterval = this._options['-downloadInterval'];
+      if (typeof downloadInterval !== 'number' || downloadInterval <= 0) return;
+      if (this._currentProfileName !== profile!.name) return;
       
       const updateProfiles: string[] = [];
       for (const key in this._watchingProfiles) {
@@ -968,11 +977,11 @@ class Options {
       if (url) {
         const type_hints = OmegaPac.Profiles.updateContentTypeHints(typedProfile);
         const fetchResult = this.fetchUrl(url, opt_bypass_cache, type_hints);
-        results[key] = fetchResult.then((data): Profile => {
+        results[key] = fetchResult.then((data) => {
           // Errors and unsuccessful response codes should have been already
           // rejected by fetchUrl and will not end up here.
           // So empty data indicates success without any update (e.g. 304).
-          if (!data) return typedProfile;
+          if (!data) return Promise.resolve<Profile | Error>(typedProfile);
           
           const currentProfile = OmegaPac.Profiles.byKey(key, this._options) as Mutable<Profile>;
           (currentProfile as Mutable<Profile & { lastUpdate?: string }>).lastUpdate = new Date().toISOString();
@@ -981,12 +990,12 @@ class Options {
             OmegaPac.Profiles.dropCache(currentProfile);
             const changes: Record<string, Profile> = {};
             changes[key] = currentProfile;
-            return this._setOptions(changes).return(currentProfile as Profile);
+            return this._setOptions(changes).then(() => currentProfile as Profile | Error);
           } else {
-            return currentProfile;
+            return Promise.resolve<Profile | Error>(currentProfile);
           }
-        }).catch((reason: unknown): Error => {
-          return reason instanceof Error ? reason : new Error(String(reason));
+        }).catch((reason: unknown): Promise<Error> => {
+          return Promise.resolve(reason instanceof Error ? reason : new Error(String(reason)));
         });
       }
     });
@@ -1134,8 +1143,9 @@ class Options {
     if (!this._tempProfile) {
       this._tempProfile = OmegaPac.Profiles.create('', 'SwitchProfile');
       const currentProfile = this.currentProfile();
-      this._tempProfile.color = currentProfile.color;
-      this._tempProfile.defaultProfileName = currentProfile.name;
+      const mutableTemp = this._tempProfile as Mutable<SwitchProfile>;
+      mutableTemp.color = currentProfile?.color;
+      mutableTemp.defaultProfileName = currentProfile?.name || this.fallbackProfileName;
     }
 
     let changed = false;
@@ -1147,7 +1157,7 @@ class Options {
         const list = this._tempProfileRulesByProfile[key];
         list.splice(list.indexOf(rule), 1);
 
-        rule.profileName = profileName;
+        (rule as Mutable<SwitchRule>).profileName = profileName;
         changed = true;
       }
     } else {
@@ -1158,8 +1168,8 @@ class Options {
         },
         profileName,
         isTempRule: true
-      };
-      this._tempProfile.rules.push(rule);
+      } as SwitchRule;
+      (this._tempProfile as Mutable<SwitchProfile>).rules.push(rule);
       this._tempProfileRules[domain] = rule;
       changed = true;
     }
@@ -1430,7 +1440,7 @@ class Options {
           this.sync!.enabled = false;
           return this._storage.remove().then(() => {
             this.sync!.enabled = true;
-            return this.init();
+            return this.init().then(() => {});
           });
         } else {
           this.sync!.enabled = true;
