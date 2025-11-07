@@ -94,28 +94,39 @@ below.
 
 ## Building the project
 
-SwitchyOmega has migrated to use npm and grunt for building. Please note that
-npm 2.x is required for this project.
+SwitchyOmega uses TypeScript and modern build tools (tsup, esbuild). 
+Node.js >= 18 is required.
 
 To build the project:
 
-    # Install node and npm first (make sure npm --version > 2.0), then:
+    # Install node and npm first, then:
     
-    sudo npm install -g grunt-cli@1.2.0 bower
+    # Install global dependencies
+    sudo npm install -g grunt-cli bower
+    
     # In the project folder:
     cd omega-build
-    npm run deps # This runs npm install in every module.
-    npm run dev # This runs npm link to aid local development.
+    npm run deps # Installs npm dependencies in all modules
+    npm run dev  # Creates npm links for local development
     # Note: the previous command may require sudo in some environments.
-    # The modules are now working. We can build now:
-    grunt
-    # After building, a folder will be generated:
-    cd .. # Return to project root.
-    ls omega-chromium-extension/build/
-    # The folder above can be loaded as an unpacked extension in Chromium now.
+    
+    # Build all modules in correct order:
+    npm run build
+    
+    # After building, the extension is ready:
+    cd ../omega-target-chromium-extension
+    ls build/
+    # The build/ folder can be loaded as an unpacked extension in Chrome/Edge.
 
-To enable `grunt watch`, run `grunt watch` once in the `omega-build` directory.
-This will effectively run `grunt watch` in every module in this project.
+**Build order** (automatic when using `omega-build`):
+1. `omega-pac` - PAC script generator
+2. `omega-target` - Options manager (produces `omega_target.min.js`)
+3. `omega-web` - Web UI (produces `build/` directory)
+4. `omega-target-chromium-extension` - Chrome extension (bundles everything)
+
+**Development workflow:**
+- Run `npm run watch` in individual modules for live rebuilding
+- Or use the centralized build via `omega-build` package
 
 License
 -------

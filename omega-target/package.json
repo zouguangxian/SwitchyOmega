@@ -6,13 +6,16 @@
   "types": "./dist/index.d.ts",
   "devDependencies": {
     "@types/bluebird": "^3.5.38",
+    "@types/chai": "^4.3.0",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.0.0",
+    "@types/sinon": "^10.0.0",
+    "@types/sinon-chai": "^3.2.0",
     "chai": "^4.3.6",
-    "coffeescript": "^2.7.0",
     "mocha": "^10.0.0",
     "sinon": "^15.0.0",
     "sinon-chai": "^3.7.0",
+    "ts-node": "^10.9.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0"
   },
@@ -29,7 +32,7 @@
     "build": "tsup",
     "watch": "tsup --watch",
     "dev": "npm link omega-pac && npm link",
-    "test": "npm run build && mocha --require coffeescript/register test/**/*.coffee",
+    "test": "npm run build && mocha --require ts-node/register test/**/*.ts",
     "clean": "rm -rf dist"
   }
 }

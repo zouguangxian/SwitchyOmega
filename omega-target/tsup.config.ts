@@ -1,25 +1,35 @@
 import { defineConfig } from 'tsup';
 
-export default defineConfig({
-  entry: ['index.ts'],
-  format: ['cjs', 'esm', 'iife'],
-  globalName: 'OmegaTarget',
-  dts: true,
-  sourcemap: true,
-  clean: true,
-  minify: false,
-  splitting: false,
-  external: ['bluebird', 'jsondiffpatch', 'omega-pac'],
-  outDir: 'dist',
-  // For browser compatibility
-  platform: 'browser',
-  target: 'es2019',
-  // Generate standalone browser bundle
-  outExtension({ format }) {
-    if (format === 'iife') {
-      return { js: '.browser.js' };
-    }
-    return { js: '.js' };
+export default defineConfig([
+  // Main builds (CJS, ESM, with type definitions)
+  {
+    entry: ['index.ts'],
+    format: ['cjs', 'esm'],
+    dts: true,
+    sourcemap: true,
+    clean: true,
+    minify: false,
+    splitting: false,
+    external: ['bluebird', 'jsondiffpatch', 'omega-pac'],
+    outDir: 'dist',
+    platform: 'browser',
+    target: 'es2019',
   },
-});
+  // Browser IIFE bundle (minified, for extension)
+  {
+    entry: { omega_target: 'index.ts' },
+    format: ['iife'],
+    globalName: 'OmegaTarget',
+    sourcemap: true,
+    minify: true,
+    splitting: false,
+    external: ['bluebird', 'jsondiffpatch', 'omega-pac'],
+    outDir: '.',
+    platform: 'browser',
+    target: 'es2019',
+    outExtension() {
+      return { js: '.min.js' };
+    },
+  },
+]);
 

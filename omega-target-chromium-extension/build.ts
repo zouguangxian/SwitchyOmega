@@ -29,7 +29,7 @@ async function build() {
     esbuild.context({
       ...commonOptions,
       entryPoints: ['index.ts'],
-      outfile: 'build/omega_target_chromium_extension.js',
+      outfile: 'omega_target_chromium_extension.min.js',
       format: 'iife',
       globalName: 'OmegaTargetChromium',
       external: ['bluebird', 'omega-pac', 'omega-target'],
