@@ -1,4 +1,6 @@
 (function(exports, global) {
+    // Service worker compatibility: use globalThis if global is undefined
+    global = global || globalThis;
     global["UglifyJS"] = exports;
     "use strict";
     function array_to_hash(a) {

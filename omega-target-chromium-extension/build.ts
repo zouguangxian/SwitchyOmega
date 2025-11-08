@@ -15,6 +15,7 @@ const commonOptions: esbuild.BuildOptions = {
   minify: isProd,
   define: {
     'process.env.NODE_ENV': JSON.stringify(isProd ? 'production' : 'development'),
+    'global': 'globalThis',  // Service worker compat: map global -> globalThis
   },
   alias: {
     'querystring': 'querystring-es3',
