@@ -1,6 +1,5 @@
 /** @module omega-target/storage */
 
-import Promise from 'bluebird';
 import Log from './log';
 
 /**
@@ -226,12 +225,12 @@ class Storage<T = unknown> {
       const ops = Storage.operationsForChanges(operations.changes, operations);
       return this.set(ops.set)
         .then(() => this.remove(ops.remove))
-        .return(ops);
+        .then(() => ops);
     }
     
     return this.set(operations.set)
       .then(() => this.remove(operations.remove))
-      .return(operations);
+      .then(() => operations);
   }
 }
 

@@ -1,10 +1,8 @@
 /** @module omega-target-chromium-extension/fetch_url */
 
 import * as OmegaTarget from 'omega-target';
-import * as Bluebird from 'bluebird';
-const Promise = OmegaTarget.Promise;
-const xhr = Bluebird.promisify(require('xhr'));
-import * as Url from 'url';
+
+const xhrLib = require('xhr');
 
 const { ContentTypeRejectedError } = OmegaTarget;
 
@@ -19,6 +17,19 @@ interface HintHandlerContext {
 }
 
 type HintHandler = (response: any, body: string, context: HintHandlerContext) => string | undefined;
+
+// Native Promise wrapper for xhr
+const xhr = (...args: any[]): Promise<[any, string]> => {
+  return new Promise((resolve, reject) => {
+    xhrLib(...args, (err: any, response: any, body: string) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve([response, body]);
+      }
+    });
+  });
+};
 
 const xhrWrapper = (...args: any[]): Promise<[any, string]> => {
   return xhr(...args).catch((err: any) => {
@@ -55,12 +66,11 @@ const fetchUrl = (
   };
 
   if (opt_bypass_cache && dest_url.indexOf('?') < 0) {
-    const parsed = Url.parse(dest_url, true);
-    parsed.search = undefined;
-    if (!parsed.query) parsed.query = {};
-    (parsed.query as any)['_'] = Date.now().toString();
-    const dest_url_nocache = Url.format(parsed);
-    // Try first with the dumb parameter to bypass cache.
+    // Use native URL API for cache busting
+    const parsed = new URL(dest_url);
+    parsed.searchParams.set('_', Date.now().toString());
+    const dest_url_nocache = parsed.toString();
+    // Try first with the cache-busting parameter.
     return xhrWrapper(dest_url_nocache)
       .then(getResBody)
       .catch(() => {

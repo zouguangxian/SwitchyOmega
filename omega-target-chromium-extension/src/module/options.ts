@@ -9,7 +9,6 @@ import WebRequestMonitor from './web_request_monitor';
 import ChromePort from './chrome_port';
 import fetchUrl from './fetch_url';
 import { storageWrapper } from './storage_wrapper';
-import * as Url from 'url';
 
 interface BadgeOptions {
   readonly text: string;
@@ -420,7 +419,8 @@ class ChromeOptions extends OmegaTarget.Options {
       if (url.substr(0, 6) === 'about:') return result;
       if (url.substr(0, 4) === 'moz-') return result;
       
-      const domain = OmegaPac.getBaseDomain(Url.parse(url).hostname);
+      // Use native URL API
+      const domain = OmegaPac.getBaseDomain(new URL(url).hostname);
 
       return {
         url,

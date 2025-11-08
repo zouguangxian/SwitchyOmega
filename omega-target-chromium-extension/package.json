@@ -6,7 +6,6 @@
   "devDependencies": {
     "@types/chrome": "^0.0.246",
     "@types/node": "^18.0.0",
-    "bluebird": "^3.7.2",
     "buffer": "^6.0.3",
     "chai": "~1.9.1",
     "esbuild": "^0.20.0",

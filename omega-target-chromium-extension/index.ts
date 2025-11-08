@@ -1,2 +1,2 @@
-export = require('./src/module');
+export * from './src/module';
 

@@ -12,8 +12,7 @@ import { storageWrapper, localStorageCompat } from '../module/storage_wrapper';
 const OmegaPac = OmegaPacImport;
 
 const OmegaTargetCurrent = Object.create(OmegaTargetChromium);
-const Promise = OmegaTargetCurrent.Promise;
-Promise.longStackTraces();
+// MV3 CSP: Use native Promise instead of Bluebird
 
 OmegaTargetCurrent.Log = Object.create(OmegaTargetCurrent.Log);
 const Log = OmegaTargetCurrent.Log;
@@ -47,23 +46,22 @@ Log.error = (...args: any[]): void => {
   _writeLogToStorage('ERROR: ' + content + '\n'); // Fire and forget
 };
 
-// Unhandled promise tracking
-const unhandledPromises: any[] = [];
-const unhandledPromisesId: number[] = [];
+// Unhandled promise tracking (native Promise)
+const unhandledPromises = new Map<Promise<any>, number>();
 let unhandledPromisesNextId = 1;
 
-Promise.onPossiblyUnhandledRejection((reason: any, promise: any) => {
-  Log.error(`[${unhandledPromisesNextId}] Unhandled rejection:\n`, reason);
-  unhandledPromises.push(promise);
-  unhandledPromisesId.push(unhandledPromisesNextId);
-  unhandledPromisesNextId++;
+self.addEventListener('unhandledrejection', (event) => {
+  const id = unhandledPromisesNextId++;
+  Log.error(`[${id}] Unhandled rejection:\n`, event.reason);
+  unhandledPromises.set(event.promise, id);
 });
 
-Promise.onUnhandledRejectionHandled((promise: any) => {
-  const index = unhandledPromises.indexOf(promise);
-  Log.log(`[${unhandledPromisesId[index]}] Rejection handled!`, promise);
-  unhandledPromises.splice(index, 1);
-  unhandledPromisesId.splice(index, 1);
+self.addEventListener('rejectionhandled', (event) => {
+  const id = unhandledPromises.get(event.promise);
+  if (id !== undefined) {
+    Log.log(`[${id}] Rejection handled!`);
+    unhandledPromises.delete(event.promise);
+  }
 });
 
 // Icon drawing

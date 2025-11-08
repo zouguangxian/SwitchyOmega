@@ -1,6 +1,5 @@
 /** @module omega-target/options */
 
-import Promise from 'bluebird';
 import Log from './log';
 import Storage from './storage';
 import * as OmegaPac from 'omega-pac';
@@ -199,9 +198,9 @@ class Options {
         return this.upgrade(options as Mutable<OmegaOptions>);
       })
       .then(([options, changes]) => {
-        return this._storage.apply({ changes }).return(options);
+        return this._storage.apply({ changes }).then(() => options);
       })
-      .tap((options) => {
+      .then((options) => {
         this._options = options as Mutable<OmegaOptions>;
         this._watchStop = this._watch();
         // Try to set syncOptions to some value if not initialized.
@@ -216,6 +215,7 @@ class Options {
             });
           }
         });
+        return options;
       })
       .catch((e: unknown) => {
         if (retry <= 0) {
@@ -572,7 +572,7 @@ class Options {
       }
       return this._storage.set(changes).then(() => {
         return this._storage.remove(removed);
-      }).return(this._options);
+      }).then(() => this._options);
     }
     
     return Promise.resolve(this._options);
@@ -1000,7 +1000,13 @@ class Options {
       }
     });
 
-    return Promise.props(results);
+    // Convert Promise.props (Bluebird) to Promise.all for native Promise support
+    const keys = Object.keys(results);
+    return Promise.all(keys.map(k => results[k])).then(values => {
+      const resolved = {} as Record<string, Profile | Error>;
+      keys.forEach((k, i) => resolved[k] = values[i]);
+      return resolved;
+    }) as Promise<ProfileUpdateResult>;
   }
 
   /**

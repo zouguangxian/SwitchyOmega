@@ -5,7 +5,6 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "devDependencies": {
-    "@types/bluebird": "^3.5.38",
     "@types/chai": "^4.3.0",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.0.0",
@@ -22,7 +21,6 @@
     "url": "^0.11.4"
   },
   "dependencies": {
-    "bluebird": "^3.7.2",
     "jsondiffpatch": "^0.4.1",
     "limiter": "^2.1.0",
     "omega-pac": "../omega-pac"

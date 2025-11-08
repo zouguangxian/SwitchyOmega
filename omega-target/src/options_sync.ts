@@ -1,6 +1,5 @@
 /** @module omega-target/options_sync */
 
-import Promise from 'bluebird';
 import Storage, { WriteOperations } from './storage';
 import Log from './log';
 import { Revision } from 'omega-pac';
@@ -148,7 +147,7 @@ class OptionsSync {
               ? Promise.resolve(0)
               : (() => {
                   Log.log('OptionsSync::set', set);
-                  return this.storage.set(set).return(1);
+                  return this.storage.set(set).then(() => 1);
                 })();
           
           return doSet.then((cost) => {
@@ -234,10 +233,10 @@ class OptionsSync {
    * @returns A promise
    */
   copyTo(local: Storage): Promise<void> {
-    return Promise.join(
+    return Promise.all([
       local.get(null),
-      this.storage.get(null),
-      (base, changes) => {
+      this.storage.get(null)
+    ]).then(([base, changes]: [any, any]) => {
         const mutableChanges = changes as Record<string, any>;
         for (const key in base) {
           if (base.hasOwnProperty(key) && !(key in mutableChanges)) {

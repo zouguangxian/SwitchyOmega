@@ -1,7 +1,6 @@
 /** @module omega-target/browser_storage */
 
 import Storage, { StorageKeys } from './storage';
-import Promise from 'bluebird';
 
 /**
  * Browser storage interface (localStorage/sessionStorage)

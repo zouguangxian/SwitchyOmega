@@ -16,6 +16,7 @@ const commonOptions: esbuild.BuildOptions = {
   define: {
     'process.env.NODE_ENV': JSON.stringify(isProd ? 'production' : 'development'),
     'global': 'globalThis',  // Service worker compat: map global -> globalThis
+    'UglifyJS_NoUnsafeEval': 'true',  // MV3 CSP: disable eval/new Function in UglifyJS
   },
   alias: {
     'querystring': 'querystring-es3',
@@ -38,7 +39,7 @@ async function buildEsbuild() {
       outfile: 'omega_target_chromium_extension.min.js',
       format: 'iife',
       globalName: 'OmegaTargetChromium',
-      external: ['bluebird', 'omega-pac', 'omega-target'],
+      external: ['omega-pac', 'omega-target'],
     }),
 
     // Background script (service worker for MV3)
@@ -47,6 +48,8 @@ async function buildEsbuild() {
       entryPoints: ['src/coffee/background.ts'],
       outfile: 'build/js/background.js',
       format: 'iife', // IIFE format for service worker
+      minify: true,  // Required to remove dead code (if (false) branches)
+      treeShaking: true,  // Remove unused code
       // Bundle everything - no externals
     }),
 

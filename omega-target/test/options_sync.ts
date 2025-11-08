@@ -4,7 +4,6 @@ import * as sinonChai from 'sinon-chai';
 import OptionsSync from '../src/options_sync';
 import Storage from '../src/storage';
 import Log from '../src/log';
-import Promise from 'bluebird';
 
 chai.use(sinonChai);
 const should = chai.should();

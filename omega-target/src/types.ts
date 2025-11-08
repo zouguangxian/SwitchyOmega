@@ -350,7 +350,7 @@ export interface NetworkErrorDetails {
 // ============================================================================
 
 export interface ProfileUpdateResult {
-  readonly [profileName: string]: Error | string;
+  readonly [profileName: string]: Error | Profile;
 }
 
 export interface UpdateProfileOptions {
