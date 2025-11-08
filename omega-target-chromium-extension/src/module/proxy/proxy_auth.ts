@@ -55,11 +55,35 @@ class ProxyAuth {
       return;
     }
     
-    chrome.webRequest.onAuthRequired.addListener(
-      this.authHandler.bind(this),
-      { urls: ['<all_urls>'] },
-      ['blocking']
-    );
+    // MV3 NOTE: chrome.webRequest.onAuthRequired with blocking/asyncBlocking
+    // is not supported in MV3 for service workers. Detect MV3 and skip registration.
+    const manifest = chrome.runtime.getManifest();
+    const isMV3 = manifest.manifest_version === 3;
+    
+    if (isMV3) {
+      this.log.error('──────────────────────────────────────────────────────────────');
+      this.log.error('⚠️  PROXY AUTHENTICATION NOT SUPPORTED IN MANIFEST V3');
+      this.log.error('──────────────────────────────────────────────────────────────');
+      this.log.error('Chrome MV3 does not support webRequest blocking in service workers.');
+      this.log.error('');
+      this.log.error('WORKAROUND: Include credentials directly in the proxy URL:');
+      this.log.error('  Example: http://username:password@proxy.example.com:8080');
+      this.log.error('');
+      this.log.error('See MV3_LIMITATIONS.md for more details and alternatives.');
+      this.log.error('──────────────────────────────────────────────────────────────');
+      return;
+    }
+    
+    // MV2: Register blocking auth handler
+    try {
+      chrome.webRequest.onAuthRequired.addListener(
+        this.authHandlerAsync.bind(this),
+        { urls: ['<all_urls>'] },
+        ['asyncBlocking']
+      );
+    } catch (e) {
+      this.log.error('Failed to register proxy auth listener:', e);
+    }
     
     chrome.webRequest.onCompleted.addListener(
       this._requestDone.bind(this),
@@ -145,6 +169,13 @@ class ProxyAuth {
     
     req.authTries++;
     return { authCredentials: proxy.auth };
+  }
+
+  // MV3-compatible async auth handler
+  authHandlerAsync(
+    details: chrome.webRequest.WebAuthenticationChallengeDetails
+  ): Promise<chrome.webRequest.BlockingResponse> {
+    return Promise.resolve(this.authHandler(details));
   }
 
   private _requestDone(details: chrome.webRequest.WebResponseDetails | chrome.webRequest.WebResponseErrorDetails): void {

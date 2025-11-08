@@ -1,38 +1,64 @@
 /** @module omega-target-chromium-extension/background_preload */
 
-(window as any).UglifyJS_NoUnsafeEval = true;
-localStorage['log'] = '';
-localStorage['logLastError'] = '';
+import { storageWrapper } from '../module/storage_wrapper';
 
-(window as any).OmegaContextMenuQuickSwitchHandler = () => null;
+// Initialize storage
+storageWrapper.set('log', '');
+storageWrapper.set('logLastError', '');
+
+// Context menu handler (will be set by background.ts)
+let contextMenuQuickSwitchHandler: ((info: chrome.contextMenus.OnClickData) => void) | null = null;
+
+export function setQuickSwitchHandler(handler: (info: chrome.contextMenus.OnClickData) => void) {
+  contextMenuQuickSwitchHandler = handler;
+}
 
 if (chrome.contextMenus) {
-  // We don't need this API. However its presence indicates that Chrome >= 35
-  // which provides info.checked we need in contextMenu callback.
-  // https://developer.chrome.com/extensions/contextMenus
-  if ((chrome.i18n as any).getUILanguage) {
+  // Create context menu items
+  if (chrome.i18n?.getUILanguage) {
     // We must create the menu item here before others to make it first in menu.
     chrome.contextMenus.create({
       id: 'enableQuickSwitch',
       title: chrome.i18n.getMessage('contextMenu_enableQuickSwitch') || 'Enable Quick Switch',
       type: 'checkbox',
       checked: false,
-      contexts: ["browser_action"],
-      onclick: (info: chrome.contextMenus.OnClickData) => 
-        (window as any).OmegaContextMenuQuickSwitchHandler(info)
+      contexts: ["action"]
     });
   }
 
   chrome.contextMenus.create({
+    id: 'reportIssues',
     title: chrome.i18n.getMessage('popup_reportIssues') || 'Report Issues',
-    contexts: ["browser_action"],
-    onclick: (window as any).OmegaDebug.reportIssue
+    contexts: ["action"]
   });
 
   chrome.contextMenus.create({
+    id: 'errorLog',
     title: chrome.i18n.getMessage('popup_errorLog') || 'Error Log',
-    contexts: ["browser_action"],
-    onclick: (window as any).OmegaDebug.downloadLog
+    contexts: ["action"]
+  });
+
+  // Handle context menu clicks
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    switch (info.menuItemId) {
+      case 'enableQuickSwitch':
+        if (contextMenuQuickSwitchHandler) {
+          contextMenuQuickSwitchHandler(info);
+        }
+        break;
+      case 'reportIssues':
+        // Will be handled by OmegaDebug
+        if (typeof (globalThis as any).OmegaDebug !== 'undefined') {
+          (globalThis as any).OmegaDebug.reportIssue();
+        }
+        break;
+      case 'errorLog':
+        // Will be handled by OmegaDebug
+        if (typeof (globalThis as any).OmegaDebug !== 'undefined') {
+          (globalThis as any).OmegaDebug.downloadLog();
+        }
+        break;
+    }
   });
 }
 

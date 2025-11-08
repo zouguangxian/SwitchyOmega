@@ -73,13 +73,23 @@ export async function copyAllFiles(): Promise<void> {
     dest: 'build/js/omega_target_popup.js'
   });
   
-  // Copy overlay files
+  // Copy overlay files (including offscreen.html and manifest.json)
   await copyFiles({
     src: '**/*',
     dest: 'build/',
     cwd: 'overlay',
     expand: true
   });
+  
+  // Explicitly copy offscreen.html to build root (if not already copied)
+  try {
+    await copyFiles({
+      src: 'overlay/offscreen.html',
+      dest: 'build/offscreen.html'
+    });
+  } catch (error) {
+    // Might already be copied, ignore error
+  }
   
   // Copy docs
   await copyFiles({

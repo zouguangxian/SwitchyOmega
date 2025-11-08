@@ -8,6 +8,7 @@ import * as querystring from 'querystring';
 import WebRequestMonitor from './web_request_monitor';
 import ChromePort from './chrome_port';
 import fetchUrl from './fetch_url';
+import { storageWrapper } from './storage_wrapper';
 import * as Url from 'url';
 
 interface BadgeOptions {
@@ -110,12 +111,12 @@ class ChromeOptions extends OmegaTarget.Options {
         : { text: '?', color: '#49afcd' };
     }
     
-    chrome.browserAction.setBadgeText({ text: options.text });
-    chrome.browserAction.setBadgeBackgroundColor({ color: options.color });
+    chrome.action.setBadgeText({ text: options.text });
+    chrome.action.setBadgeBackgroundColor({ color: options.color });
     
     if (options.title) {
       this._badgeTitle = options.title;
-      chrome.browserAction.setTitle({ title: options.title });
+      chrome.action.setTitle({ title: options.title });
     } else {
       this._badgeTitle = null;
     }
@@ -131,7 +132,7 @@ class ChromeOptions extends OmegaTarget.Options {
     if (this._proxyNotControllable) {
       this.setBadge();
     } else {
-      chrome.browserAction.setBadgeText?.({ text: '' });
+      chrome.action.setBadgeText?.({ text: '' });
     }
   }
 
@@ -140,27 +141,30 @@ class ChromeOptions extends OmegaTarget.Options {
     
     if (!this._quickSwitchHandlerReady) {
       this._quickSwitchHandlerReady = true;
-      (window as any).OmegaContextMenuQuickSwitchHandler = (info: chrome.contextMenus.OnClickData) => {
-        const changes: Record<string, any> = {};
-        changes['-enableQuickSwitch'] = info.checked;
-        const setOptions = this._setOptions(changes);
-        
-        if (info.checked && !this._quickSwitchCanEnable) {
-          setOptions.then(() => {
-            chrome.tabs.create({
-              url: chrome.extension.getURL('options.html#/ui')
+      // Use setQuickSwitchHandler from background_preload instead of window
+      import('../coffee/background_preload').then(({ setQuickSwitchHandler }) => {
+        setQuickSwitchHandler((info: chrome.contextMenus.OnClickData) => {
+          const changes: Record<string, any> = {};
+          changes['-enableQuickSwitch'] = info.checked;
+          const setOptions = this._setOptions(changes);
+          
+          if (info.checked && !this._quickSwitchCanEnable) {
+            setOptions.then(() => {
+              chrome.tabs.create({
+                url: chrome.extension.getURL('options.html#/ui')
+              });
             });
-          });
-        }
-      };
+          }
+        });
+      });
     }
 
-    if (quickSwitch || !chrome.browserAction.setPopup) {
-      chrome.browserAction.setPopup?.({ popup: '' });
+    if (quickSwitch || !chrome.action.setPopup) {
+      chrome.action.setPopup?.({ popup: '' });
       
       if (!this._quickSwitchInit) {
         this._quickSwitchInit = true;
-        chrome.browserAction.onClicked.addListener((tab) => {
+        chrome.action.onClicked.addListener((tab) => {
           this.clearBadge();
           
           if (!this._options['-enableQuickSwitch']) {
@@ -189,7 +193,7 @@ class ChromeOptions extends OmegaTarget.Options {
         });
       }
     } else {
-      chrome.browserAction.setPopup({ popup: 'popup/index.html' });
+      chrome.action.setPopup({ popup: 'popup/index.html' });
     }
 
     chrome.contextMenus?.update('enableQuickSwitch', { checked: !!quickSwitch });
@@ -221,14 +225,14 @@ class ChromeOptions extends OmegaTarget.Options {
         if (info.errorCount > 0) {
           info.badgeSet = true;
           const badge = { text: info.errorCount.toString(), color: '#f0ad4e' };
-          chrome.browserAction.setBadgeText({ text: badge.text, tabId });
-          chrome.browserAction.setBadgeBackgroundColor({
+          chrome.action.setBadgeText({ text: badge.text, tabId });
+          chrome.action.setBadgeBackgroundColor({
             color: badge.color,
             tabId
           });
         } else if (info.badgeSet) {
           info.badgeSet = false;
-          chrome.browserAction.setBadgeText({ text: '', tabId });
+          chrome.action.setBadgeText({ text: '', tabId });
         }
         
         this._tabRequestInfoPorts![tabId]?.postMessage({
@@ -341,14 +345,16 @@ class ChromeOptions extends OmegaTarget.Options {
       getOldOptions = getOldOptions.catch(() => {
         if (options?.['config']) {
           return Promise.resolve(options);
-        } else if (localStorage['config']) {
-          return Promise.resolve(localStorage);
+        } else if (storageWrapper.get('config')) {
+          return Promise.resolve({
+            config: storageWrapper.get('config')
+          });
         } else {
           return Promise.reject(new OmegaTarget.Options.NoOptionsError());
         }
       });
 
-      return getOldOptions.then((oldOptions: unknown) => {
+      return getOldOptions.then(async (oldOptions: unknown) => {
         const i18n = {
           upgrade_profile_auto: chrome.i18n.getMessage('upgrade_profile_auto')
         };
@@ -362,8 +368,8 @@ class ChromeOptions extends OmegaTarget.Options {
           return Promise.reject(ex);
         }
         
-        if (localStorage['config']) {
-          Object.getPrototypeOf(localStorage).clear.call(localStorage);
+        if (storageWrapper.get('config')) {
+          await storageWrapper.clear();
         }
         this._state.set({ 'firstRun': 'upgrade' });
         return super.upgrade(upgraded, upgraded);
@@ -380,11 +386,11 @@ class ChromeOptions extends OmegaTarget.Options {
     const result: PageInfoResult | null = errorCount ? { errorCount } : null;
     
     const getBadge = new Promise<string>((resolve, reject) => {
-      if (!chrome.browserAction.getBadgeText) {
+      if (!chrome.action.getBadgeText) {
         resolve('');
         return;
       }
-      chrome.browserAction.getBadgeText({ tabId }, (badgeText) => {
+      chrome.action.getBadgeText({ tabId }, (badgeText) => {
         resolve(badgeText);
       });
     });

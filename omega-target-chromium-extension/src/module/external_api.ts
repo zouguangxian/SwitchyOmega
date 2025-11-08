@@ -31,7 +31,7 @@ class ExternalApi {
     if (!this.disabled) return;
 
     this.options.setProxyNotControllable(null);
-    chrome.browserAction.setPopup?.({ popup: 'popup/index.html' });
+    chrome.action.setPopup?.({ popup: 'popup/index.html' });
     this.options.reloadQuickSwitch();
     this.disabled = false;
     this.options.clearBadge();
@@ -65,7 +65,7 @@ class ExternalApi {
           }
           this.options.setProxyNotControllable(reason, { text: 'X', color: '#5ab432' });
         });
-        chrome.browserAction.setPopup?.({ popup: 'popup/index.html' });
+        chrome.action.setPopup?.({ popup: 'popup/index.html' });
         (port as any).postMessage({ action: 'state', state: 'disabled' });
         break;
       

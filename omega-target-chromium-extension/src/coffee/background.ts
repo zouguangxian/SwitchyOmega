@@ -1,13 +1,12 @@
 /// <reference types="chrome"/>
 
 // Initialize OmegaTarget with Chrome implementation
+import { offscreenManager } from '../module/offscreen_manager';
+import { setQuickSwitchHandler } from './background_preload';
+import { storageWrapper, localStorageCompat } from '../module/storage_wrapper';
+
 declare const OmegaTargetChromium: any;
 declare const OmegaPac: any;
-declare const drawOmega: (
-  context: CanvasRenderingContext2D,
-  colorOrResult: string,
-  profileColor?: string
-) => void;
 
 const OmegaTargetCurrent = Object.create(OmegaTargetChromium);
 const Promise = OmegaTargetCurrent.Promise;
@@ -17,26 +16,32 @@ OmegaTargetCurrent.Log = Object.create(OmegaTargetCurrent.Log);
 const Log = OmegaTargetCurrent.Log;
 
 // Logging setup
-function _writeLogToLocalStorage(content: string): void {
+async function _writeLogToStorage(content: string): Promise<void> {
   try {
-    localStorage['log'] += content;
+    const currentLog = await storageWrapper.getItem('log') || '';
+    await storageWrapper.setItem('log', currentLog + content);
   } catch (_) {
     // Maybe we have reached our limit here. See #1288. Try trimming it.
-    localStorage['log'] = content;
+    try {
+      await storageWrapper.setItem('log', content);
+    } catch (e) {
+      // Storage failed completely, just log to console
+      console.warn('Failed to write to storage:', e);
+    }
   }
 }
 
 Log.log = (...args: any[]): void => {
   console.log(...args);
   const content = args.map(Log.str.bind(Log)).join(' ') + '\n';
-  _writeLogToLocalStorage(content);
+  _writeLogToStorage(content); // Fire and forget
 };
 
 Log.error = (...args: any[]): void => {
   console.error(...args);
   const content = args.map(Log.str.bind(Log)).join(' ');
-  localStorage['logLastError'] = content;
-  _writeLogToLocalStorage('ERROR: ' + content + '\n');
+  storageWrapper.set('logLastError', content); // Synchronous cache
+  _writeLogToStorage('ERROR: ' + content + '\n'); // Fire and forget
 };
 
 // Unhandled promise tracking
@@ -63,51 +68,56 @@ interface IconSet {
   [size: number]: ImageData;
 }
 
-const iconCache: { [key: string]: IconSet | null } = {};
-let drawContext: CanvasRenderingContext2D | null = null;
+const iconCache: { [key: string]: IconSet | null | Promise<IconSet | null> } = {};
 let drawError: Error | null = null;
 
-function drawIcon(resultColor: string, profileColor?: string): IconSet | null {
+async function drawIcon(resultColor: string, profileColor?: string): Promise<IconSet | null> {
   const cacheKey = `omega+${resultColor || ''}+${profileColor || ''}`;
   const cachedIcon = iconCache[cacheKey];
+  
+  // Return cached value if available
   if (cachedIcon !== undefined) {
+    if (cachedIcon instanceof Promise) {
+      return await cachedIcon;
+    }
     return cachedIcon;
   }
 
-  let icon: IconSet | null = null;
-  try {
-    if (drawContext == null) {
-      const canvas = document.getElementById('canvas-icon') as HTMLCanvasElement;
-      drawContext = canvas.getContext('2d')!;
+  // Create a promise for this icon and cache it to prevent concurrent draws
+  const drawPromise = (async () => {
+    let icon: IconSet | null = null;
+    try {
+      icon = {};
+      // Draw each size using offscreen document
+      for (const size of [16, 19, 24, 32, 38]) {
+        const imageData = await offscreenManager.drawIcon(resultColor, profileColor, size);
+        if (!imageData) {
+          throw new Error('Failed to draw icon');
+        }
+        if (imageData.data[3] === 255) {
+          // Some browsers may replace the image data with a opaque white image to
+          // resist fingerprinting. In that case the icon cannot be drawn.
+          throw new Error('Icon drawing blocked by privacy.resistFingerprinting.');
+        }
+        icon[size] = imageData;
+      }
+    } catch (e) {
+      if (drawError == null) {
+        drawError = e as Error;
+        Log.error(e);
+        Log.error('Profile-colored icon disabled. Falling back to static icon.');
+      }
+      icon = null;
     }
 
-    icon = {};
-    for (const size of [16, 19, 24, 32, 38]) {
-      drawContext.scale(size, size);
-      drawContext.clearRect(0, 0, 1, 1);
-      if (resultColor != null && profileColor != null) {
-        drawOmega(drawContext, resultColor, profileColor);
-      } else {
-        drawOmega(drawContext, resultColor);
-      }
-      drawContext.setTransform(1, 0, 0, 1, 0, 0);
-      icon[size] = drawContext.getImageData(0, 0, size, size);
-      if (icon[size].data[3] === 255) {
-        // Some browsers may replace the image data with a opaque white image to
-        // resist fingerprinting. In that case the icon cannot be drawn.
-        throw new Error('Icon drawing blocked by privacy.resistFingerprinting.');
-      }
-    }
-  } catch (e) {
-    if (drawError == null) {
-      drawError = e as Error;
-      Log.error(e);
-      Log.error('Profile-colored icon disabled. Falling back to static icon.');
-    }
-    icon = null;
-  }
+    // Cache the result
+    iconCache[cacheKey] = icon;
+    return icon;
+  })();
 
-  return (iconCache[cacheKey] = icon);
+  // Cache the promise
+  iconCache[cacheKey] = drawPromise;
+  return await drawPromise;
 }
 
 // Helper functions
@@ -252,45 +262,53 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
     .catch(() => null);
 }
 
-// Initialize storage and options
-const storage = new OmegaTargetCurrent.Storage('local');
-const state = new OmegaTargetCurrent.BrowserStorage(localStorage, 'omega.local.');
+// Initialize storage and options (async to wait for storage to be ready)
+async function initializeExtension() {
+  // Wait for storage cache to be loaded
+  await storageWrapper.ready.catch(e => {
+    console.error('Failed to init storage:', e);
+  });
 
-let syncStorage: any;
-let sync: any;
-if (chrome?.storage?.sync || (typeof browser !== 'undefined' && browser?.storage?.sync)) {
-  syncStorage = new OmegaTargetCurrent.Storage('sync');
-  sync = new OmegaTargetCurrent.OptionsSync(syncStorage);
-  if (localStorage['omega.local.syncOptions'] !== '"sync"') {
-    sync.enabled = false;
+  const storage = new OmegaTargetCurrent.Storage('local');
+  const state = new OmegaTargetCurrent.BrowserStorage(localStorageCompat, 'omega.local.');
+
+  let syncStorage: any;
+  let sync: any;
+  if (chrome?.storage?.sync || (typeof browser !== 'undefined' && browser?.storage?.sync)) {
+    syncStorage = new OmegaTargetCurrent.Storage('sync');
+    sync = new OmegaTargetCurrent.OptionsSync(syncStorage);
+    // Now safe to use synchronous get() after awaiting ready
+    const syncOptions = storageWrapper.get('omega.local.syncOptions');
+    if (syncOptions !== '"sync"') {
+      sync.enabled = false;
+    }
+    sync.transformValue = OmegaTargetCurrent.Options.transformValueForSync;
   }
-  sync.transformValue = OmegaTargetCurrent.Options.transformValueForSync;
-}
 
-const proxyImpl = OmegaTargetCurrent.proxy.getProxyImpl(Log);
-state.set({ proxyImplFeatures: proxyImpl.features });
+  const proxyImpl = OmegaTargetCurrent.proxy.getProxyImpl(Log);
+  state.set({ proxyImplFeatures: proxyImpl.features });
 
-const options = new OmegaTargetCurrent.Options(
-  null,
-  storage,
-  state,
-  Log,
-  sync,
-  proxyImpl
-);
+  const options = new OmegaTargetCurrent.Options(
+    null,
+    storage,
+    state,
+    Log,
+    sync,
+    proxyImpl
+  );
 
-options.externalApi = new OmegaTargetCurrent.ExternalApi(options);
-options.externalApi.listen();
+  options.externalApi = new OmegaTargetCurrent.ExternalApi(options);
+  options.externalApi.listen();
 
-if (chrome.runtime.id !== OmegaTargetCurrent.SwitchySharp.extId) {
-  options.switchySharp = new OmegaTargetCurrent.SwitchySharp();
-  options.switchySharp.monitor();
-}
+  if (chrome.runtime.id !== OmegaTargetCurrent.SwitchySharp.extId) {
+    options.switchySharp = new OmegaTargetCurrent.SwitchySharp();
+    options.switchySharp.monitor();
+  }
 
-const tabs = new OmegaTargetCurrent.ChromeTabs(actionForUrl);
-tabs.watch();
+  const tabs = new OmegaTargetCurrent.ChromeTabs(actionForUrl);
+  tabs.watch();
 
-options._inspect = new OmegaTargetCurrent.Inspect((url: string, tab: chrome.tabs.Tab) => {
+  options._inspect = new OmegaTargetCurrent.Inspect((url: string, tab: chrome.tabs.Tab) => {
   if (url === tab.url) {
     options.clearBadge();
     tabs.processTab(tab);
@@ -316,7 +334,7 @@ options._inspect = new OmegaTargetCurrent.Inspect((url: string, tab: chrome.tabs
       chrome.i18n.getMessage('browserAction_titleInspect', urlDisp) +
       '\n' +
       action.title;
-    chrome.browserAction.setTitle({ title: title, tabId: tab.id });
+    chrome.action.setTitle({ title: title, tabId: tab.id });
     tabs.setTabBadge(tab, {
       text: '#',
       color: action.resultColor,
@@ -459,21 +477,42 @@ function encodeError(obj: any): any {
   }
 }
 
-// Refresh active page if enabled
-function refreshActivePageIfEnabled(): void {
-  if (localStorage['omega.local.refreshOnProfileChange'] === 'false') return;
+  // Refresh active page if enabled (uses storageWrapper which is now initialized)
+  function refreshActivePageIfEnabled(): void {
+    if (storageWrapper.get('omega.local.refreshOnProfileChange') === 'false') return;
 
-  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-    const url = tabs[0]?.url;
-    if (!url) return;
-    if (url.substr(0, 6) === 'chrome') return;
-    if (url.substr(0, 6) === 'about:') return;
-    if (url.substr(0, 4) === 'moz-') return;
-    chrome.tabs.reload(tabs[0].id!, { bypassCache: true });
-  });
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      const url = tabs[0]?.url;
+      if (!url) return;
+      if (url.substr(0, 6) === 'chrome') return;
+      if (url.substr(0, 6) === 'about:') return;
+      if (url.substr(0, 4) === 'moz-') return;
+      chrome.tabs.reload(tabs[0].id!, { bypassCache: true });
+    });
+  }
+
+  return { options, tabs, state, refreshActivePageIfEnabled };
 }
 
-// Message handling
+// Module-level variables (initialized asynchronously)
+let options: any;
+let tabs: any;
+let state: any;
+let refreshActivePageIfEnabled: () => void;
+
+// Initialization promise for waiting
+const initPromise = initializeExtension().then((result) => {
+  options = result.options;
+  tabs = result.tabs;
+  state = result.state;
+  refreshActivePageIfEnabled = result.refreshActivePageIfEnabled;
+  return result;
+}).catch(e => {
+  console.error('Failed to initialize extension:', e);
+  throw e;
+});
+
+// Message handling (waits for initialization first)
 chrome.runtime.onMessage.addListener(
   (
     request: any,
@@ -482,7 +521,8 @@ chrome.runtime.onMessage.addListener(
   ): boolean | void => {
     if (!request || !request.method) return;
 
-    options.ready.then(() => {
+    // Wait for initialization, then for options.ready
+    initPromise.then(() => options.ready).then(() => {
       let target: any;
       let method: any;
 
@@ -508,7 +548,7 @@ chrome.runtime.onMessage.addListener(
         method.apply(target, request.args)
       );
 
-      if (request.refreshActivePage) {
+      if (request.refreshActivePage && refreshActivePageIfEnabled) {
         promise.then(refreshActivePageIfEnabled);
       }
 
@@ -529,10 +569,13 @@ chrome.runtime.onMessage.addListener(
         Log.error(request.method + ' ==>', error);
         respond({ error: encodeError(error) });
       });
+    }).catch((initError: any) => {
+      // Initialization failed
+      Log.error('Extension not initialized:', initError);
+      respond({ error: { reason: 'notInitialized', message: String(initError) } });
     });
 
-    // Wait for my response!
-    return !request.noReply;
+    return true; // Always async (waiting for init)
   }
 );
 

@@ -54,10 +54,10 @@ class ChromeTabs {
       });
     });
     
-    if (chrome.browserAction.setPopup) {
-      chrome.browserAction.setTitle({ title: action.title });
+    if (chrome.action.setPopup) {
+      chrome.action.setTitle({ title: action.title });
     } else {
-      chrome.browserAction.setTitle({ title: action.shortTitle });
+      chrome.action.setTitle({ title: action.shortTitle });
     }
     this.setIcon(action.icon);
   }
@@ -78,7 +78,7 @@ class ChromeTabs {
       for (const id in this._badgeTab) {
         if (this._badgeTab.hasOwnProperty(id)) {
           try {
-            chrome.browserAction.setBadgeText?.({ text: '', tabId: parseInt(id) });
+            chrome.action.setBadgeText?.({ text: '', tabId: parseInt(id) });
           } catch (e) {
             // Ignore errors
           }
@@ -89,7 +89,7 @@ class ChromeTabs {
 
     if (!tab.url || tab.url.indexOf("chrome") === 0) {
       if (this._defaultAction && tab.id != null) {
-        chrome.browserAction.setTitle({
+        chrome.action.setTitle({
           title: this._defaultAction.title,
           tabId: tab.id
         });
@@ -107,10 +107,10 @@ class ChromeTabs {
       }
       if (tab.id != null) {
         this.setIcon(action.icon, tab.id);
-        if (chrome.browserAction.setPopup) {
-          chrome.browserAction.setTitle({ title: action.title, tabId: tab.id });
+        if (chrome.action.setPopup) {
+          chrome.action.setTitle({ title: action.title, tabId: tab.id });
         } else {
-          chrome.browserAction.setTitle({ title: action.shortTitle, tabId: tab.id });
+          chrome.action.setTitle({ title: action.shortTitle, tabId: tab.id });
         }
       }
     });
@@ -122,8 +122,8 @@ class ChromeTabs {
     }
     if (tab.id != null) {
       this._badgeTab[tab.id] = true;
-      chrome.browserAction.setBadgeText?.({ text: badge.text, tabId: tab.id });
-      chrome.browserAction.setBadgeBackgroundColor?.({
+      chrome.action.setBadgeText?.({ text: badge.text, tabId: tab.id });
+      chrome.action.setBadgeBackgroundColor?.({
         color: badge.color,
         tabId: tab.id
       });
@@ -144,11 +144,11 @@ class ChromeTabs {
 
   private _chromeSetIcon(params: any): void {
     try {
-      chrome.browserAction.setIcon?.(params, this.ignoreError);
+      chrome.action.setIcon?.(params, this.ignoreError);
     } catch (e) {
       // Some legacy Chrome versions will panic if there are other icon sizes.
       params.imageData = { 19: params.imageData[19], 38: params.imageData[38] };
-      chrome.browserAction.setIcon?.(params, this.ignoreError);
+      chrome.action.setIcon?.(params, this.ignoreError);
     }
   }
 

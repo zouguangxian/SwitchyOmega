@@ -38,11 +38,12 @@ async function buildEsbuild() {
       external: ['bluebird', 'omega-pac', 'omega-target'],
     }),
 
-    // Background script
+    // Background script (service worker for MV3)
     esbuild.context({
       ...commonOptions,
       entryPoints: ['src/coffee/background.ts'],
       outfile: 'build/js/background.js',
+      format: 'esm', // ESM format for service worker
       external: ['omega-pac'],
     }),
 
@@ -51,7 +52,16 @@ async function buildEsbuild() {
       ...commonOptions,
       entryPoints: ['src/coffee/background_preload.ts'],
       outfile: 'build/js/background_preload.js',
+      format: 'esm', // ESM format for service worker modules
       external: ['omega-pac', 'omega-target'],
+    }),
+
+    // Offscreen document script
+    esbuild.context({
+      ...commonOptions,
+      entryPoints: ['src/offscreen/offscreen.ts'],
+      outfile: 'build/js/offscreen.js',
+      format: 'iife', // IIFE for offscreen document
     }),
 
     // Omega debug

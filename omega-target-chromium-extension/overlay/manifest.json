@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "__MSG_manifest_app_name__",
   "version": "2.5.21",
   "description": "__MSG_manifest_app_description__",
@@ -13,8 +13,7 @@
     "128": "img/icons/omega-128.png"
   },
   "default_locale": "en",
-  "browser_action": {
-    "browser_style": false,
+  "action": {
     "default_icon": {
       "16": "img/icons/omega-action-16.png",
       "19": "img/icons/omega-action-19.png",
@@ -25,13 +24,13 @@
     "default_popup": "popup/index.html"
   },
   "background": {
-    "page": "background.html"
+    "service_worker": "js/background.js",
+    "type": "module"
   },
-  "minimum_chrome_version": "22.0.0",
+  "minimum_chrome_version": "109.0.0",
   "options_page": "options.html",
   "options_ui": {
     "page": "options.html",
-    "browser_style": false,
     "open_in_tab": true
   },
   "permissions": [
@@ -41,24 +40,23 @@
     "storage",
     "webRequest",
     "downloads",
-    "webRequestBlocking",
     "contextMenus",
-
-    "http://*/*",
-    "https://*/*",
+    "offscreen"
+  ],
+  "host_permissions": [
     "<all_urls>"
   ],
   "commands": {
-    "_execute_browser_action": {
+    "_execute_action": {
       "suggested_key": {
         "default": "Alt+Shift+O"
       }
     }
   },
-  "applications": {
+  "browser_specific_settings": {
     "gecko": {
       "id": "switchyomega@feliscatus.addons.mozilla.org",
-      "strict_min_version": "55.0a1"
+      "strict_min_version": "109.0"
     }
   }
 }
