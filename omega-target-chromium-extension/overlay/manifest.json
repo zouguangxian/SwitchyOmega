@@ -24,8 +24,7 @@
     "default_popup": "popup/index.html"
   },
   "background": {
-    "service_worker": "js/background.js",
-    "type": "module"
+    "service_worker": "js/background.js"
   },
   "minimum_chrome_version": "109.0.0",
   "options_page": "options.html",

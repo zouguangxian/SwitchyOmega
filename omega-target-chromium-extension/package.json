@@ -6,25 +6,23 @@
   "devDependencies": {
     "@types/chrome": "^0.0.246",
     "@types/node": "^18.0.0",
+    "bluebird": "^3.7.2",
+    "buffer": "^6.0.3",
     "chai": "~1.9.1",
     "esbuild": "^0.20.0",
     "fast-glob": "^3.3.2",
     "po2json": "^0.3.2",
     "tsx": "^4.7.0",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "url": "^0.11.4"
   },
   "dependencies": {
-    "buffer": "^6.0.3",
     "heap": "^0.2.6",
     "omega-pac": "../omega-pac",
     "omega-target": "../omega-target",
     "omega-web": "../omega-web",
     "querystring-es3": "^0.2.1",
-    "url": "^0.11.4",
     "xhr": "^1.16.0"
-  },
-  "browser": {
-    "omega-target": "./omega_target_shim.js"
   },
   "scripts": {
     "dev": "npm link omega-target && npm link omega-web && npm link omega-pac",

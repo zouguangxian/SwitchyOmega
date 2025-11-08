@@ -27,6 +27,12 @@ export default defineConfig([
     outDir: '.',
     platform: 'browser',
     target: 'es2019',
+    esbuildOptions(options) {
+      options.alias = {
+        'url': 'url',
+        'buffer': 'buffer',
+      };
+    },
     outExtension() {
       return { js: '.min.js' };
     },

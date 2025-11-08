@@ -18,6 +18,8 @@ const commonOptions: esbuild.BuildOptions = {
   },
   alias: {
     'querystring': 'querystring-es3',
+    'url': 'url',
+    'buffer': 'buffer',
   },
 };
 
@@ -43,8 +45,8 @@ async function buildEsbuild() {
       ...commonOptions,
       entryPoints: ['src/coffee/background.ts'],
       outfile: 'build/js/background.js',
-      format: 'esm', // ESM format for service worker
-      external: ['omega-pac'],
+      format: 'iife', // IIFE format for service worker
+      // Bundle everything - no externals
     }),
 
     // Background preload

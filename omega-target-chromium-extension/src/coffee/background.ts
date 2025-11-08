@@ -1,12 +1,15 @@
 /// <reference types="chrome"/>
 
-// Initialize OmegaTarget with Chrome implementation
+// MV3: Bundle dependencies directly into the service worker
+// Import the module (which will be bundled by esbuild)
+import * as OmegaTargetChromium from '../module';
+import * as OmegaPacImport from 'omega-pac';
 import { offscreenManager } from '../module/offscreen_manager';
 import { setQuickSwitchHandler } from './background_preload';
 import { storageWrapper, localStorageCompat } from '../module/storage_wrapper';
 
-declare const OmegaTargetChromium: any;
-declare const OmegaPac: any;
+// Make OmegaPac available
+const OmegaPac = OmegaPacImport;
 
 const OmegaTargetCurrent = Object.create(OmegaTargetChromium);
 const Promise = OmegaTargetCurrent.Promise;
