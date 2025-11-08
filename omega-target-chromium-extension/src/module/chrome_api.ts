@@ -1,8 +1,5 @@
 /** @module omega-target-chromium-extension/chrome_api */
 
-import * as OmegaTarget from 'omega-target';
-const Promise = OmegaTarget.Promise;
-
 export function chromeApiPromisify<T = any>(target: any, method: string): (...args: any[]) => Promise<T> {
   return (...args: any[]) => {
     return new Promise<T>((resolve, reject) => {

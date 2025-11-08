@@ -2,7 +2,6 @@
 
 import * as OmegaTarget from 'omega-target';
 import type { Profile, OmegaOptions, VirtualProfile } from 'omega-target';
-const Promise = OmegaTarget.Promise;
 const OmegaPac = OmegaTarget.OmegaPac;
 import ProxyAuth from './proxy_auth';
 

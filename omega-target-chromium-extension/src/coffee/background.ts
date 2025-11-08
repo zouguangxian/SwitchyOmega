@@ -8,14 +8,17 @@ import { offscreenManager } from '../module/offscreen_manager';
 import { setQuickSwitchHandler } from './background_preload';
 import { storageWrapper, localStorageCompat } from '../module/storage_wrapper';
 
+// Browser API compatibility: Firefox uses 'browser', Chrome uses 'chrome'
+if (typeof browser === 'undefined') {
+  (globalThis as any).browser = chrome;
+}
+
 // Make OmegaPac available
 const OmegaPac = OmegaPacImport;
 
-const OmegaTargetCurrent = Object.create(OmegaTargetChromium);
 // MV3 CSP: Use native Promise instead of Bluebird
-
-OmegaTargetCurrent.Log = Object.create(OmegaTargetCurrent.Log);
-const Log = OmegaTargetCurrent.Log;
+const OmegaTargetCurrent = OmegaTargetChromium;
+const Log = Object.create(OmegaTargetCurrent.Log);
 
 // Logging setup
 async function _writeLogToStorage(content: string): Promise<void> {

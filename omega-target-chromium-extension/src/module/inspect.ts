@@ -2,7 +2,6 @@
 
 import * as OmegaTarget from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
-const Promise = OmegaTarget.Promise;
 
 type OnInspectCallback = (url: string, tab: chrome.tabs.Tab) => void;
 

@@ -2,7 +2,6 @@
 
 import * as OmegaTarget from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
-const Promise = OmegaTarget.Promise;
 import { chromeApiPromisify } from '../chrome_api';
 import ProxyImpl from './proxy_impl';
 

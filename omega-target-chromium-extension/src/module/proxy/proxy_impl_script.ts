@@ -1,7 +1,6 @@
 /** @module omega-target-chromium-extension/proxy/proxy_impl_script */
 
 import * as OmegaTarget from 'omega-target';
-const Promise = OmegaTarget.Promise;
 import ProxyImpl from './proxy_impl';
 
 class ScriptProxyImpl extends ProxyImpl {

@@ -2,7 +2,6 @@
 
 import { chromeApiPromisify } from './chrome_api';
 import * as OmegaTarget from 'omega-target';
-const Promise = OmegaTarget.Promise;
 
 type StorageKeys = string | string[] | Record<string, any> | null;
 

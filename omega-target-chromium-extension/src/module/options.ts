@@ -3,7 +3,6 @@
 import * as OmegaTarget from 'omega-target';
 import type { Profile, SwitchRule } from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
-const Promise = OmegaTarget.Promise;
 import * as querystring from 'querystring';
 import WebRequestMonitor from './web_request_monitor';
 import ChromePort from './chrome_port';

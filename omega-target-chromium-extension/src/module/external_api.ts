@@ -2,7 +2,6 @@
 
 import * as OmegaTarget from 'omega-target';
 const OmegaPac = OmegaTarget.OmegaPac;
-const Promise = OmegaTarget.Promise;
 import ChromePort from './chrome_port';
 
 class ExternalApi {

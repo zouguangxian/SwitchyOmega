@@ -33,15 +33,15 @@ const xhr = (...args: any[]): Promise<[any, string]> => {
 
 const xhrWrapper = (...args: any[]): Promise<[any, string]> => {
   return xhr(...args).catch((err: any) => {
-    if (!err.isOperational) throw err;
-    
-    if (!err.statusCode) {
+    const statusCode = err?.statusCode ?? err?.response?.statusCode;
+
+    if (!statusCode) {
       throw new OmegaTarget.NetworkError(err);
     }
-    if (err.statusCode === 404) {
+    if (statusCode === 404) {
       throw new OmegaTarget.HttpNotFoundError(err);
     }
-    if (err.statusCode >= 500 && err.statusCode < 600) {
+    if (statusCode >= 500 && statusCode < 600) {
       throw new OmegaTarget.HttpServerError(err);
     }
     throw new OmegaTarget.HttpError(err);

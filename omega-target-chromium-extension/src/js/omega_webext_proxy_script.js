@@ -1,3 +1,8 @@
+// Browser API compatibility: Firefox uses 'browser', Chrome uses 'chrome'
+if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
+  var browser = chrome;
+}
+
 FindProxyForURL = (function () {
   var OmegaPac = require('omega-pac');
   var options = {};
