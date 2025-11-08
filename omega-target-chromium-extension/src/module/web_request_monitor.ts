@@ -1,6 +1,6 @@
 /** @module omega-target-chromium-extension/web_request_monitor */
 
-import * as Heap from 'heap';
+import Heap from 'heap';
 import * as Url from 'url';
 
 type RequestEventStatus = 'start' | 'ongoing' | 'timeout' | 'error' | 'timeoutAbort' | 'done';

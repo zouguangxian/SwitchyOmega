@@ -103,8 +103,8 @@ class Storage<T = unknown> {
       
       // Always call merge if provided, even for deletions (undefined values)
       // The merge function decides whether to accept the deletion or keep the value
-      if (merge && newVal !== undefined) {
-        newVal = merge(key, newVal, oldVal);
+      if (merge) {
+        newVal = merge(key, newVal as T, oldVal);
       }
       
       if (base != null && newVal === oldVal) continue;

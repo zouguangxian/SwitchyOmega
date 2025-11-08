@@ -138,13 +138,15 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
       return options.matchProfile(request);
     })
     .then(({ profile, results }: any) => {
-      const current = options.currentProfile();
+      let current = options.currentProfile();
       let currentName = dispName(current.name);
       let realCurrentName: string | undefined;
 
       if (current.profileType === 'VirtualProfile') {
         realCurrentName = current.defaultProfileName;
         currentName += ` [${dispName(realCurrentName)}]`;
+        // Use the actual backing profile for colors and comparisons
+        current = options.profile(realCurrentName);
       }
 
       let details = '';
@@ -388,7 +390,7 @@ options.currentProfileChanged = (reason: string) => {
     external = false;
   }
 
-  const current = options.currentProfile();
+  let current = options.currentProfile();
   let currentName = '';
   let realCurrentName: string | undefined;
 
@@ -397,6 +399,8 @@ options.currentProfileChanged = (reason: string) => {
     if (current.profileType === 'VirtualProfile') {
       realCurrentName = current.defaultProfileName;
       currentName += ` [${dispName(realCurrentName)}]`;
+      // Use the actual backing profile for colors and comparisons
+      current = options.profile(realCurrentName);
     }
   }
 
