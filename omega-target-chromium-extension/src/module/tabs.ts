@@ -87,7 +87,8 @@ class ChromeTabs {
       this._badgeTab = null;
     }
 
-    if (!tab.url || tab.url.indexOf("chrome") === 0) {
+    const tabUrl = tab.pendingUrl || tab.url;
+    if (!tabUrl || tabUrl.indexOf('chrome') === 0) {
       if (this._defaultAction && tab.id != null) {
         chrome.action.setTitle({
           title: this._defaultAction.title,
@@ -98,7 +99,7 @@ class ChromeTabs {
       return;
     }
     
-    this.actionForUrl(tab.url).then((action) => {
+    this.actionForUrl(tabUrl).then((action) => {
       if (!action) {
         if (tab.id != null) {
           this.clearIcon(tab.id);

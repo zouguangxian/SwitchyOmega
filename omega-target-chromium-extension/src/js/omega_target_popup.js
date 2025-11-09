@@ -1,23 +1,73 @@
+var RETRYABLE_ERRORS = ['Could not establish connection. Receiving end does not exist.']
+var MAX_RETRIES = 5
+var RETRY_DELAY_MS = 150
+
+function sendMessageWithRetry(payload, retries, onSuccess, onFailure) {
+  chrome.runtime.sendMessage(payload, function(response) {
+    var error = chrome.runtime.lastError
+    if (error) {
+      var retryable = false
+      var message = error.message || ''
+      for (var i = 0; i < RETRYABLE_ERRORS.length; i++) {
+        if (message.indexOf(RETRYABLE_ERRORS[i]) >= 0) {
+          retryable = true
+          break
+        }
+      }
+
+      if (retryable && retries > 0) {
+        setTimeout(function() {
+          sendMessageWithRetry(payload, retries - 1, onSuccess, onFailure)
+        }, RETRY_DELAY_MS)
+      } else if (onFailure) {
+        onFailure(error)
+      }
+      return
+    }
+    if (onSuccess) onSuccess(response)
+  })
+}
+
 function callBackgroundNoReply(method, args, cb) {
-  chrome.runtime.sendMessage({
+  var payload = {
     method: method,
     args: args,
     noReply: true,
     refreshActivePage: true,
-  });
-  if (cb) return cb();
+  }
+
+  sendMessageWithRetry(
+    payload,
+    MAX_RETRIES,
+    function() {
+      if (cb) cb()
+    },
+    function(error) {
+      console.warn('callBackgroundNoReply failed:', error)
+      if (cb) cb(error)
+    }
+  )
 }
 
 function callBackground(method, args, cb) {
-  chrome.runtime.sendMessage({
+  var payload = {
     method: method,
     args: args,
-  }, function(response) {
-    if (chrome.runtime.lastError != null)
-      return cb && cb(chrome.runtime.lastError)
-    if (response.error) return cb && cb(response.error)
-    return cb && cb(null, response.result)
-  });
+  }
+
+  sendMessageWithRetry(
+    payload,
+    MAX_RETRIES,
+    function(response) {
+      if (response && response.error) {
+        return cb && cb(response.error)
+      }
+      return cb && cb(null, response ? response.result : undefined)
+    },
+    function(error) {
+      return cb && cb(error)
+    }
+  )
 }
 
 var requestInfoCallback = null;

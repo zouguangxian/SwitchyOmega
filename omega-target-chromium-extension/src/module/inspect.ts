@@ -28,21 +28,17 @@ class Inspect {
       "ftp://*/*"
     ];
 
-    /* Not so useful...
     chrome.contextMenus.create({
       id: 'inspectPage',
-      title: chrome.i18n.getMessage('contextMenu_inspectPage'),
+      title: chrome.i18n.getMessage('contextMenu_inspectPage') || 'Inspect Page',
       contexts: ['page'],
-      onclick: this.inspect.bind(this),
       documentUrlPatterns: webResource
     });
-    */
 
     chrome.contextMenus.create({
       id: 'inspectFrame',
       title: chrome.i18n.getMessage('contextMenu_inspectFrame') || 'Inspect Frame',
       contexts: ['frame'],
-      onclick: this.inspect.bind(this) as any,
       documentUrlPatterns: webResource
     });
 
@@ -50,7 +46,6 @@ class Inspect {
       id: 'inspectLink',
       title: chrome.i18n.getMessage('contextMenu_inspectLink') || 'Inspect Link',
       contexts: ['link'],
-      onclick: this.inspect.bind(this) as any,
       targetUrlPatterns: webResource
     });
 
@@ -58,9 +53,13 @@ class Inspect {
       id: 'inspectElement',
       title: chrome.i18n.getMessage('contextMenu_inspectElement') || 'Inspect Element',
       contexts: ['image', 'video', 'audio'],
-      onclick: this.inspect.bind(this) as any,
       targetUrlPatterns: webResource
     });
+
+    if (!this._onClickListener) {
+      this._onClickListener = this.inspect.bind(this);
+      chrome.contextMenus.onClicked.addListener(this._onClickListener);
+    }
 
     this._enabled = true;
   }
@@ -78,6 +77,11 @@ class Inspect {
       }
     }
     this._enabled = false;
+
+    if (this._onClickListener) {
+      chrome.contextMenus.onClicked.removeListener(this._onClickListener);
+      this._onClickListener = null;
+    }
   }
 
   propForMenuItem: Record<string, string> = {

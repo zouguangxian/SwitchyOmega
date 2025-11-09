@@ -44,7 +44,7 @@ class ProxyImpl {
   }
 
   setProxyAuth(profile: Profile, options: OmegaOptions): Promise<void> {
-    return Promise.try(() => {
+    return Promise.resolve().then(() => {
       if (!this._proxyAuth) {
         this._proxyAuth = new ProxyAuth(this.log);
       }

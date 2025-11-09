@@ -4,6 +4,16 @@
 
 declare const angular: any;
 
+const getActiveTab = (callback: (tab?: chrome.tabs.Tab) => void): void => {
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+    if (tabs.length === 0) {
+      callback(undefined);
+    } else {
+      callback(tabs[0]);
+    }
+  });
+};
+
 angular.module('omegaTarget', []).factory('omegaTarget', ['$q', function($q: any) {
   const decodeError = (obj: any): any => {
     if (obj._error === 'error') {
@@ -17,30 +27,66 @@ angular.module('omegaTarget', []).factory('omegaTarget', ['$q', function($q: any
     }
   };
 
-  const callBackgroundNoReply = (method: string, ...args: any[]): void => {
-    chrome.runtime.sendMessage({
-      method,
-      args,
-      noReply: true
+  const RETRYABLE_ERRORS = ['Could not establish connection. Receiving end does not exist.'];
+  const MAX_RETRIES = 5;
+  const RETRY_DELAY_MS = 150;
+
+  const sendMessageWithRetry = (
+    payload: any,
+    retries: number,
+    onSuccess: (response: any) => void,
+    onFailure: (error: chrome.runtime.LastError) => void
+  ) => {
+    chrome.runtime.sendMessage(payload, (response: any) => {
+      const error = chrome.runtime.lastError;
+      if (error) {
+        const retryable = RETRYABLE_ERRORS.some((message) =>
+          error.message?.includes(message)
+        );
+        if (retryable && retries > 0) {
+          setTimeout(
+            () => sendMessageWithRetry(payload, retries - 1, onSuccess, onFailure),
+            RETRY_DELAY_MS
+          );
+        } else {
+          onFailure(error);
+        }
+        return;
+      }
+      onSuccess(response);
     });
+  };
+
+  const callBackgroundNoReply = (method: string, ...args: any[]): void => {
+    const payload = { method, args, noReply: true };
+    sendMessageWithRetry(
+      payload,
+      MAX_RETRIES,
+      () => {},
+      (error) => {
+        // Surface the error in the console for debugging.
+        console.warn('callBackgroundNoReply failed:', error.message);
+      }
+    );
   };
 
   const callBackground = (method: string, ...args: any[]): Promise<any> => {
     const d = $q['defer']();
-    chrome.runtime.sendMessage({
-      method,
-      args
-    }, (response: any) => {
-      if (chrome.runtime.lastError) {
-        d.reject(chrome.runtime.lastError);
-        return;
+    const payload = { method, args };
+    sendMessageWithRetry(
+      payload,
+      MAX_RETRIES,
+      (response: any) => {
+        if (response?.error) {
+          d.reject(decodeError(response.error));
+        } else {
+          d.resolve(response?.result);
+        }
+      },
+      (error) => {
+        d.reject(error);
       }
-      if (response.error) {
-        d.reject(decodeError(response.error));
-      } else {
-        d.resolve(response.result);
-      }
-    });
+    );
     return d.promise;
   };
 
@@ -66,29 +112,40 @@ angular.module('omegaTarget', []).factory('omegaTarget', ['$q', function($q: any
   let requestInfoCallback: ((msg: any) => void) | null = null;
   const prefix = 'omega.local.';
   const urlParser = document.createElement('a');
+  const getLocalValue = (key: string) => {
+    try {
+      return JSON.parse(localStorage[prefix + key]);
+    } catch (e) {
+      return undefined;
+    }
+  };
 
   const omegaTarget = {
     options: null as any,
 
     state(name: string | string[], value?: any): Promise<any> {
+      const deferred = $q.defer();
       if (arguments.length === 1) {
-        const getValue = (key: string) => {
-          try {
-            return JSON.parse(localStorage[prefix + key]);
-          } catch (e) {
-            return undefined;
-          }
-        };
-        
         if (Array.isArray(name)) {
-          return $q.when(name.map(getValue));
+          callBackground('getState', name).then((values: Record<string, any>) => {
+            deferred.resolve(name.map((key) => {
+              const remoteValue = values?.[key];
+              return remoteValue !== undefined ? remoteValue : getLocalValue(key);
+            }));
+          });
         } else {
-          value = getValue(name);
+          callBackground('getState', [name]).then((values: Record<string, any>) => {
+            const remoteValue = values?.[name];
+            deferred.resolve(remoteValue !== undefined ? remoteValue : getLocalValue(name));
+          });
         }
       } else {
-        localStorage[prefix + name] = JSON.stringify(value);
+        const payload: Record<string, any> = {};
+        payload[name as string] = value;
+        localStorage[prefix + (name as string)] = JSON.stringify(value);
+        callBackground('setState', payload).then(() => deferred.resolve(value));
       }
-      return $q.when(value);
+      return deferred.promise;
     },
 
     lastUrl(url?: string): string | undefined {
@@ -150,7 +207,7 @@ angular.module('omegaTarget', []).factory('omegaTarget', ['$q', function($q: any
 
     openOptions(hash?: string): Promise<void> {
       const d = $q['defer']();
-      const options_url = chrome.extension.getURL('options.html');
+      const options_url = chrome.runtime.getURL('options.html');
       chrome.tabs.query({ url: options_url }, (tabs) => {
         let url: string;
         if (hash) {
@@ -201,13 +258,14 @@ angular.module('omegaTarget', []).factory('omegaTarget', ['$q', function($q: any
 
     getActivePageInfo(): Promise<any> {
       const d = $q['defer']();
-      chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-        if (!tabs[0]?.url) {
+      getActiveTab((tab) => {
+        const url = tab?.pendingUrl || tab?.url;
+        if (!url || !tab?.id) {
           d.resolve(null);
           return;
         }
-        const args = { tabId: tabs[0].id, url: tabs[0].url };
-        if (tabs[0].id && requestInfoCallback) {
+        const args = { tabId: tab.id, url };
+        if (requestInfoCallback) {
           connectBackground('tabRequestInfo', args, requestInfoCallback);
         }
         d.resolve(callBackground('getPageInfo', args));
@@ -217,9 +275,14 @@ angular.module('omegaTarget', []).factory('omegaTarget', ['$q', function($q: any
 
     refreshActivePage(): Promise<void> {
       const d = $q['defer']();
-      chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-        if (tabs[0]?.url && !isChromeUrl(tabs[0].url) && tabs[0].id) {
-          chrome.tabs.reload(tabs[0].id, { bypassCache: true });
+      getActiveTab((tab) => {
+        const url = tab?.pendingUrl || tab?.url;
+        if (url && !isChromeUrl(url) && tab?.id) {
+          if (tab.pendingUrl) {
+            chrome.tabs.update(tab.id, { url });
+          } else {
+            chrome.tabs.reload(tab.id, { bypassCache: true });
+          }
         }
         d.resolve();
       });

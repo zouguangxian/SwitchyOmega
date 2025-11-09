@@ -9,6 +9,22 @@ import ChromePort from './chrome_port';
 import fetchUrl from './fetch_url';
 import { storageWrapper } from './storage_wrapper';
 
+function withTimeout<T>(promise: Promise<T>, ms: number, errorFactory?: () => Error): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(errorFactory ? errorFactory() : new Error('Operation timed out'));
+    }, ms);
+
+    promise.then((value) => {
+      clearTimeout(timer);
+      resolve(value);
+    }).catch((err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+
 interface BadgeOptions {
   readonly text: string;
   readonly color: string;
@@ -23,6 +39,7 @@ interface PageInfoRequest {
 interface PageInfoResult {
   readonly url?: string;
   readonly domain?: string;
+  readonly subdomain?: string | null;
   readonly tempRuleProfileName?: string | null;
   readonly errorCount?: number;
 }
@@ -51,7 +68,7 @@ class ChromeOptions extends OmegaTarget.Options {
   private _proxyNotControllable: string | null = null;
   private _badgeTitle: string | null = null;
   private _quickSwitchInit: boolean = false;
-  private _quickSwitchHandlerReady: boolean = false;
+  private _quickSwitchMenuPromise: Promise<void> | null = null;
   private _quickSwitchCanEnable: boolean = false;
   private _requestMonitor: WebRequestMonitor | null = null;
   private _monitorWebRequests: boolean = false;
@@ -134,28 +151,31 @@ class ChromeOptions extends OmegaTarget.Options {
     }
   }
 
-  setQuickSwitch(quickSwitch: string[] | null, canEnable: boolean): Promise<void> {
-    this._quickSwitchCanEnable = canEnable;
-    
-    if (!this._quickSwitchHandlerReady) {
-      this._quickSwitchHandlerReady = true;
-      // Use setQuickSwitchHandler from background_preload instead of window
-      import('../coffee/background_preload').then(({ setQuickSwitchHandler }) => {
+  private ensureQuickSwitchMenu(): Promise<void> {
+    if (!this._quickSwitchMenuPromise) {
+      this._quickSwitchMenuPromise = import('../coffee/background_preload').then(({ setQuickSwitchHandler }) => {
         setQuickSwitchHandler((info: chrome.contextMenus.OnClickData) => {
           const changes: Record<string, any> = {};
           changes['-enableQuickSwitch'] = info.checked;
           const setOptions = this._setOptions(changes);
-          
+
           if (info.checked && !this._quickSwitchCanEnable) {
             setOptions.then(() => {
               chrome.tabs.create({
-                url: chrome.extension.getURL('options.html#/ui')
+                url: chrome.extension.getURL('options.html#/ui'),
               });
             });
           }
         });
       });
     }
+    return this._quickSwitchMenuPromise;
+  }
+
+  async setQuickSwitch(quickSwitch: string[] | null, canEnable: boolean): Promise<void> {
+    this._quickSwitchCanEnable = canEnable;
+    
+    await this.ensureQuickSwitchMenu();
 
     if (quickSwitch || !chrome.action.setPopup) {
       chrome.action.setPopup?.({ popup: '' });
@@ -195,7 +215,6 @@ class ChromeOptions extends OmegaTarget.Options {
     }
 
     chrome.contextMenus?.update('enableQuickSwitch', { checked: !!quickSwitch });
-    return Promise.resolve();
   }
 
   setInspect(settings: { showMenu: boolean }): Promise<void> {
@@ -337,7 +356,11 @@ class ChromeOptions extends OmegaTarget.Options {
       }
       
       let getOldOptions = this.switchySharp
-        ? (this.switchySharp as { getOptions(): Promise<unknown> }).getOptions().timeout(1000)
+        ? withTimeout(
+            (this.switchySharp as { getOptions(): Promise<unknown> }).getOptions(),
+            1000,
+            () => new Error('SwitchySharp upgrade timed out')
+          )
         : Promise.reject();
 
       getOldOptions = getOldOptions.catch(() => {
@@ -393,9 +416,13 @@ class ChromeOptions extends OmegaTarget.Options {
       });
     });
 
-    const getInspectUrl = this._state.get({ inspectUrl: '' });
+    const getInspectUrlPromise = this._state.get({ inspectUrl: '' }) as Promise<{ inspectUrl?: string }>;
     
-    return Promise.join(getBadge, getInspectUrl, (badge, { inspectUrl }) => {
+    return Promise.all([getBadge, getInspectUrlPromise] as const).then(([badge, inspectData]) => {
+      const inspectUrl =
+        inspectData && typeof inspectData.inspectUrl === 'string'
+          ? inspectData.inspectUrl
+          : undefined;
       if (badge === '#' && inspectUrl) {
         url = inspectUrl;
       } else {
@@ -419,11 +446,15 @@ class ChromeOptions extends OmegaTarget.Options {
       if (url.substr(0, 4) === 'moz-') return result;
       
       // Use native URL API
-      const domain = OmegaPac.getBaseDomain(new URL(url).hostname);
+      const parsedUrl = new URL(url);
+      const domain = OmegaPac.getBaseDomain(parsedUrl.hostname);
+      const getSubdomain = (OmegaPac as any).getSubdomain as (input: string) => string | null | undefined;
+      const subdomain = typeof getSubdomain === 'function' ? getSubdomain(url) : null;
 
       return {
         url,
         domain,
+        subdomain,
         tempRuleProfileName: this.queryTempRule(domain),
         errorCount
       };

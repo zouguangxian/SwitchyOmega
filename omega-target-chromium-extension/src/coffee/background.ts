@@ -8,6 +8,61 @@ import { offscreenManager } from '../module/offscreen_manager';
 import { setQuickSwitchHandler } from './background_preload';
 import { storageWrapper, localStorageCompat } from '../module/storage_wrapper';
 
+type OmegaCanvasContext = OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
+
+function drawOmegaSymbol(
+  ctx: OmegaCanvasContext,
+  outerCircleColor: string,
+  innerCircleColor?: string
+): void {
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = outerCircleColor;
+  ctx.beginPath();
+  ctx.arc(0.5, 0.5, 0.5, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+  if (innerCircleColor != null) {
+    ctx.fillStyle = innerCircleColor;
+  } else {
+    ctx.globalCompositeOperation = 'destination-out';
+  }
+
+  ctx.beginPath();
+  ctx.arc(0.5, 0.5, 0.25, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+const ICON_SIZES = [16, 19, 24, 32, 38] as const;
+
+let localCanvas: OffscreenCanvas | null = null;
+let localDrawContext: OffscreenCanvasRenderingContext2D | null = null;
+
+function ensureLocalDrawContext(): OffscreenCanvasRenderingContext2D | null {
+  if (typeof OffscreenCanvas === 'undefined') {
+    return null;
+  }
+  if (!localCanvas) {
+    try {
+      localCanvas = new OffscreenCanvas(64, 64);
+      localDrawContext = localCanvas.getContext('2d', { willReadFrequently: true });
+      if (!localDrawContext) {
+        localCanvas = null;
+        return null;
+      }
+    } catch (error) {
+      console.warn('Failed to create OffscreenCanvas for icon drawing:', error);
+      localCanvas = null;
+      localDrawContext = null;
+      return null;
+    }
+  }
+  return localDrawContext;
+}
+
 // Browser API compatibility: Firefox uses 'browser', Chrome uses 'chrome'
 if (typeof browser === 'undefined') {
   (globalThis as any).browser = chrome;
@@ -19,6 +74,14 @@ const OmegaPac = OmegaPacImport;
 // MV3 CSP: Use native Promise instead of Bluebird
 const OmegaTargetCurrent = OmegaTargetChromium;
 const Log = Object.create(OmegaTargetCurrent.Log);
+
+// Keep the service worker alive so context menu and proxy listeners stay active.
+const KEEP_ALIVE_INTERVAL_MS = 25 * 1000;
+setInterval(() => {
+  chrome.runtime.getPlatformInfo(() => {
+    // Intentionally empty. The callback prevents lastError noise.
+  });
+}, KEEP_ALIVE_INTERVAL_MS);
 
 // Logging setup
 async function _writeLogToStorage(content: string): Promise<void> {
@@ -72,6 +135,49 @@ interface IconSet {
   [size: number]: ImageData;
 }
 
+function drawIconsWithLocalCanvas(resultColor: string, profileColor?: string): IconSet | null {
+  const ctx = ensureLocalDrawContext();
+  if (!ctx || !localCanvas) {
+    return null;
+  }
+
+  const icon: IconSet = {};
+  for (const size of ICON_SIZES) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, localCanvas.width, localCanvas.height);
+    ctx.save();
+    ctx.scale(size, size);
+    ctx.clearRect(0, 0, 1, 1);
+    drawOmegaSymbol(ctx, resultColor, profileColor);
+    ctx.restore();
+    const imageData = ctx.getImageData(0, 0, size, size);
+    if (imageData.data[3] === 255) {
+      throw new Error('Icon drawing blocked by privacy.resistFingerprinting.');
+    }
+    icon[size] = imageData;
+  }
+
+  return icon;
+}
+
+async function drawIconsWithOffscreenDocument(
+  resultColor: string,
+  profileColor: string | undefined
+): Promise<IconSet> {
+  const icon: IconSet = {};
+  for (const size of ICON_SIZES) {
+    const imageData = await offscreenManager.drawIcon(resultColor, profileColor, size);
+    if (!imageData) {
+      throw new Error('Failed to draw icon');
+    }
+    if (imageData.data[3] === 255) {
+      throw new Error('Icon drawing blocked by privacy.resistFingerprinting.');
+    }
+    icon[size] = imageData;
+  }
+  return icon;
+}
+
 const iconCache: { [key: string]: IconSet | null | Promise<IconSet | null> } = {};
 let drawError: Error | null = null;
 
@@ -91,19 +197,9 @@ async function drawIcon(resultColor: string, profileColor?: string): Promise<Ico
   const drawPromise = (async () => {
     let icon: IconSet | null = null;
     try {
-      icon = {};
-      // Draw each size using offscreen document
-      for (const size of [16, 19, 24, 32, 38]) {
-        const imageData = await offscreenManager.drawIcon(resultColor, profileColor, size);
-        if (!imageData) {
-          throw new Error('Failed to draw icon');
-        }
-        if (imageData.data[3] === 255) {
-          // Some browsers may replace the image data with a opaque white image to
-          // resist fingerprinting. In that case the icon cannot be drawn.
-          throw new Error('Icon drawing blocked by privacy.resistFingerprinting.');
-        }
-        icon[size] = imageData;
+      icon = drawIconsWithLocalCanvas(resultColor, profileColor);
+      if (!icon) {
+        icon = await drawIconsWithOffscreenDocument(resultColor, profileColor);
       }
     } catch (e) {
       if (drawError == null) {
@@ -151,7 +247,7 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
       const request = OmegaPac.Conditions.requestFromUrl(url);
       return options.matchProfile(request);
     })
-    .then(({ profile, results }: any) => {
+    .then(async ({ profile, results }: any) => {
       let current = options.currentProfile();
       let currentName = dispName(current.name);
       let realCurrentName: string | undefined;
@@ -236,14 +332,14 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
         options.isCurrentProfileStatic()
       ) {
         resultColor = profileColor = profile.color;
-        icon = drawIcon(profile.color);
+        icon = await drawIcon(profile.color);
       } else {
         resultColor = profile.color;
         profileColor = current.color;
       }
 
       if (icon == null) {
-        icon = drawIcon(resultColor, profileColor);
+        icon = await drawIcon(resultColor, profileColor);
       }
 
       let shortTitle = 'Omega: ' + currentName; // TODO: I18n.
@@ -325,8 +421,12 @@ async function initializeExtension() {
   actionForUrl(url).then((action) => {
     if (!action) return;
 
+    const tabUrlString = tab.pendingUrl || tab.url || '';
+    if (!tabUrlString) {
+      return;
+    }
     const parsedUrl = OmegaTargetCurrent.Url.parse(url);
-    const tabUrl = OmegaTargetCurrent.Url.parse(tab.url!);
+    const tabUrl = OmegaTargetCurrent.Url.parse(tabUrlString);
     let urlDisp: string;
     if (parsedUrl.hostname === tabUrl.hostname) {
       urlDisp = parsedUrl.path;
@@ -403,7 +503,7 @@ proxyImpl.watchProxyChange((details: any) => {
 
 // Profile change handling
 let external = false;
-options.currentProfileChanged = (reason: string) => {
+options.currentProfileChanged = async (reason: string) => {
   Object.keys(iconCache).forEach((key) => delete iconCache[key]);
 
   if (reason === 'external') {
@@ -454,9 +554,9 @@ options.currentProfileChanged = (reason: string) => {
 
   let icon: IconSet | null;
   if (!current.name || !OmegaPac.Profiles.isInclusive(current)) {
-    icon = drawIcon(current.color);
+    icon = await drawIcon(current.color);
   } else {
-    icon = drawIcon(options.profile('direct').color, current.color);
+    icon = await drawIcon(options.profile('direct').color, current.color);
   }
 
   tabs.resetAll({
@@ -486,12 +586,17 @@ function encodeError(obj: any): any {
     if (storageWrapper.get('omega.local.refreshOnProfileChange') === 'false') return;
 
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-      const url = tabs[0]?.url;
+      const activeTab = tabs[0];
+      const url = activeTab?.pendingUrl || activeTab?.url;
       if (!url) return;
       if (url.substr(0, 6) === 'chrome') return;
       if (url.substr(0, 6) === 'about:') return;
       if (url.substr(0, 4) === 'moz-') return;
-      chrome.tabs.reload(tabs[0].id!, { bypassCache: true });
+      if (activeTab?.pendingUrl) {
+        chrome.tabs.update(activeTab.id!, { url });
+      } else {
+        chrome.tabs.reload(activeTab!.id!, { bypassCache: true });
+      }
     });
   }
 
@@ -533,6 +638,9 @@ chrome.runtime.onMessage.addListener(
       if (request.method === 'getState') {
         target = state;
         method = state.get;
+      } else if (request.method === 'setState') {
+        target = state;
+        method = state.set;
       } else {
         target = options;
         method = target[request.method];

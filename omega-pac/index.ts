@@ -4,6 +4,7 @@ const Profiles = require('./src/profiles');
 const RuleList = require('./src/rule_list');
 const ShexpUtils = require('./src/shexp_utils');
 const utils = require('./src/utils');
+const url = require('url');
 
 // Export with explicit typing
 export {
@@ -17,5 +18,12 @@ export {
 // Re-export utils
 export const Revision = utils.Revision;
 export const AttachedCache = utils.AttachedCache;
-export const parseUrl = utils.parseUrl;
+export const getBaseDomain = utils.getBaseDomain;
+export const wildcardForDomain = utils.wildcardForDomain;
+export const wildcardForUrl = utils.wildcardForUrl;
+export const Url = {
+  parse: url.parse,
+  format: url.format,
+  resolve: url.resolve
+};
 

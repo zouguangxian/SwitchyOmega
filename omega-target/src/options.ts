@@ -5,6 +5,7 @@ import Storage from './storage';
 import * as OmegaPac from 'omega-pac';
 import * as jsondiffpatch from 'jsondiffpatch';
 import OptionsSync from './options_sync';
+import defaultOptions from './default_options';
 import type {
   Profile,
   SwitchProfile,
@@ -462,7 +463,7 @@ class Options {
    * @returns The default options.
    */
   getDefaultOptions(): OmegaOptions {
-    return require('./default_options')();
+    return defaultOptions();
   }
 
   /**

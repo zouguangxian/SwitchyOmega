@@ -102,8 +102,9 @@
   }
 
   function updateOtherItems(state) {
-    var hasValidResults = state && state.validResultProfiles &&
-      state.validResultProfiles.length;
+    if (!state) return;
+    var validProfiles = state.validResultProfiles || [];
+    var hasValidResults = validProfiles.length > 0;
     if (!hasValidResults || !state.currentProfileCanAddRule) {
       document.querySelector('.om-nav-addrule').classList.add('om-hidden');
       document.getElementById('js-addrule').href = '#';
@@ -120,6 +121,8 @@
     });
 
   function addProfilesItems(state) {
+    if (!state || !state.availableProfiles) return;
+    var availableProfiles = state.availableProfiles;
     var systemProfileDisp = document.getElementById('js-system');
     var directProfileDisp = document.getElementById('js-direct');
     var currentProfileClass = 'om-active';
@@ -131,25 +134,28 @@
       directProfileDisp.parentElement.classList.add(currentProfileClass);
     }
 
-    systemProfileDisp.setAttribute('title',
-      state.availableProfiles['+system'].desc);
-    directProfileDisp.setAttribute('title',
-      state.availableProfiles['+direct'].desc);
+    var systemProfile = availableProfiles['+system'];
+    if (systemProfile) {
+      systemProfileDisp.setAttribute('title', systemProfile.desc || '');
+    }
+    var directProfile = availableProfiles['+direct'];
+    if (directProfile) {
+      directProfileDisp.setAttribute('title', directProfile.desc || '');
+    }
 
     var profilesEnd = document.getElementById('js-profiles-end');
     var profilesContainer = profilesEnd.parentElement;
     var profileCount = 0;
     var charCodeUnderscore = '_'.charCodeAt(0)
-    var profiles = Object.keys(state.availableProfiles).map(function(key) {
-      return state.availableProfiles[key];
+    var profiles = Object.keys(availableProfiles).map(function(key) {
+      return availableProfiles[key];
     }).sort(compareProfile);
     profiles.forEach(function(profile) {
       if (profile.builtin) return;
       if (profile.name.charCodeAt(0) === charCodeUnderscore) return;
       profileCount++;
 
-      var profileDisp = createMenuItemForProfile(profile,
-        state.availableProfiles);
+      var profileDisp = createMenuItemForProfile(profile, availableProfiles);
       var link = profileDisp.querySelector('a');
       link.id = 'js-profile-' + profileCount;
       link.addEventListener('click', function() {
@@ -228,19 +234,26 @@
 
   function createTempRuleDropdown() {
     var ul = document.createElement('ul');
-    var state = OmegaPopup.state;
+    var state = OmegaPopup.state || {};
+    var availableProfiles = state.availableProfiles || {};
     var pageInfo = OmegaPopup.pageInfo;
+    if (!pageInfo || !pageInfo.domain) {
+      return ul;
+    }
 
-    var profiles = state.validResultProfiles.map(function(name) {
-      return state.availableProfiles['+' + name];
+    var validProfiles = state.validResultProfiles || [];
+    var profiles = validProfiles.map(function(name) {
+      return availableProfiles['+' + name];
+    }).filter(function(profile) {
+      return !!profile;
     }).sort(compareProfile);
     profiles.forEach(function(profile) {
       if (profile.name.indexOf('__') === 0) return;
       if ((profile.name === OmegaPopup.state.currentProfileName) &&
         (!pageInfo.tempRuleProfileName) &&
-        (state.validResultProfiles.length > 1)
+        (validProfiles.length > 1)
       ) return;
-      var li = createMenuItemForProfile(profile, state.availableProfiles);
+      var li = createMenuItemForProfile(profile, availableProfiles);
       var link = li.querySelector('a');
       link.addEventListener('click', function() {
         $script.ready('om-main', function() {
@@ -257,16 +270,20 @@
 
   function createDefaultProfileDropdown(profile) {
     var ul = document.createElement('ul');
-    var state = OmegaPopup.state;
-    var profiles = profile.validResultProfiles.map(function(name) {
-      return state.availableProfiles['+' + name];
+    var state = OmegaPopup.state || {};
+    var availableProfiles = state.availableProfiles || {};
+    var profileValidResults = profile.validResultProfiles || [];
+    var profiles = profileValidResults.map(function(name) {
+      return availableProfiles['+' + name];
+    }).filter(function(resultProfile) {
+      return !!resultProfile;
     }).sort(compareProfile);
     profiles.forEach(function(resultProfile) {
       if (resultProfile.name.indexOf('__') === 0) return;
       if ((resultProfile === profile.currentProfileName) &&
-        (profile.validResultProfiles.length > 1)
+        (profileValidResults.length > 1)
       ) return;
-      var li = createMenuItemForProfile(resultProfile, state.availableProfiles);
+      var li = createMenuItemForProfile(resultProfile, availableProfiles);
       var link = li.querySelector('a');
       link.addEventListener('click', function() {
         $script.ready('om-main', function() {

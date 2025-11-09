@@ -21,7 +21,7 @@ function initCanvas() {
   if (!canvas) {
     canvas = document.getElementById('canvas-icon') as HTMLCanvasElement;
     if (canvas) {
-      drawContext = canvas.getContext('2d');
+      drawContext = canvas.getContext('2d', { willReadFrequently: true });
     }
   }
 }

@@ -5,6 +5,10 @@ declare const angular: any;
 
 (window as any).UglifyJS_NoUnsafeEval = true;
 
+if (typeof (window as any).browser === 'undefined' && typeof chrome !== 'undefined') {
+  (window as any).browser = chrome;
+}
+
 $script('lib/angular-loader/angular-loader.min.js', 'angular-loader');
 $script('lib/jquery/jquery.min.js', 'jquery');
 $script('js/omega_pac.min.js', 'omega-pac');
@@ -36,6 +40,7 @@ $script.ready(['angular-loader'], () => {
     'lib/angular-bootstrap/ui-bootstrap-tpls.min.js',
     'lib/ngprogress/ngProgress.min.js',
     'lib/angular-ui-sortable/sortable.min.js',
+    'lib/angular-ui-utils/ui-utils.min.js',
     'lib/angular-ui-utils/validate.min.js',
     'lib/jsondiffpatch/jsondiffpatch.min.js',
     'lib/angular-spectrum-colorpicker/angular-spectrum-colorpicker.min.js'
