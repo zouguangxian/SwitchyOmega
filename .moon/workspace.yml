@@ -1,0 +1,5 @@
+# https://moonrepo.dev/docs/config/workspace
+$schema: './cache/schemas/workspace.json'
+
+projects:
+  - 'omega-*'
