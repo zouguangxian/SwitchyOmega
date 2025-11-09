@@ -30,3 +30,14 @@ d
 	# https://github.com/ohmyzsh/ohmyzsh/issues/7426
 	echo 'export LANG=en_US.UTF-8' >> $HOME/.zshrc
 EOF
+
+# Install node and moon
+RUN <<-'EOF' bash
+	set -eu -o pipefail
+    bash <(curl -fsSL https://moonrepo.dev/install/proto.sh) --yes --shell=zsh
+
+	~/.proto/bin/proto install moon 1
+	~/.proto/bin/proto install node 24
+	~/.proto/bin/proto install npm 11
+	~/.proto/bin/proto install yarn 4
+EOF
