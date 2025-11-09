@@ -59,10 +59,13 @@ function callBackground(method, args, cb) {
     payload,
     MAX_RETRIES,
     function(response) {
-      if (response && response.error) {
+      if (!response) {
+        return cb && cb(new Error('Empty response from background'))
+      }
+      if (response.error) {
         return cb && cb(response.error)
       }
-      return cb && cb(null, response ? response.result : undefined)
+      return cb && cb(null, response.result)
     },
     function(error) {
       return cb && cb(error)
@@ -74,19 +77,12 @@ var requestInfoCallback = null;
 
 OmegaTargetPopup = {
   getState: function (keys, cb) {
-    if (typeof localStorage === 'undefined' || !localStorage.length) {
-      callBackground('getState', [keys], cb);
-      return;
-    }
-    var results = {};
-    keys.forEach(function(key) {
-      try {
-        results[key] = JSON.parse(localStorage['omega.local.' + key]);
-      } catch (_) {
-        return null;
-      }
-    });
-    if (cb) cb(null, results);
+    callBackground('getState', [keys], cb);
+  },
+  setState: function (name, value, cb) {
+    var payload = {};
+    payload[name] = value;
+    callBackground('setState', [payload], cb);
   },
   applyProfile: function (name, cb) {
     callBackgroundNoReply('applyProfile', [name], cb);
@@ -114,10 +110,16 @@ OmegaTargetPopup = {
       if (cb) return cb();
     });
   },
+  addCondition: function(condition, profileName, cb){
+    callBackground('addCondition', [condition, profileName], cb);
+  },
+  getTempRules: function(cb){
+    callBackground('getTempRules', [], cb);
+  },
   getActivePageInfo: function(cb) {
     chrome.tabs.query({active: true, lastFocusedWindow: true}, function (tabs) {
-      if (tabs.length === 0 || !tabs[0].url) return cb();
-      var args = {tabId: tabs[0].id, url: tabs[0].url};
+      if (tabs.length === 0 || !(tabs[0].pendingUrl || tabs[0].url)) return cb();
+      var args = {tabId: tabs[0].id, url: tabs[0].pendingUrl || tabs[0].url};
       callBackground('getPageInfo', [args], cb)
     });
   },

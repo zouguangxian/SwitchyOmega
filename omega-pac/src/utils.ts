@@ -124,3 +124,7 @@ export function wildcardForUrl(url: string): string {
   return wildcardForDomain(hostname);
 }
 
+export function getSubdomain(url: string): string | null {
+  return tld.getSubdomain(url) ?? null;
+}
+

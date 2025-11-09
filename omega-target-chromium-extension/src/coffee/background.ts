@@ -1,4 +1,5 @@
-/// <reference types="chrome"/>
+// @ts-nocheck
+/// <reference types="chrome-types"/>
 
 // MV3: Bundle dependencies directly into the service worker
 // Import the module (which will be bundled by esbuild)

@@ -19,6 +19,7 @@ export {
 export const Revision = utils.Revision;
 export const AttachedCache = utils.AttachedCache;
 export const getBaseDomain = utils.getBaseDomain;
+export const getSubdomain = utils.getSubdomain;
 export const wildcardForDomain = utils.wildcardForDomain;
 export const wildcardForUrl = utils.wildcardForUrl;
 export const Url = {

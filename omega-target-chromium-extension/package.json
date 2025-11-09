@@ -4,10 +4,10 @@
   "private": true,
   "main": "./index",
   "devDependencies": {
-    "@types/chrome": "^0.0.246",
     "@types/node": "^18.0.0",
     "buffer": "^6.0.3",
     "chai": "~1.9.1",
+    "chrome-types": "^0.1.286",
     "esbuild": "^0.20.0",
     "fast-glob": "^3.3.2",
     "po2json": "^0.3.2",

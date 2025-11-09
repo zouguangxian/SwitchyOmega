@@ -119,11 +119,20 @@
       isValidResultProfile['+' + name] = true;
     });
 
+  function createGlobeIcon(targetEl, color) {
+    var el = document.createElement('span');
+    el.className = 'glyphicon glyphicon-globe';
+    el.style.color = color || '';
+    targetEl.appendChild(el);
+  }
+
   function addProfilesItems(state) {
+    if (!state || !state.availableProfiles) return;
+    var availableProfiles = state.availableProfiles;
     var systemProfileDisp = document.getElementById('js-system');
     var directProfileDisp = document.getElementById('js-direct');
-    var systemProfile = state.availableProfiles['+system'];
-    var directProfile = state.availableProfiles['+direct'];
+    var systemProfile = availableProfiles['+system'];
+    var directProfile = availableProfiles['+direct'];
     var currentProfileClass = 'om-active';
     if (state.isSystemProfile) {
       systemProfileDisp.parentElement.classList.add('om-active');
@@ -133,17 +142,27 @@
       directProfileDisp.parentElement.classList.add(currentProfileClass);
     }
 
-    systemProfileDisp.setAttribute('title',
-      systemProfile.desc || '');
-    directProfileDisp.setAttribute('title',
-      directProfile.desc || '');
+    if (systemProfile) {
+      if (!systemProfileDisp.querySelector('.glyphicon')) {
+        createGlobeIcon(systemProfileDisp, systemProfile.color);
+      }
+      systemProfileDisp.setAttribute('title',
+        systemProfile.desc || '');
+    }
+    if (directProfile) {
+      if (!directProfileDisp.querySelector('.glyphicon')) {
+        createGlobeIcon(directProfileDisp, directProfile.color);
+      }
+      directProfileDisp.setAttribute('title',
+        directProfile.desc || '');
+    }
 
     var profilesEnd = document.getElementById('js-profiles-end');
     var profilesContainer = profilesEnd.parentElement;
     var profileCount = 0;
     var charCodeUnderscore = '_'.charCodeAt(0)
-    var profiles = Object.keys(state.availableProfiles).map(function(key) {
-      return state.availableProfiles[key];
+    var profiles = Object.keys(availableProfiles).map(function(key) {
+      return availableProfiles[key];
     }).sort(compareProfile);
     profiles.forEach(function(profile) {
       if (profile.builtin) return;
@@ -151,7 +170,7 @@
       profileCount++;
 
       var profileDisp = createMenuItemForProfile(profile,
-        state.availableProfiles);
+        availableProfiles);
       var link = profileDisp.querySelector('a');
       link.id = 'js-profile-' + profileCount;
       link.addEventListener('click', function() {

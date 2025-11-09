@@ -158,7 +158,7 @@ class ChromeOptions extends OmegaTarget.Options {
           const changes: Record<string, any> = {};
           changes['-enableQuickSwitch'] = info.checked;
           const setOptions = this._setOptions(changes);
-
+          
           if (info.checked && !this._quickSwitchCanEnable) {
             setOptions.then(() => {
               chrome.tabs.create({
@@ -416,13 +416,10 @@ class ChromeOptions extends OmegaTarget.Options {
       });
     });
 
-    const getInspectUrlPromise = this._state.get({ inspectUrl: '' }) as Promise<{ inspectUrl?: string }>;
+    const getInspectUrl = this._state.get({ inspectUrl: '' });
     
-    return Promise.all([getBadge, getInspectUrlPromise] as const).then(([badge, inspectData]) => {
-      const inspectUrl =
-        inspectData && typeof inspectData.inspectUrl === 'string'
-          ? inspectData.inspectUrl
-          : undefined;
+    return Promise.all([getBadge, getInspectUrl]).then(([badge, inspectData]) => {
+      const inspectUrl = inspectData?.inspectUrl;
       if (badge === '#' && inspectUrl) {
         url = inspectUrl;
       } else {
@@ -446,10 +443,10 @@ class ChromeOptions extends OmegaTarget.Options {
       if (url.substr(0, 4) === 'moz-') return result;
       
       // Use native URL API
-      const parsedUrl = new URL(url);
-      const domain = OmegaPac.getBaseDomain(parsedUrl.hostname);
-      const getSubdomain = (OmegaPac as any).getSubdomain as (input: string) => string | null | undefined;
-      const subdomain = typeof getSubdomain === 'function' ? getSubdomain(url) : null;
+      const domain = OmegaPac.getBaseDomain(new URL(url).hostname);
+      const subdomain = typeof (OmegaPac as any).getSubdomain === 'function'
+        ? (OmegaPac as any).getSubdomain(url)
+        : null;
 
       return {
         url,

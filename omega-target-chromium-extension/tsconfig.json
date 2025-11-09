@@ -14,7 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["chrome", "node"]
+    "types": ["chrome-types", "node"]
   },
   "include": [
     "src/**/*"
