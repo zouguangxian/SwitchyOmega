@@ -1,7 +1,5 @@
 /** @module omega-target-chromium-extension/external_api */
 
-import * as OmegaTarget from 'omega-target';
-const OmegaPac = OmegaTarget.OmegaPac;
 import ChromePort from './chrome_port';
 
 class ExternalApi {

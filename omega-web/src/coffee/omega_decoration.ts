@@ -1,7 +1,6 @@
 /** @module omega-web/omega_decoration */
 
 declare const angular: any;
-declare const OmegaPac: any;
 
 const orderForType: Record<string, number> = {
   FixedProfile: -2000,

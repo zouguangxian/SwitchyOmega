@@ -1,7 +1,8 @@
 /** @module omega-target-chromium-extension/storage */
 
-import { chromeApiPromisify } from './chrome_api';
 import * as OmegaTarget from 'omega-target';
+
+import { chromeApiPromisify } from './chrome_api';
 
 type StorageKeys = string | string[] | Record<string, any> | null;
 

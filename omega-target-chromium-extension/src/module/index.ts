@@ -1,13 +1,13 @@
 /** @module omega-target-chromium-extension */
 
-import Storage from './storage';
-import Options from './options';
-import ChromeTabs from './tabs';
-import SwitchySharp from './switchysharp';
 import ExternalApi from './external_api';
-import WebRequestMonitor from './web_request_monitor';
 import Inspect from './inspect';
+import Options from './options';
 import * as proxy from './proxy';
+import Storage from './storage';
+import SwitchySharp from './switchysharp';
+import ChromeTabs from './tabs';
+import WebRequestMonitor from './web_request_monitor';
 
 // Export all module components
 export {

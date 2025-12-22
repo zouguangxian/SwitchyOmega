@@ -1,5 +1,6 @@
-import * as esbuild from 'esbuild';
 import * as fs from 'fs';
+
+import * as esbuild from 'esbuild';
 
 const isDev = process.argv.includes('--watch');
 const isProd = process.env.NODE_ENV === 'production';

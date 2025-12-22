@@ -1,9 +1,9 @@
 /** @module omega-target-chromium-extension/proxy */
 
-import ListenerProxyImpl from './proxy_impl_listener';
-import SettingsProxyImpl from './proxy_impl_settings';
-import ScriptProxyImpl from './proxy_impl_script';
 import ProxyImpl from './proxy_impl';
+import ListenerProxyImpl from './proxy_impl_listener';
+import ScriptProxyImpl from './proxy_impl_script';
+import SettingsProxyImpl from './proxy_impl_settings';
 
 export const proxyImpls = [ListenerProxyImpl, ScriptProxyImpl, SettingsProxyImpl];
 

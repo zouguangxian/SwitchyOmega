@@ -341,15 +341,12 @@ angular.module('omega').controller('MasterCtrl', [
         omegaTarget
           .updateProfile(name, 'bypass_cache')
           .then((results: any) => {
-            let success = 0;
             let error = 0;
             for (const profileName in results) {
               if (results.hasOwnProperty(profileName)) {
                 const result = results[profileName];
                 if (result instanceof Error) {
                   error++;
-                } else {
-                  success++;
                 }
               }
             }

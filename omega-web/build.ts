@@ -1,10 +1,11 @@
+import { cp, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
+import path from 'path';
+
 import autoprefixer from 'autoprefixer';
 import chokidar from 'chokidar';
 import * as esbuild from 'esbuild';
 import fg from 'fast-glob';
-import { cp, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import less from 'less';
-import path from 'path';
 import postcss from 'postcss';
 import pug from 'pug';
 

@@ -1,6 +1,7 @@
 /** @module omega-target-chromium-extension/proxy/proxy_impl_listener */
 
 import * as OmegaTarget from 'omega-target';
+
 const OmegaPac = OmegaTarget.OmegaPac;
 // The browser only accepts native promises as onRequest return values.
 // DO NOT USE Bluebird Promises here!

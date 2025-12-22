@@ -41,7 +41,7 @@ import { storageWrapper } from '../module/storage_wrapper';
       const extensionVersion = (globalThis as any).OmegaDebug.getExtensionVersion();
       const env = {
         extensionVersion,
-        projectVersion: extensionVersion,
+        projectVersion,
         userAgent: navigator.userAgent,
       };
 

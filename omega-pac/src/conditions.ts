@@ -1,11 +1,12 @@
-import type { UrlWithStringQuery } from 'url';
 import { parse as parseUrl, format as formatUrl } from 'url';
 
-import * as U2 from 'uglify-js';
 import * as IP from 'ip-address';
+import * as U2 from 'uglify-js';
 
 import { shExp2RegExp, escapeSlash } from './shexp_utils';
 import { AttachedCache } from './utils';
+
+import type { UrlWithStringQuery } from 'url';
 
 type Condition = {
   conditionType: string;

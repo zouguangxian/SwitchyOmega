@@ -12,13 +12,6 @@ type ParsedRule = {
   note?: string | null;
 };
 
-type Parser = (
-  text: string,
-  matchProfileName: string,
-  defaultProfileName: string | undefined,
-  args?: Record<string, any>,
-) => ParsedRule[];
-
 const RuleList: Record<string, any> = {
   AutoProxy: {
     magicPrefix: 'W0F1dG9Qcm94',
@@ -111,11 +104,9 @@ const RuleList: Record<string, any> = {
 
     directReferenceSet({
       ruleList,
-      matchProfileName,
       defaultProfileName,
     }: {
       ruleList: string;
-      matchProfileName?: string;
       defaultProfileName?: string;
     }): Record<string, string> | undefined {
       const text = ruleList.trim();

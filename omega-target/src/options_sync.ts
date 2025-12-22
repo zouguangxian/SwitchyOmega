@@ -1,10 +1,11 @@
 /** @module omega-target/options_sync */
 
-import Storage, { WriteOperations } from './storage';
-import Log from './log';
-import { Revision } from 'omega-pac';
 import * as jsondiffpatch from 'jsondiffpatch';
 import { TokenBucket } from 'limiter';
+import { Revision } from 'omega-pac';
+
+import Log from './log';
+import Storage, { WriteOperations } from './storage';
 
 class OptionsSync {
   static TokenBucket = TokenBucket;

@@ -1,20 +1,21 @@
 /** @module omega-target/options */
 
-import Log from './log';
-import Storage from './storage';
-import * as OmegaPac from 'omega-pac';
 import * as jsondiffpatch from 'jsondiffpatch';
-import OptionsSync from './options_sync';
+import * as OmegaPac from 'omega-pac';
+
 import defaultOptions from './default_options';
+import Log from './log';
+import OptionsSync from './options_sync';
+import Storage from './storage';
+
+
 import type {
   Profile,
   SwitchProfile,
   SwitchRule,
   OmegaOptions,
   ApplyProfileOptions,
-  ProxyImplFeatures,
   ProfileUpdateResult,
-  UpdateProfileOptions,
   Mutable,
 } from './types';
 

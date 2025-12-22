@@ -1,13 +1,18 @@
 /** @module omega-target-chromium-extension/options */
 
-import * as OmegaTarget from 'omega-target';
-import type { Profile, SwitchRule } from 'omega-target';
-const OmegaPac = OmegaTarget.OmegaPac;
 import * as querystring from 'querystring';
-import WebRequestMonitor from './web_request_monitor';
+
+import * as OmegaTarget from 'omega-target';
+
+import type { Profile } from 'omega-target';
+
+
 import ChromePort from './chrome_port';
 import fetchUrl from './fetch_url';
 import { storageWrapper } from './storage_wrapper';
+import WebRequestMonitor from './web_request_monitor';
+
+const OmegaPac = OmegaTarget.OmegaPac;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, errorFactory?: () => Error): Promise<T> {
   return new Promise<T>((resolve, reject) => {

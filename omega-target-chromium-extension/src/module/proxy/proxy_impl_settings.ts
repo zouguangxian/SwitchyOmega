@@ -1,6 +1,7 @@
 /** @module omega-target-chromium-extension/proxy/proxy_impl_settings */
 
 import * as OmegaTarget from 'omega-target';
+
 const OmegaPac = OmegaTarget.OmegaPac;
 import { chromeApiPromisify } from '../chrome_api';
 import ProxyImpl from './proxy_impl';

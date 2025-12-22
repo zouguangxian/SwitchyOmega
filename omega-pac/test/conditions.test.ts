@@ -259,22 +259,22 @@ describe('Conditions', function () {
       return testCond(cond, 'http://127.0.0.2:8080/', !'match');
     });
     it('should correctly support IPv6 canonicalization', function () {
-      var cond, result;
+      var cond, _result;
       cond = {
         conditionType: 'BypassCondition',
         pattern: 'http://[0:0::1]:8080',
       };
-      result = Conditions.analyze(cond);
+      _result = Conditions.analyze(cond);
       testCond(cond, 'http://[::1]:8080/', 'match');
       return testCond(cond, 'http://[1::1]:8080/', !'match');
     });
     it('should correctly support IPv6 canonicalization 2', function () {
-      var cond, result;
+      var cond, _result;
       cond = {
         conditionType: 'BypassCondition',
         pattern: '[::1]',
       };
-      result = Conditions.analyze(cond);
+      _result = Conditions.analyze(cond);
       testCond(cond, 'http://[::1]:8080/', 'match');
       return testCond(cond, 'http://[1::1]:8080/', !'match');
     });

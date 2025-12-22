@@ -1,13 +1,12 @@
 /** @module omega-target-chromium-extension/proxy/proxy_impl */
 
 import * as OmegaTarget from 'omega-target';
+
 import type { Profile, OmegaOptions, VirtualProfile } from 'omega-target';
-const OmegaPac = OmegaTarget.OmegaPac;
+
 import ProxyAuth from './proxy_auth';
 
-interface ProxyImplFeatures {
-  readonly [key: string]: boolean;
-}
+const OmegaPac = OmegaTarget.OmegaPac;
 
 class ProxyImpl {
   log: typeof OmegaTarget.Log;

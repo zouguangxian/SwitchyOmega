@@ -1,12 +1,13 @@
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
+
+import Log from '../src/log';
 import OptionsSync from '../src/options_sync';
 import Storage from '../src/storage';
-import Log from '../src/log';
 
 chai.use(sinonChai);
-const should = chai.should();
+chai.should();
 
 describe('OptionsSync', () => {
   before(() => {

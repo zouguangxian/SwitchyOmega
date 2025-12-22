@@ -1,8 +1,5 @@
 /** @module omega-target-chromium-extension/inspect */
 
-import * as OmegaTarget from 'omega-target';
-const OmegaPac = OmegaTarget.OmegaPac;
-
 type OnInspectCallback = (url: string, tab: chrome.tabs.Tab) => void;
 
 class Inspect {

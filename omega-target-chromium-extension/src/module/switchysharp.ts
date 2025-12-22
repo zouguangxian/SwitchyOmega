@@ -1,7 +1,7 @@
 /** @module omega-target-chromium-extension/switchysharp */
 
 import * as OmegaTarget from 'omega-target';
-const OmegaPac = OmegaTarget.OmegaPac;
+
 import ChromePort from './chrome_port';
 
 class SwitchySharp {

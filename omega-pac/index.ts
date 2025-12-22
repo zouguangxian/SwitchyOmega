@@ -1,10 +1,11 @@
+const url = require('url');
+
 const Conditions = require('./src/conditions');
 const PacGenerator = require('./src/pac_generator');
 const Profiles = require('./src/profiles');
 const RuleList = require('./src/rule_list');
 const ShexpUtils = require('./src/shexp_utils');
 const utils = require('./src/utils');
-const url = require('url');
 
 // Export with explicit typing
 export { Conditions, PacGenerator, Profiles, RuleList, ShexpUtils };

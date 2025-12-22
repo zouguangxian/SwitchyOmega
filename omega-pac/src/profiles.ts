@@ -4,7 +4,6 @@ var AST_Raw,
   Conditions,
   Revision,
   RuleList,
-  ShexpUtils,
   U2,
   exports,
   ref1,
@@ -23,8 +22,6 @@ var AST_Raw,
   hasProp = {}.hasOwnProperty;
 
 U2 = require('uglify-js');
-
-ShexpUtils = require('./shexp_utils');
 
 Conditions = require('./conditions');
 
@@ -791,8 +788,7 @@ module.exports = exports = {
         return formatHandler.parse(ruleList, profile.matchProfileName, profile.defaultProfileName);
       },
       match: function (profile, request) {
-        var result;
-        return (result = exports.match(profile, request, 'SwitchProfile'));
+        return exports.match(profile, request, 'SwitchProfile');
       },
       compile: function (profile) {
         return exports.compile(profile, 'SwitchProfile');

@@ -1,4 +1,5 @@
 import { parse as parseUrl } from 'url';
+
 import * as tld from 'tldjs';
 
 export const Revision = {

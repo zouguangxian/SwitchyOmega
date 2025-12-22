@@ -1,7 +1,8 @@
 import js from '@eslint/js';
-import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 import prettier from 'eslint-config-prettier';
+import importPlugin from 'eslint-plugin-import';
 
 /** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
@@ -29,6 +30,9 @@ export default [
   {
     files: ['**/*.{js,mjs,cjs}'],
     ...js.configs.recommended,
+    plugins: {
+      import: importPlugin,
+    },
     languageOptions: {
       globals: {
         window: 'readonly',
@@ -39,6 +43,31 @@ export default [
         browser: 'readonly',
         globalThis: 'readonly',
       },
+    },
+    rules: {
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'object', 'type'],
+          pathGroups: [
+            {
+              pattern: 'omega-*',
+              group: 'internal',
+              position: 'before',
+            },
+            {
+              pattern: '@/**',
+              group: 'parent',
+              position: 'before',
+            },
+          ],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: false,
+          },
+        },
+      ],
     },
   },
   {
@@ -52,11 +81,46 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
+      import: importPlugin,
     },
     rules: {
       // Keep it low-friction initially; we can tighten later.
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': 'warn',
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'object', 'type'],
+          pathGroups: [
+            {
+              pattern: 'omega-*',
+              group: 'internal',
+              position: 'before',
+            },
+            {
+              pattern: '@/**',
+              group: 'parent',
+              position: 'before',
+            },
+          ],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: false,
+          },
+        },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          args: 'none',
+          argsIgnorePattern: '^_|^(args|argv)$',
+          caughtErrors: 'all',
+          caughtErrorsIgnorePattern: '^_|^(e|err|error)$',
+          destructuredArrayIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'off',
     },
   },

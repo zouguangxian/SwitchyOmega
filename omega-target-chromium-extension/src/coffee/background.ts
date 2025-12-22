@@ -3,10 +3,10 @@
 
 // MV3: Bundle dependencies directly into the service worker
 // Import the module (which will be bundled by esbuild)
-import * as OmegaTargetChromium from '../module';
 import * as OmegaPacImport from 'omega-pac';
+
+import * as OmegaTargetChromium from '../module';
 import { offscreenManager } from '../module/offscreen_manager';
-import { setQuickSwitchHandler } from './background_preload';
 import { storageWrapper, localStorageCompat } from '../module/storage_wrapper';
 
 type OmegaCanvasContext = OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
@@ -38,6 +38,21 @@ function drawOmegaSymbol(
 }
 
 const ICON_SIZES = [16, 19, 24, 32, 38] as const;
+
+// Error encoding for messaging (used by async message handlers)
+function encodeError(obj: any): any {
+  if (obj instanceof Error) {
+    return {
+      _error: 'error',
+      name: obj.name,
+      message: obj.message,
+      stack: obj.stack,
+      original: obj,
+    };
+  } else {
+    return obj;
+  }
+}
 
 let localCanvas: OffscreenCanvas | null = null;
 let localDrawContext: OffscreenCanvasRenderingContext2D | null = null;
@@ -547,21 +562,6 @@ async function initializeExtension() {
     });
   };
 
-  // Error encoding for messaging
-  function encodeError(obj: any): any {
-    if (obj instanceof Error) {
-      return {
-        _error: 'error',
-        name: obj.name,
-        message: obj.message,
-        stack: obj.stack,
-        original: obj,
-      };
-    } else {
-      return obj;
-    }
-  }
-
   // Refresh active page if enabled (uses storageWrapper which is now initialized)
   function refreshActivePageIfEnabled(): void {
     if (storageWrapper.get('omega.local.refreshOnProfileChange') === 'false') return;
@@ -586,7 +586,7 @@ async function initializeExtension() {
 
 // Module-level variables (initialized asynchronously)
 let options: any;
-let tabs: any;
+let _tabs: any;
 let state: any;
 let refreshActivePageIfEnabled: () => void;
 
@@ -594,7 +594,7 @@ let refreshActivePageIfEnabled: () => void;
 const initPromise = initializeExtension()
   .then((result) => {
     options = result.options;
-    tabs = result.tabs;
+    _tabs = result.tabs;
     state = result.state;
     refreshActivePageIfEnabled = result.refreshActivePageIfEnabled;
     return result;

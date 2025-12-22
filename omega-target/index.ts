@@ -1,11 +1,13 @@
 /** @module omega-target */
 
-import Log from './src/log';
-import Storage from './src/storage';
+import * as OmegaPac from 'omega-pac';
+
 import BrowserStorage from './src/browser_storage';
+import Log from './src/log';
 import Options from './src/options';
 import OptionsSync from './src/options_sync';
-import * as OmegaPac from 'omega-pac';
+import Storage from './src/storage';
+
 
 export { Log, Storage, BrowserStorage, Options, OptionsSync, OmegaPac };
 
