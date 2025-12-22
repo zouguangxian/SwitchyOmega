@@ -43,6 +43,51 @@ function findChromiumExecutable() {
   return null;
 }
 
+function isLikelySnapWrapper(executablePath) {
+  // Ubuntu sometimes provides a stub script that requires snap.
+  try {
+    const content = fs.readFileSync(executablePath, 'utf8');
+    return (
+      content.includes('requires the chromium snap to be installed') ||
+      content.includes('snap install chromium')
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function ensureChromeForTesting(repoRoot) {
+  if (process.env.PUPPETEER_SKIP_DOWNLOAD === '1') {
+    fail(
+      `No usable Chrome found and PUPPETEER_SKIP_DOWNLOAD=1 is set. Install Chrome/Chromium or unset PUPPETEER_SKIP_DOWNLOAD.`,
+    );
+  }
+
+  const cacheDir = process.env.PUPPETEER_CACHE_DIR || path.join(repoRoot, '.cache', 'puppeteer');
+  fs.mkdirSync(cacheDir, { recursive: true });
+
+  const { install, Browser, BrowserTag, detectBrowserPlatform, resolveBuildId } =
+    await import('@puppeteer/browsers');
+
+  const platform = detectBrowserPlatform();
+  if (!platform) {
+    fail(`Could not detect browser platform for @puppeteer/browsers.`);
+  }
+
+  // Prefer Chromium because it has official Linux ARM builds; Chrome-for-Testing does not.
+  const buildId = await resolveBuildId(Browser.CHROMIUM, platform, BrowserTag.LATEST);
+  console.log(`📥 Downloading Chromium (${buildId}) to ${cacheDir}...`);
+  const installed = await install({
+    cacheDir,
+    browser: Browser.CHROMIUM,
+    buildId,
+    downloadProgressCallback: 'default',
+  });
+
+  ok(`Chrome for Testing installed: ${installed.executablePath}`);
+  return installed.executablePath;
+}
+
 async function sleep(ms) {
   await new Promise((r) => setTimeout(r, ms));
 }
@@ -71,12 +116,13 @@ async function run() {
     fail(`Missing build output at ${extensionPath}. Run: yarn build`);
   }
 
-  const executablePath = findChromiumExecutable();
+  let executablePath = findChromiumExecutable();
+  if (executablePath && isLikelySnapWrapper(executablePath)) {
+    console.warn(`⚠️ Ignoring snap wrapper executable: ${executablePath}`);
+    executablePath = null;
+  }
   if (!executablePath) {
-    fail(
-      `Could not find Chromium/Chrome. Set PUPPETEER_EXECUTABLE_PATH or install chromium.\n` +
-        `CI hint: sudo apt-get install -y chromium xvfb`,
-    );
+    executablePath = await ensureChromeForTesting(repoRoot);
   }
 
   const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'switchyomega-e2e-'));

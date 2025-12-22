@@ -53,17 +53,22 @@ jobs:
           set -euo pipefail
           yarn format:check
 
-      - name: Install Chromium + Xvfb (for extension E2E)
+      - name: Install Xvfb + Chrome runtime deps (for extension E2E)
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y chromium xvfb
+          sudo apt-get install -y \
+            xvfb \
+            libnss3 \
+            libatk-bridge2.0-0 \
+            libgtk-3-0 \
+            libgbm1 \
+            libxkbcommon0 \
+            libasound2
 
       - name: E2E (load MV3 unpacked extension)
         shell: bash
-        env:
-          PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
         run: |
           set -euo pipefail
           yarn test:e2e:ci

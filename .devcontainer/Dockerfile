@@ -5,7 +5,11 @@ FROM mcr.microsoft.com/devcontainers/base:1-noble
 RUN <<-'EOF' bash
 	set -eu -o pipefail
 	apt-get update
-	apt-get install -y --no-install-recommends ca-certificates curl shfmt
+	apt-get install -y --no-install-recommends \
+		ca-certificates \
+		curl \
+		shfmt \
+		xvfb
 	rm -rf /var/lib/apt/lists/*
 EOF
 
