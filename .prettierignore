@@ -1,0 +1,25 @@
+# Dependencies / vendor
+**/node_modules/**
+**/bower_components/**
+
+# Build outputs
+**/build/**
+**/dist/**
+**/*.min.js
+**/*.min.css
+**/*.map
+**/release.zip
+
+# Legacy snapshot (not part of modern toolchain)
+ZeroOmega/**
+
+# Legacy/generated sources
+omega-pac/src-js/**
+omega-pac/uglifyjs*.js
+omega-locales/**/*.po
+
+# Yarn
+.yarn/**
+.pnp.*
+
+

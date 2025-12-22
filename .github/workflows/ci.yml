@@ -39,4 +39,14 @@ jobs:
           set -euo pipefail
           yarn build
 
+      - name: Lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          yarn lint
 
+      - name: Format check
+        shell: bash
+        run: |
+          set -euo pipefail
+          yarn format:check
