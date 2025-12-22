@@ -1,12 +1,11 @@
-SwitchyOmega
-============
+# SwitchyOmega
 
 Manage and switch between multiple proxies quickly & easily.
 
 [![Translation status](https://hosted.weblate.org/widgets/switchyomega/-/svg-badge.svg)](https://hosted.weblate.org/engage/switchyomega/?utm_source=widget)
 
-Chromium Extension
-------------------
+## Chromium Extension
+
 The project is available as a Chromium Extension.
 
 You can try it on [Chrome Web Store](https://chrome.google.com/webstore/detail/padekgcemlokbadohgkifijomclgjgif),
@@ -14,8 +13,7 @@ or grab a packaged extension file (CRX) for offline installation on the [Release
 
 Please [report issues on the issue tracker.](https://github.com/FelisCatus/SwitchyOmega/issues)
 
-Firefox Addon (Experimental)
-----------------------------
+## Firefox Addon (Experimental)
 
 There is also an experimental WebExtension port, which allows installing in
 **Firefox Nightly Version >= 56**.
@@ -37,15 +35,16 @@ Build number AND build date should be mentioned somewhere in the issue.
 
 NOTE: PAC Profiles DO NOT work on Firefox due to AMO review policies. We will see what we can do.
 
-Development status
-------------------
+## Development status
 
 ## PAC generator
+
 This project contains a PAC generating module called `omega-pac`, which handles
 the profiles model and compile profiles into PAC scripts. This module is standalone
 and can be published to npm when the documentation is ready.
 
 ## Options manager
+
 The folder `omega-target` contains browser-independent logic for managing the
 options and applying profiles. Every public method is well documented in the comments.
 Functions related to browser are not included, and shall be implemented in subclasses
@@ -62,6 +61,7 @@ See the `omega-target-chromium-extension/omega_target_web.coffee` file for an
 example of such module.
 
 ## Targets
+
 The `omega-target-*` folders should contain environment-dependent code such as
 browser API calls.
 
@@ -99,6 +99,7 @@ SwitchyOmega uses TypeScript and a modern toolchain (tsup, esbuild) with Yarn wo
 ### Install
 
 **Requirements**
+
 - Node.js + Yarn (or install via **proto** for fully pinned versions)
 
 **Recommended (reproducible): proto**
@@ -107,6 +108,10 @@ Install [proto](https://moonrepo.dev/docs/proto) and run:
 
     proto install
     yarn install
+
+Or use the one-command bootstrap:
+
+    ./bootstrap
 
 **Install dependencies**
 
@@ -132,13 +137,14 @@ Load that folder as an unpacked extension in Chrome/Edge.
     # omega-target-chromium-extension: yarn watch
 
 **Build order**:
+
 1. `omega-pac` - PAC script generator
 2. `omega-target` - Options manager (produces `omega_target.min.js`)
 3. `omega-web` - Web UI (produces `build/` directory)
 4. `omega-target-chromium-extension` - Chrome extension (bundles everything)
 
-License
--------
+## License
+
 ![GPLv3](https://www.gnu.org/graphics/gplv3-127x51.png)
 
 SwitchyOmega is licensed under [GNU General Public License](https://www.gnu.org/licenses/gpl.html) Version 3 or later.
@@ -150,21 +156,19 @@ the Free Software Foundation, either version 3 of the License, or
 
 SwitchyOmega is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with SwitchyOmega.  If not, see <http://www.gnu.org/licenses/>.
+along with SwitchyOmega. If not, see <http://www.gnu.org/licenses/>.
 
-Notice
-------
+## Notice
 
 SwitchyOmega currently does not have a dedicated project homepage. `switchyomega.com` and similar webites are NOT affiliated with the SwitchyOmega project in any way, nor are they maintained by SwitchyOmega project members. Please refer to this Github repository and wiki for official information.
 
 SwitchyOmega is not cooperating with any proxy providers, VPN providers or ISPs at the moment. No advertisement is displayed in SwitchyOmega project or software. Proxy providers are welcome to recommend SwitchyOmega as part of the solution in tutorials, but it must be made clear that SwitchyOmega is an independent project, is not affiliated with the provider and therefore cannot provide any support on network connections or proxy technology.
 
-重要声明
---------
+## 重要声明
 
 SwitchyOmega 目前没有专门的项目主页。 `switchyomega.com` 等网站与 SwitchyOmega 项目并无任何关联，也并非由 SwitchyOmega 项目成员维护。一切信息请以 Github 上的项目和 wiki 为准。
 

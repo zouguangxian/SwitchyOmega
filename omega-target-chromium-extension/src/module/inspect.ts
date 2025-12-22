@@ -22,38 +22,34 @@ class Inspect {
 
     if (this._enabled) return;
 
-    const webResource = [
-      "http://*/*",
-      "https://*/*",
-      "ftp://*/*"
-    ];
+    const webResource = ['http://*/*', 'https://*/*', 'ftp://*/*'];
 
     chrome.contextMenus.create({
       id: 'inspectPage',
       title: chrome.i18n.getMessage('contextMenu_inspectPage') || 'Inspect Page',
       contexts: ['page'],
-      documentUrlPatterns: webResource
+      documentUrlPatterns: webResource,
     });
 
     chrome.contextMenus.create({
       id: 'inspectFrame',
       title: chrome.i18n.getMessage('contextMenu_inspectFrame') || 'Inspect Frame',
       contexts: ['frame'],
-      documentUrlPatterns: webResource
+      documentUrlPatterns: webResource,
     });
 
     chrome.contextMenus.create({
       id: 'inspectLink',
       title: chrome.i18n.getMessage('contextMenu_inspectLink') || 'Inspect Link',
       contexts: ['link'],
-      targetUrlPatterns: webResource
+      targetUrlPatterns: webResource,
     });
 
     chrome.contextMenus.create({
       id: 'inspectElement',
       title: chrome.i18n.getMessage('contextMenu_inspectElement') || 'Inspect Element',
       contexts: ['image', 'video', 'audio'],
-      targetUrlPatterns: webResource
+      targetUrlPatterns: webResource,
     });
 
     if (!this._onClickListener) {
@@ -66,7 +62,7 @@ class Inspect {
 
   disable(): void {
     if (!this._enabled) return;
-    
+
     for (const menuId in this.propForMenuItem) {
       if (this.propForMenuItem.hasOwnProperty(menuId)) {
         try {
@@ -85,18 +81,18 @@ class Inspect {
   }
 
   propForMenuItem: Record<string, string> = {
-    'inspectPage': 'pageUrl',
-    'inspectFrame': 'frameUrl',
-    'inspectLink': 'linkUrl',
-    'inspectElement': 'srcUrl'
+    inspectPage: 'pageUrl',
+    inspectFrame: 'frameUrl',
+    inspectLink: 'linkUrl',
+    inspectElement: 'srcUrl',
   };
 
   inspect(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab): void {
     if (!info.menuItemId) return;
-    
+
     const menuItemId = info.menuItemId as string;
     let url = (info as any)[this.propForMenuItem[menuItemId]];
-    
+
     if (!url && menuItemId === 'inspectPage' && tab) {
       url = tab.url;
     }
@@ -107,4 +103,3 @@ class Inspect {
 }
 
 export default Inspect;
-

@@ -54,7 +54,7 @@ const Conditions: any = {
     return {
       url: formatted,
       host: parsed.hostname ?? '',
-      scheme: (parsed.protocol ?? '').replace(':', '')
+      scheme: (parsed.protocol ?? '').replace(':', ''),
     };
   },
 
@@ -69,13 +69,18 @@ const Conditions: any = {
 
   analyze(condition: Condition): ConditionCache {
     return Conditions._condCache.get(condition, () => ({
-      analyzed: Conditions._handler(condition.conditionType).analyze.call(Conditions, condition)
+      analyzed: Conditions._handler(condition.conditionType).analyze.call(Conditions, condition),
     }));
   },
 
   match(condition: Condition, request: RequestInfo): boolean {
     const cache = Conditions.analyze(condition);
-    return Conditions._handler(condition.conditionType).match.call(Conditions, condition, request, cache);
+    return Conditions._handler(condition.conditionType).match.call(
+      Conditions,
+      condition,
+      request,
+      cache,
+    );
   },
 
   compile(condition: Condition): any {
@@ -98,9 +103,10 @@ const Conditions: any = {
       }
     }
     const strFn = handler.str;
-    const typeStr = typeof abbr === 'number'
-      ? handler.abbrs[(handler.abbrs.length + abbr) % handler.abbrs.length]
-      : condition.conditionType;
+    const typeStr =
+      typeof abbr === 'number'
+        ? handler.abbrs[(handler.abbrs.length + abbr) % handler.abbrs.length]
+        : condition.conditionType;
     let result = `${typeStr}:`;
     const part = strFn ? strFn.call(Conditions, condition) : condition.pattern;
     if (part) {
@@ -168,7 +174,7 @@ const Conditions: any = {
       },
       set() {
         return false;
-      }
+      },
     });
     if (!anyNode.start.comments_before) {
       anyNode.start.comments_before = [];
@@ -199,9 +205,9 @@ const Conditions: any = {
       expression: new U2.AST_Dot({
         property: 'test',
         expression: new U2.AST_RegExp({
-          value: actualRegexp
-        })
-      })
+          value: actualRegexp,
+        }),
+      }),
     });
   },
 
@@ -215,11 +221,14 @@ const Conditions: any = {
       if (typeof min === 'number') {
         minNode = new U2.AST_Number({ value: min });
       }
-      return Conditions.comment(comment, new U2.AST_Binary({
-        left: val,
-        operator: '===',
-        right: minNode
-      }));
+      return Conditions.comment(
+        comment,
+        new U2.AST_Binary({
+          left: val,
+          operator: '===',
+          right: minNode,
+        }),
+      );
     }
     if (min > max) {
       return Conditions.comment(comment, new U2.AST_False());
@@ -227,55 +236,63 @@ const Conditions: any = {
     if (Conditions.isInt(min) && Conditions.isInt(max) && max - min < 32) {
       const actualComment = comment ?? `${min} <= value && value <= ${max}`;
       const tmpl = '0123456789abcdefghijklmnopqrstuvwxyz';
-      const str = max < tmpl.length ? tmpl.substr(min, max - min + 1) : tmpl.substr(0, max - min + 1);
-      const pos = min === 0
-        ? val
-        : new U2.AST_Binary({
-          left: val,
-          operator: '-',
-          right: new U2.AST_Number({ value: min })
-        });
-      return Conditions.comment(actualComment, new U2.AST_Binary({
-        left: new U2.AST_Call({
-          expression: new U2.AST_Dot({
-            expression: new U2.AST_String({ value: str }),
-            property: 'charCodeAt'
+      const str =
+        max < tmpl.length ? tmpl.substr(min, max - min + 1) : tmpl.substr(0, max - min + 1);
+      const pos =
+        min === 0
+          ? val
+          : new U2.AST_Binary({
+              left: val,
+              operator: '-',
+              right: new U2.AST_Number({ value: min }),
+            });
+      return Conditions.comment(
+        actualComment,
+        new U2.AST_Binary({
+          left: new U2.AST_Call({
+            expression: new U2.AST_Dot({
+              expression: new U2.AST_String({ value: str }),
+              property: 'charCodeAt',
+            }),
+            args: [pos],
           }),
-          args: [pos]
+          operator: '>',
+          right: new U2.AST_Number({ value: 0 }),
         }),
-        operator: '>',
-        right: new U2.AST_Number({ value: 0 })
-      }));
+      );
     }
     const minNode = typeof min === 'number' ? new U2.AST_Number({ value: min }) : min;
     const maxNode = typeof max === 'number' ? new U2.AST_Number({ value: max }) : max;
-    return Conditions.comment(comment, new U2.AST_Call({
-      args: [val, minNode, maxNode],
-      expression: new U2.AST_Function({
-        argnames: [
-          new U2.AST_SymbolFunarg({ name: 'value' }),
-          new U2.AST_SymbolFunarg({ name: 'min' }),
-          new U2.AST_SymbolFunarg({ name: 'max' })
-        ],
-        body: [
-          new U2.AST_Return({
-            value: new U2.AST_Binary({
-              left: new U2.AST_Binary({
-                left: new U2.AST_SymbolRef({ name: 'min' }),
-                operator: '<=',
-                right: new U2.AST_SymbolRef({ name: 'value' })
+    return Conditions.comment(
+      comment,
+      new U2.AST_Call({
+        args: [val, minNode, maxNode],
+        expression: new U2.AST_Function({
+          argnames: [
+            new U2.AST_SymbolFunarg({ name: 'value' }),
+            new U2.AST_SymbolFunarg({ name: 'min' }),
+            new U2.AST_SymbolFunarg({ name: 'max' }),
+          ],
+          body: [
+            new U2.AST_Return({
+              value: new U2.AST_Binary({
+                left: new U2.AST_Binary({
+                  left: new U2.AST_SymbolRef({ name: 'min' }),
+                  operator: '<=',
+                  right: new U2.AST_SymbolRef({ name: 'value' }),
+                }),
+                operator: '&&',
+                right: new U2.AST_Binary({
+                  left: new U2.AST_SymbolRef({ name: 'value' }),
+                  operator: '<=',
+                  right: new U2.AST_SymbolRef({ name: 'max' }),
+                }),
               }),
-              operator: '&&',
-              right: new U2.AST_Binary({
-                left: new U2.AST_SymbolRef({ name: 'value' }),
-                operator: '<=',
-                right: new U2.AST_SymbolRef({ name: 'max' })
-              })
-            })
-          })
-        ]
-      })
-    }));
+            }),
+          ],
+        }),
+      }),
+    );
   },
 
   parseIp(ip: string): any {
@@ -318,7 +335,9 @@ const Conditions: any = {
 
   _condCache: new AttachedCache<ConditionCache, Condition>(function tag(condition: Condition) {
     const handler = Conditions._handler(condition.conditionType);
-    const tagValue = handler.tag ? handler.tag.call(Conditions, condition) : Conditions.str(condition);
+    const tagValue = handler.tag
+      ? handler.tag.call(Conditions, condition)
+      : Conditions.str(condition);
     return `${condition.conditionType}$${tagValue}`;
   }),
 
@@ -355,7 +374,7 @@ const Conditions: any = {
       },
       fromStr(_: string, condition: Condition) {
         return condition;
-      }
+      },
     },
 
     FalseCondition: {
@@ -374,7 +393,7 @@ const Conditions: any = {
           condition.pattern = str;
         }
         return condition;
-      }
+      },
     },
 
     UrlRegexCondition: {
@@ -387,13 +406,14 @@ const Conditions: any = {
       },
       compile(_: Condition, cache: ConditionCache) {
         return this.regTest('url', cache.analyzed);
-      }
+      },
     },
 
     UrlWildcardCondition: {
       abbrs: ['U', 'UW', 'Url', 'UrlW', 'UWild', 'UWildcard', 'UrlWild', 'UrlWildcard'],
       analyze(condition: Condition) {
-        const parts = (condition.pattern ?? '').split('|')
+        const parts = (condition.pattern ?? '')
+          .split('|')
           .filter((pattern: string) => pattern)
           .map((pattern: string) => shExp2RegExp(pattern, { trimAsterisk: true }));
         return this.safeRegex(parts.join('|'));
@@ -403,7 +423,7 @@ const Conditions: any = {
       },
       compile(_: Condition, cache: ConditionCache) {
         return this.regTest('url', cache.analyzed);
-      }
+      },
     },
 
     HostRegexCondition: {
@@ -416,13 +436,27 @@ const Conditions: any = {
       },
       compile(_: Condition, cache: ConditionCache) {
         return this.regTest('host', cache.analyzed);
-      }
+      },
     },
 
     HostWildcardCondition: {
-      abbrs: ['', 'H', 'W', 'HW', 'Wild', 'Wildcard', 'Host', 'HostW', 'HWild', 'HWildcard', 'HostWild', 'HostWildcard'],
+      abbrs: [
+        '',
+        'H',
+        'W',
+        'HW',
+        'Wild',
+        'Wildcard',
+        'Host',
+        'HostW',
+        'HWild',
+        'HWildcard',
+        'HostWild',
+        'HostWildcard',
+      ],
       analyze(condition: Condition) {
-        const parts = (condition.pattern ?? '').split('|')
+        const parts = (condition.pattern ?? '')
+          .split('|')
           .filter((pattern: string) => Boolean(pattern))
           .map((pattern: string) => {
             let current = pattern;
@@ -446,7 +480,7 @@ const Conditions: any = {
       },
       compile(_: Condition, cache: ConditionCache) {
         return this.regTest('host', cache.analyzed);
-      }
+      },
     },
 
     BypassCondition: {
@@ -457,7 +491,7 @@ const Conditions: any = {
           ip: null,
           scheme: null,
           url: null,
-          normalizedPattern: ''
+          normalizedPattern: '',
         };
         let server = condition.pattern ?? '';
         if (server === '<local>') {
@@ -478,7 +512,7 @@ const Conditions: any = {
             cache.ip = {
               conditionType: 'IpCondition',
               ip: this.normalizeIp(addr),
-              prefixLength: prefixLen
+              prefixLength: prefixLen,
             };
             cache.normalizedPattern += `${cache.ip.ip}/${cache.ip.prefixLength}`;
             return cache;
@@ -534,7 +568,11 @@ const Conditions: any = {
         }
         if (analyzed.host) {
           if (analyzed.host === '<local>') {
-            return request.host === '127.0.0.1' || request.host === '::1' || request.host.indexOf('.') < 0;
+            return (
+              request.host === '127.0.0.1' ||
+              request.host === '::1' ||
+              request.host.indexOf('.') < 0
+            );
           }
           if (!analyzed.host.test(request.host)) {
             return false;
@@ -560,37 +598,40 @@ const Conditions: any = {
         }
         const conditions: any[] = [];
         if (analyzed.host === '<local>') {
-          const hostEquals = (host: string) => new U2.AST_Binary({
-            left: new U2.AST_SymbolRef({ name: 'host' }),
-            operator: '===',
-            right: new U2.AST_String({ value: host })
-          });
+          const hostEquals = (host: string) =>
+            new U2.AST_Binary({
+              left: new U2.AST_SymbolRef({ name: 'host' }),
+              operator: '===',
+              right: new U2.AST_String({ value: host }),
+            });
           return new U2.AST_Binary({
             left: new U2.AST_Binary({
               left: hostEquals('127.0.0.1'),
               operator: '||',
-              right: hostEquals('::1')
+              right: hostEquals('::1'),
             }),
             operator: '||',
             right: new U2.AST_Binary({
               left: new U2.AST_Call({
                 expression: new U2.AST_Dot({
                   expression: new U2.AST_SymbolRef({ name: 'host' }),
-                  property: 'indexOf'
+                  property: 'indexOf',
                 }),
-                args: [new U2.AST_String({ value: '.' })]
+                args: [new U2.AST_String({ value: '.' })],
               }),
               operator: '<',
-              right: new U2.AST_Number({ value: 0 })
-            })
+              right: new U2.AST_Number({ value: 0 }),
+            }),
           });
         }
         if (analyzed.scheme) {
-          conditions.push(new U2.AST_Binary({
-            left: new U2.AST_SymbolRef({ name: 'scheme' }),
-            operator: '===',
-            right: new U2.AST_String({ value: analyzed.scheme })
-          }));
+          conditions.push(
+            new U2.AST_Binary({
+              left: new U2.AST_SymbolRef({ name: 'scheme' }),
+              operator: '===',
+              right: new U2.AST_String({ value: analyzed.scheme }),
+            }),
+          );
         }
         if (analyzed.host) {
           conditions.push(this.regTest('host', analyzed.host));
@@ -606,9 +647,9 @@ const Conditions: any = {
         return new U2.AST_Binary({
           left: conditions[0],
           operator: '&&',
-          right: conditions[1]
+          right: conditions[1],
         });
-      }
+      },
     },
 
     KeywordCondition: {
@@ -624,22 +665,22 @@ const Conditions: any = {
           left: new U2.AST_Binary({
             left: new U2.AST_SymbolRef({ name: 'scheme' }),
             operator: '===',
-            right: new U2.AST_String({ value: 'http' })
+            right: new U2.AST_String({ value: 'http' }),
           }),
           operator: '&&',
           right: new U2.AST_Binary({
             left: new U2.AST_Call({
               expression: new U2.AST_Dot({
                 expression: new U2.AST_SymbolRef({ name: 'url' }),
-                property: 'indexOf'
+                property: 'indexOf',
               }),
-              args: [new U2.AST_String({ value: condition.pattern ?? '' })]
+              args: [new U2.AST_String({ value: condition.pattern ?? '' })],
             }),
             operator: '>=',
-            right: new U2.AST_Number({ value: 0 })
-          })
+            right: new U2.AST_Number({ value: 0 }),
+          }),
         });
-      }
+      },
     },
 
     IpCondition: {
@@ -677,31 +718,31 @@ const Conditions: any = {
         const analyzed = cache.analyzed;
         const hostLooksLikeIp = analyzed.addr.v4
           ? new U2.AST_Binary({
-            left: new U2.AST_Sub({
-              expression: new U2.AST_SymbolRef({ name: 'host' }),
-              property: new U2.AST_Binary({
-                left: new U2.AST_Dot({
-                  expression: new U2.AST_SymbolRef({ name: 'host' }),
-                  property: 'length'
-                }),
-                operator: '-',
-                right: new U2.AST_Number({ value: 1 })
-              })
-            }),
-            operator: '>=',
-            right: new U2.AST_Number({ value: 0 })
-          })
-          : new U2.AST_Binary({
-            left: new U2.AST_Call({
-              expression: new U2.AST_Dot({
+              left: new U2.AST_Sub({
                 expression: new U2.AST_SymbolRef({ name: 'host' }),
-                property: 'indexOf'
+                property: new U2.AST_Binary({
+                  left: new U2.AST_Dot({
+                    expression: new U2.AST_SymbolRef({ name: 'host' }),
+                    property: 'length',
+                  }),
+                  operator: '-',
+                  right: new U2.AST_Number({ value: 1 }),
+                }),
               }),
-              args: [new U2.AST_String({ value: ':' })]
-            }),
-            operator: '>=',
-            right: new U2.AST_Number({ value: 0 })
-          });
+              operator: '>=',
+              right: new U2.AST_Number({ value: 0 }),
+            })
+          : new U2.AST_Binary({
+              left: new U2.AST_Call({
+                expression: new U2.AST_Dot({
+                  expression: new U2.AST_SymbolRef({ name: 'host' }),
+                  property: 'indexOf',
+                }),
+                args: [new U2.AST_String({ value: ':' })],
+              }),
+              operator: '>=',
+              right: new U2.AST_Number({ value: 0 }),
+            });
         if (analyzed.addr.subnetMask === 0) {
           return hostLooksLikeIp;
         }
@@ -710,16 +751,16 @@ const Conditions: any = {
           args: [
             new U2.AST_SymbolRef({ name: 'host' }),
             new U2.AST_String({ value: analyzed.normalized }),
-            new U2.AST_String({ value: analyzed.mask })
-          ]
+            new U2.AST_String({ value: analyzed.mask }),
+          ],
         });
         if (!analyzed.addr.v4) {
           const hostIsInNetEx = new U2.AST_Call({
             expression: new U2.AST_SymbolRef({ name: 'isInNetEx' }),
             args: [
               new U2.AST_SymbolRef({ name: 'host' }),
-              new U2.AST_String({ value: `${analyzed.normalized}${analyzed.addr.subnet}` })
-            ]
+              new U2.AST_String({ value: `${analyzed.normalized}${analyzed.addr.subnet}` }),
+            ],
           });
           return new U2.AST_Binary({
             left: hostLooksLikeIp,
@@ -728,20 +769,20 @@ const Conditions: any = {
               condition: new U2.AST_Binary({
                 left: new U2.AST_UnaryPrefix({
                   operator: 'typeof',
-                  expression: new U2.AST_SymbolRef({ name: 'isInNetEx' })
+                  expression: new U2.AST_SymbolRef({ name: 'isInNetEx' }),
                 }),
                 operator: '===',
-                right: new U2.AST_String({ value: 'function' })
+                right: new U2.AST_String({ value: 'function' }),
               }),
               consequent: hostIsInNetEx,
-              alternative: hostIsInNet
-            })
+              alternative: hostIsInNet,
+            }),
           });
         }
         return new U2.AST_Binary({
           left: hostLooksLikeIp,
           operator: '&&',
-          right: hostIsInNet
+          right: hostIsInNet,
         });
       },
       str(condition: Condition) {
@@ -757,11 +798,23 @@ const Conditions: any = {
           condition.prefixLength = 0;
         }
         return condition;
-      }
+      },
     },
 
     HostLevelsCondition: {
-      abbrs: ['Lv', 'Level', 'Levels', 'HL', 'HLv', 'HLevel', 'HLevels', 'HostL', 'HostLv', 'HostLevel', 'HostLevels'],
+      abbrs: [
+        'Lv',
+        'Level',
+        'Levels',
+        'HL',
+        'HLv',
+        'HLevel',
+        'HLevels',
+        'HostL',
+        'HostLv',
+        'HostLevel',
+        'HostLevels',
+      ],
       analyze() {
         return '.'.charCodeAt(0);
       },
@@ -785,15 +838,15 @@ const Conditions: any = {
             args: [new U2.AST_String({ value: '.' })],
             expression: new U2.AST_Dot({
               expression: new U2.AST_SymbolRef({ name: 'host' }),
-              property: 'split'
-            })
-          })
+              property: 'split',
+            }),
+          }),
         });
         return this.between(
           val,
           (condition.minValue ?? 0) + 1,
           (condition.maxValue ?? 0) + 1,
-          `${condition.minValue} <= hostLevels <= ${condition.maxValue}`
+          `${condition.minValue} <= hostLevels <= ${condition.maxValue}`,
         );
       },
       str(condition: Condition) {
@@ -810,7 +863,7 @@ const Conditions: any = {
           condition.maxValue = 1;
         }
         return condition;
-      }
+      },
     },
 
     WeekdayCondition: {
@@ -832,21 +885,21 @@ const Conditions: any = {
             property: 'getDay',
             expression: new U2.AST_New({
               args: [],
-              expression: new U2.AST_SymbolRef({ name: 'Date' })
-            })
-          })
+              expression: new U2.AST_SymbolRef({ name: 'Date' }),
+            }),
+          }),
         });
         if (condition.days) {
           return new U2.AST_Binary({
             left: new U2.AST_Call({
               expression: new U2.AST_Dot({
                 expression: new U2.AST_String({ value: condition.days }),
-                property: 'charCodeAt'
+                property: 'charCodeAt',
               }),
-              args: [getDay]
+              args: [getDay],
             }),
             operator: '>',
-            right: new U2.AST_Number({ value: 64 })
+            right: new U2.AST_Number({ value: 64 }),
           });
         }
         return this.between(getDay, condition.startDay, condition.endDay);
@@ -874,7 +927,7 @@ const Conditions: any = {
           }
         }
         return condition;
-      }
+      },
     },
 
     TimeCondition: {
@@ -893,9 +946,9 @@ const Conditions: any = {
             property: 'getHours',
             expression: new U2.AST_New({
               args: [],
-              expression: new U2.AST_SymbolRef({ name: 'Date' })
-            })
-          })
+              expression: new U2.AST_SymbolRef({ name: 'Date' }),
+            }),
+          }),
         });
         return this.between(val, condition.startHour, condition.endHour);
       },
@@ -915,10 +968,9 @@ const Conditions: any = {
           condition.endHour = 0;
         }
         return condition;
-      }
-    }
-  } as Record<string, ConditionHandler>
+      },
+    },
+  } as Record<string, ConditionHandler>,
 };
 
 export = Conditions;
-

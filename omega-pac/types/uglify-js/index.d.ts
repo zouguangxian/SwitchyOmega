@@ -101,4 +101,3 @@ declare module 'uglify-js' {
   export function parse(code: string, options?: any): any;
   export function minify(files: string | string[], options?: any): any;
 }
-

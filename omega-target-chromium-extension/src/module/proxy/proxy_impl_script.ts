@@ -5,7 +5,7 @@ import ProxyImpl from './proxy_impl';
 
 class ScriptProxyImpl extends ProxyImpl {
   features = ['socks5Auth'];
-  
+
   private _proxyScriptUrl: string = 'js/omega_webext_proxy_script.min.js';
   private _proxyScriptDisabled: boolean = false;
   private _proxyScriptInitialized: boolean = false;
@@ -23,17 +23,17 @@ class ScriptProxyImpl extends ProxyImpl {
   applyProfile(profile: any, state: any, options: any): Promise<void> {
     this.log.error(
       'Your browser is outdated! Full-URL based matching, etc. unsupported! ' +
-      "Please update your browser ASAP!"
+        'Please update your browser ASAP!',
     );
-    
+
     state = state || {};
     this._options = options;
     state.currentProfileName = profile.name;
-    
+
     if (profile.name === '') {
       state.tempProfile = profile;
     }
-    
+
     if (profile.profileType === 'SystemProfile') {
       // MOZ: SystemProfile cannot be done now due to lack of "PASS" support.
       // https://bugzilla.mozilla.org/show_bug.cgi?id=1319634
@@ -48,23 +48,22 @@ class ScriptProxyImpl extends ProxyImpl {
       this._proxyScriptDisabled = true;
     } else {
       this._proxyScriptState = state;
-      Promise.all([
-        (browser as any).runtime.getBrowserInfo(),
-        this._initWebextProxyScript(),
-      ]).then(([info]) => {
-        if (info.vendor === 'Mozilla' && info.buildID < '20170918220054') {
-          // MOZ: Legacy proxy support expects PAC-like string return type.
-          // TODO(catus): Remove support for string return type.
-          this.log.error(
-            'Your browser is outdated! SOCKS5 DNS/Auth unsupported! ' +
-            `Please update your browser ASAP! (Current Build ${info.buildID})`
-          );
-          this._proxyScriptState.useLegacyStringReturn = true;
-        }
-        this._proxyScriptStateChanged();
-      });
+      Promise.all([(browser as any).runtime.getBrowserInfo(), this._initWebextProxyScript()]).then(
+        ([info]) => {
+          if (info.vendor === 'Mozilla' && info.buildID < '20170918220054') {
+            // MOZ: Legacy proxy support expects PAC-like string return type.
+            // TODO(catus): Remove support for string return type.
+            this.log.error(
+              'Your browser is outdated! SOCKS5 DNS/Auth unsupported! ' +
+                `Please update your browser ASAP! (Current Build ${info.buildID})`,
+            );
+            this._proxyScriptState.useLegacyStringReturn = true;
+          }
+          this._proxyScriptStateChanged();
+        },
+      );
     }
-    
+
     return this.setProxyAuth(profile, options);
   }
 
@@ -84,7 +83,7 @@ class ScriptProxyImpl extends ProxyImpl {
             // TODO(catus): Remove support for string return type.
             this.log.error(
               'Your browser is outdated! SOCKS5 DNS/Auth unsupported! ' +
-              'Please update your browser ASAP!'
+                'Please update your browser ASAP!',
             );
             this._proxyScriptState.useLegacyStringReturn = true;
             this._proxyScriptStateChanged();
@@ -93,10 +92,10 @@ class ScriptProxyImpl extends ProxyImpl {
         }
         this.log.error(err);
       });
-      
+
       (browser as any).runtime.onMessage.addListener((message: any) => {
         if (message.event !== 'proxyScriptLog') return;
-        
+
         if (message.level === 'error') {
           this.log.error(message);
         } else if (message.level === 'warn') {
@@ -108,7 +107,7 @@ class ScriptProxyImpl extends ProxyImpl {
     }
 
     let promise: Promise<void>;
-    
+
     if (!this._proxyScriptInitialized || this._proxyScriptDisabled) {
       promise = new Promise<void>((resolve) => {
         const onMessage = (message: any) => {
@@ -118,7 +117,7 @@ class ScriptProxyImpl extends ProxyImpl {
         };
         (browser as any).runtime.onMessage.addListener(onMessage);
       });
-      
+
       // The API has been renamed to .register but for some old browsers' sake:
       if ((browser as any).proxy.register) {
         (browser as any).proxy.register(this._proxyScriptUrl);
@@ -129,21 +128,23 @@ class ScriptProxyImpl extends ProxyImpl {
     } else {
       promise = Promise.resolve();
     }
-    
+
     this._proxyScriptInitialized = true;
     return promise;
   }
 
   private _proxyScriptStateChanged(): void {
-    (browser as any).runtime.sendMessage({
-      event: 'proxyScriptStateChanged',
-      state: this._proxyScriptState,
-      options: this._options
-    }, {
-      toProxyScript: true
-    });
+    (browser as any).runtime.sendMessage(
+      {
+        event: 'proxyScriptStateChanged',
+        state: this._proxyScriptState,
+        options: this._options,
+      },
+      {
+        toProxyScript: true,
+      },
+    );
   }
 }
 
 export default ScriptProxyImpl;
-

@@ -1,4 +1,4 @@
-(function() {
+(function () {
   var keyForId = {
     'js-direct': '0',
     'js-system': 'S',
@@ -6,8 +6,8 @@
     'js-addrule': 'A',
     'js-temprule': 'T',
     'js-option': 'O',
-    'js-reqinfo': 'R'
-  }
+    'js-reqinfo': 'R',
+  };
   Object.keys(keyForId).forEach(function (id) {
     showHelp(id, keyForId[id]);
   });

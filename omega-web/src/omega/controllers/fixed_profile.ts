@@ -3,30 +3,33 @@
 declare const angular: any;
 declare const browser: any;
 
-angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$uibModal', 'trFilter',
-  function($scope: any, $uibModal: any, trFilter: any) {
+angular.module('omega').controller('FixedProfileCtrl', [
+  '$scope',
+  '$uibModal',
+  'trFilter',
+  function ($scope: any, $uibModal: any, trFilter: any) {
     $scope.urlSchemes = ['', 'http', 'https', 'ftp'];
     $scope.urlSchemeDefault = 'fallbackProxy';
-    
+
     const proxyProperties: Record<string, string> = {
       '': 'fallbackProxy',
-      'http': 'proxyForHttp',
-      'https': 'proxyForHttps',
-      'ftp': 'proxyForFtp'
+      http: 'proxyForHttp',
+      https: 'proxyForHttps',
+      ftp: 'proxyForFtp',
     };
-    
+
     $scope.schemeDisp = {
       '': null,
-      'http': 'http://',
-      'https': 'https://',
-      'ftp': 'ftp://'
+      http: 'http://',
+      https: 'https://',
+      ftp: 'ftp://',
     };
 
     const defaultPort: Record<string, number> = {
-      'http': 80,
-      'https': 443,
-      'socks4': 1080,
-      'socks5': 1080
+      http: 80,
+      https: 443,
+      socks4: 1080,
+      socks5: 1080,
     };
 
     $scope.showAdvanced = false;
@@ -49,15 +52,15 @@ angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$uibModal', '
 
     const socks5AuthSupported = !!(browser as any)?.proxy?.register;
     $scope.authSupported = {
-      "http": true,
-      "https": true,
-      "socks5": socks5AuthSupported,
+      http: true,
+      https: true,
+      socks5: socks5AuthSupported,
     };
-    
+
     $scope.isProxyAuthActive = (scheme: string) => {
       return $scope.profile.auth?.[proxyProperties[scheme]] != null;
     };
-    
+
     $scope.editProxyAuth = (scheme: string) => {
       const prop = proxyProperties[scheme];
       const proxy = $scope.profile[prop];
@@ -67,26 +70,28 @@ angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$uibModal', '
       scope.auth = auth && angular.copy(auth);
       scope.authSupported = $scope.authSupported[proxy.scheme];
       scope.protocolDisp = proxy.scheme;
-      
-      $uibModal.open({
-        templateUrl: 'partials/fixed_auth_edit.html',
-        scope,
-        size: scope.authSupported ? 'sm' : 'lg'
-      }).result.then((auth: any) => {
-        if (!auth?.username) {
-          if ($scope.profile.auth) {
-            $scope.profile.auth[prop] = undefined;
+
+      $uibModal
+        .open({
+          templateUrl: 'partials/fixed_auth_edit.html',
+          scope,
+          size: scope.authSupported ? 'sm' : 'lg',
+        })
+        .result.then((auth: any) => {
+          if (!auth?.username) {
+            if ($scope.profile.auth) {
+              $scope.profile.auth[prop] = undefined;
+            }
+          } else {
+            $scope.profile.auth = $scope.profile.auth || {};
+            $scope.profile.auth[prop] = auth;
           }
-        } else {
-          $scope.profile.auth = $scope.profile.auth || {};
-          $scope.profile.auth[prop] = auth;
-        }
-      });
+        });
     };
 
     const onProxyChange = (proxyEditors: any, oldProxyEditors: any) => {
       if (!proxyEditors) return;
-      
+
       for (const scheme of $scope.urlSchemes) {
         const proxy = proxyEditors[scheme];
         if ($scope.profile.auth && !$scope.authSupported[proxy.scheme]) {
@@ -108,15 +113,18 @@ angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$uibModal', '
         $scope.profile[proxyProperties[scheme]] = $scope.profile[proxyProperties[scheme]] || proxy;
       }
     };
-    
+
     for (const scheme of $scope.urlSchemes) {
       ((scheme) => {
-        $scope.$watch(() => $scope.profile[proxyProperties[scheme]], (proxy: any) => {
-          if (scheme && proxy) {
-            $scope.showAdvanced = true;
-          }
-          $scope.proxyEditors[scheme] = proxy || {};
-        });
+        $scope.$watch(
+          () => $scope.profile[proxyProperties[scheme]],
+          (proxy: any) => {
+            if (scheme && proxy) {
+              $scope.showAdvanced = true;
+            }
+            $scope.proxyEditors[scheme] = proxy || {};
+          },
+        );
       })(scheme);
     }
     $scope.$watch('proxyEditors', onProxyChange, true);
@@ -133,12 +141,11 @@ angular.module('omega').controller('FixedProfileCtrl', ['$scope', '$uibModal', '
       for (const entry of bypassList.split(/\r?\n/)) {
         if (entry) {
           $scope.profile.bypassList.push({
-            conditionType: "BypassCondition",
-            pattern: entry
+            conditionType: 'BypassCondition',
+            pattern: entry,
           });
         }
       }
     });
-  }
+  },
 ]);
-

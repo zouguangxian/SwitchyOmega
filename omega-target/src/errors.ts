@@ -40,4 +40,3 @@ export class ContentTypeRejectedError extends Error {
     this.name = 'ContentTypeRejectedError';
   }
 }
-

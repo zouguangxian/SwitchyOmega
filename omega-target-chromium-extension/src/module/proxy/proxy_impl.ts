@@ -39,7 +39,7 @@ class ProxyImpl {
     return OmegaPac.Profiles.create({
       name,
       profileType: 'VirtualProfile',
-      defaultProfileName: 'direct'
+      defaultProfileName: 'direct',
     }) as VirtualProfile;
   }
 
@@ -49,14 +49,12 @@ class ProxyImpl {
         this._proxyAuth = new ProxyAuth(this.log);
       }
       this._proxyAuth.listen();
-      
+
       const referenced_profiles: Profile[] = [];
-      const ref_set = OmegaPac.Profiles.allReferenceSet(
-        profile,
-        options,
-        { profileNotFound: this._profileNotFound.bind(this) }
-      );
-      
+      const ref_set = OmegaPac.Profiles.allReferenceSet(profile, options, {
+        profileNotFound: this._profileNotFound.bind(this),
+      });
+
       for (const key in ref_set) {
         if (Object.prototype.hasOwnProperty.call(ref_set, key)) {
           const name = ref_set[key];
@@ -66,7 +64,7 @@ class ProxyImpl {
           }
         }
       }
-      
+
       this._proxyAuth.setProxies(referenced_profiles);
     });
   }
@@ -75,21 +73,20 @@ class ProxyImpl {
     if (!meta) {
       meta = profile;
     }
-    
+
     let ast = OmegaPac.PacGenerator.script(options, profile, {
-      profileNotFound: this._profileNotFound.bind(this)
+      profileNotFound: this._profileNotFound.bind(this),
     });
     ast = OmegaPac.PacGenerator.compress(ast);
     const script = OmegaPac.PacGenerator.ascii(ast.print_to_string());
-    
+
     let profileName = OmegaPac.PacGenerator.ascii(JSON.stringify(meta.name));
     profileName = profileName.replace(/\*/g, '\\u002a');
     profileName = profileName.replace(/\\/g, '\\u002f');
-    
+
     const prefix = `/*OmegaProfile*${profileName}*${meta.revision}*/`;
     return prefix + script;
   }
 }
 
 export default ProxyImpl;
-

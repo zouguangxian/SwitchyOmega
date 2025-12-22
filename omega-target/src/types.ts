@@ -26,7 +26,7 @@ export interface ProxyAuth {
 // Profile Types - Using Discriminated Unions
 // ============================================================================
 
-export type ProfileType = 
+export type ProfileType =
   | 'DirectProfile'
   | 'SystemProfile'
   | 'FixedProfile'
@@ -99,7 +99,7 @@ export interface VirtualProfile extends BaseProfile {
 }
 
 /** Union type of all profiles - enables exhaustive checking */
-export type Profile = 
+export type Profile =
   | DirectProfile
   | SystemProfile
   | FixedProfile
@@ -235,34 +235,34 @@ export type SettingKey = `-${string}`;
 export interface OmegaOptions {
   /** Schema version */
   readonly schemaVersion: number;
-  
+
   /** Startup profile name */
   readonly '-startupProfileName'?: string;
-  
+
   /** Quick switch profiles */
   readonly '-quickSwitchProfiles'?: readonly string[];
-  
+
   /** Download interval in minutes */
   readonly '-downloadInterval'?: number;
-  
+
   /** Confirm deletion flag */
   readonly '-confirmDeletion'?: boolean;
-  
+
   /** Refresh on profile change */
   readonly '-refreshOnProfileChange'?: boolean;
-  
+
   /** Show condition types */
   readonly '-showConditionTypes'?: number;
-  
+
   /** Export legacy rule list */
   readonly '-exportLegacyRuleList'?: boolean;
-  
+
   /** Profiles indexed by key (+profileName) */
   readonly [key: ProfileKey]: Profile;
-  
+
   /** Settings indexed by key (-settingName) */
   readonly [key: SettingKey]: any;
-  
+
   /** Allow additional string keys for flexibility */
   readonly [key: string]: any;
 }
@@ -363,12 +363,7 @@ export interface UpdateProfileOptions {
 // ============================================================================
 
 export function isProfile(value: unknown): value is Profile {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'profileType' in value &&
-    'name' in value
-  );
+  return typeof value === 'object' && value !== null && 'profileType' in value && 'name' in value;
 }
 
 export function isFixedProfile(profile: Profile): profile is FixedProfile {
@@ -398,8 +393,7 @@ export function canAddRules(profile: Profile): profile is SwitchProfile {
 
 /** Check if a profile can be used as a fallback */
 export function isIncludable(profile: Profile): boolean {
-  return profile.profileType !== 'SystemProfile' && 
-         profile.profileType !== 'DirectProfile';
+  return profile.profileType !== 'SystemProfile' && profile.profileType !== 'DirectProfile';
 }
 
 // ============================================================================
@@ -430,4 +424,3 @@ export interface ApplyProfileOptions {
   readonly system?: boolean;
   readonly reason?: string;
 }
-

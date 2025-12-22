@@ -2,7 +2,8 @@ import { Buffer } from 'buffer';
 
 const Conditions = require('./conditions');
 
-const strStartsWith = (str: string, prefix: string): boolean => str.substr(0, prefix.length) === prefix;
+const strStartsWith = (str: string, prefix: string): boolean =>
+  str.substr(0, prefix.length) === prefix;
 
 type ParsedRule = {
   condition: any;
@@ -11,7 +12,12 @@ type ParsedRule = {
   note?: string | null;
 };
 
-type Parser = (text: string, matchProfileName: string, defaultProfileName: string | undefined, args?: Record<string, any>) => ParsedRule[];
+type Parser = (
+  text: string,
+  matchProfileName: string,
+  defaultProfileName: string | undefined,
+  args?: Record<string, any>,
+) => ParsedRule[];
 
 const RuleList: Record<string, any> = {
   AutoProxy: {
@@ -52,40 +58,40 @@ const RuleList: Record<string, any> = {
         if (line[0] === '/') {
           condition = {
             conditionType: 'UrlRegexCondition',
-            pattern: line.substring(1, line.length - 1)
+            pattern: line.substring(1, line.length - 1),
           };
         } else if (line[0] === '|') {
           if (line[1] === '|') {
             condition = {
               conditionType: 'HostWildcardCondition',
-              pattern: `*.${line.substring(2)}`
+              pattern: `*.${line.substring(2)}`,
             };
           } else {
             condition = {
               conditionType: 'UrlWildcardCondition',
-              pattern: `${line.substring(1)}*`
+              pattern: `${line.substring(1)}*`,
             };
           }
         } else if (line.indexOf('*') < 0) {
           condition = {
             conditionType: 'KeywordCondition',
-            pattern: line
+            pattern: line,
           };
         } else {
           condition = {
             conditionType: 'UrlWildcardCondition',
-            pattern: `http://*${line}*`
+            pattern: `http://*${line}*`,
           };
         }
         list.push({ condition, profileName: profile, source });
       });
       return exclusiveRules.concat(normalRules);
-    }
+    },
   },
 
   Switchy: {
     omegaPrefix: '[SwitchyOmega Conditions',
-    specialLineStart: "[;#@!",
+    specialLineStart: '[;#@!',
 
     detect(text: string): boolean | undefined {
       if (strStartsWith(text, RuleList.Switchy.omegaPrefix)) {
@@ -103,7 +109,15 @@ const RuleList: Record<string, any> = {
       return switchy.parseLegacy(text, matchProfileName, defaultProfileName);
     },
 
-    directReferenceSet({ ruleList, matchProfileName, defaultProfileName }: { ruleList: string; matchProfileName?: string; defaultProfileName?: string }): Record<string, string> | undefined {
+    directReferenceSet({
+      ruleList,
+      matchProfileName,
+      defaultProfileName,
+    }: {
+      ruleList: string;
+      matchProfileName?: string;
+      defaultProfileName?: string;
+    }): Record<string, string> | undefined {
       const text = ruleList.trim();
       const switchy = RuleList.Switchy;
       const parser = switchy.getParser(text);
@@ -131,7 +145,10 @@ const RuleList: Record<string, any> = {
       return refs;
     },
 
-    compose({ rules, defaultProfileName }: { rules: ParsedRule[]; defaultProfileName: string }, options: { withResult?: boolean; useExclusive?: boolean } = {}): string {
+    compose(
+      { rules, defaultProfileName }: { rules: ParsedRule[]; defaultProfileName: string },
+      options: { withResult?: boolean; useExclusive?: boolean } = {},
+    ): string {
       const eol = '\r\n';
       let ruleList = `[SwitchyOmega Conditions]${eol}`;
       const opts = { ...options };
@@ -192,12 +209,12 @@ const RuleList: Record<string, any> = {
       if (host) {
         return {
           conditionType: 'HostWildcardCondition',
-          pattern: host
+          pattern: host,
         };
       }
       return {
         conditionType: 'UrlWildcardCondition',
-        pattern: result
+        pattern: result,
       };
     },
 
@@ -239,7 +256,7 @@ const RuleList: Record<string, any> = {
         } else if (section === 'REGEXP') {
           condition = {
             conditionType: 'UrlRegexCondition',
-            pattern: line
+            pattern: line,
           };
         } else {
           condition = null;
@@ -251,7 +268,12 @@ const RuleList: Record<string, any> = {
       return exclusiveRules.concat(normalRules);
     },
 
-    parseOmega(text: string, matchProfileName: string, defaultProfileName: string, args: Record<string, any> = {}): ParsedRule[] {
+    parseOmega(
+      text: string,
+      matchProfileName: string,
+      defaultProfileName: string,
+      args: Record<string, any> = {},
+    ): ParsedRule[] {
       const { strict } = args;
       let error: ((fields: any) => void) | undefined;
       if (strict) {
@@ -324,7 +346,7 @@ const RuleList: Record<string, any> = {
               message: `Missing result profile name: ${line}`,
               reason: 'missingResultProfile',
               source: line,
-              sourceLineNo: lineNumber
+              sourceLineNo: lineNumber,
             });
             return;
           }
@@ -343,7 +365,7 @@ const RuleList: Record<string, any> = {
             message: `Invalid rule: ${line}`,
             reason: 'invalidRule',
             source: source ?? line,
-            sourceLineNo: lineNumber
+            sourceLineNo: lineNumber,
           });
           return;
         }
@@ -351,7 +373,7 @@ const RuleList: Record<string, any> = {
         const rule: ParsedRule = {
           condition: cond,
           profileName: profile,
-          source: includeSource ? source ?? line : undefined
+          source: includeSource ? (source ?? line) : undefined,
         };
         if (noteForNextRule) {
           rule.note = noteForNextRule;
@@ -368,7 +390,7 @@ const RuleList: Record<string, any> = {
           if (strict) {
             error?.({
               message: "Missing default rule with catch-all '*' condition",
-              reason: 'noDefaultRule'
+              reason: 'noDefaultRule',
             });
           }
           exclusiveProfile = defaultProfileName || 'direct';
@@ -378,9 +400,8 @@ const RuleList: Record<string, any> = {
         });
       }
       return rules;
-    }
-  }
+    },
+  },
 };
 
 export = RuleList;
-

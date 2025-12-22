@@ -6,7 +6,7 @@ import ChromePort from './chrome_port';
 
 class SwitchySharp {
   static extId: string = 'dpplabbmogkhghncfbfdeeokoefdjegm';
-  
+
   port: ChromePort | null = null;
   private _getOptions: Promise<any> | null = null;
   private _getOptionsResolver: ((options: any) => void) | null = null;
@@ -14,7 +14,7 @@ class SwitchySharp {
 
   monitor(action?: string): void {
     if (location.href.substr(0, 4) === 'moz-') return;
-    
+
     if (!this.port && !this._monitorTimerId) {
       this._monitorTimerId = setInterval(this._connect.bind(this), 5000);
       if (action !== 'reconnect') {
@@ -38,7 +38,7 @@ class SwitchySharp {
       clearInterval(this._monitorTimerId);
       this._monitorTimerId = null;
     }
-    
+
     switch (msg?.action) {
       case 'state':
         // State changed.
@@ -47,7 +47,7 @@ class SwitchySharp {
           this.port.postMessage({ action: 'getOptions' });
         }
         break;
-      
+
       case 'options':
         if (this._getOptionsResolver) {
           this._getOptionsResolver(msg.options);
@@ -70,16 +70,15 @@ class SwitchySharp {
       this.port.onDisconnect.addListener(this._onDisconnect.bind(this));
       this.port.onMessage.addListener(this._onMessage.bind(this));
     }
-    
+
     try {
       this.port.postMessage({ action: 'disable' });
     } catch (e) {
       this.port = null;
     }
-    
+
     return this.port != null;
   }
 }
 
 export default SwitchySharp;
-

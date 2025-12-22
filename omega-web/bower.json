@@ -1,25 +1,13 @@
 {
   "name": "switchyomega",
   "version": "0.0.1",
-  "authors": [
-    "FelisCatus <felis.catus@example.com>"
-  ],
+  "authors": ["FelisCatus <felis.catus@example.com>"],
   "description": "The ultimate proxy switcher.",
-  "keywords": [
-    "proxy",
-    "pac",
-    "extension"
-  ],
+  "keywords": ["proxy", "pac", "extension"],
   "license": "GPL",
   "homepage": "https://github.com/FelisCatus/SwitchyOmega",
   "private": true,
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "test",
-    "tests"
-  ],
+  "ignore": ["**/.*", "node_modules", "bower_components", "test", "tests"],
   "dependencies": {
     "angular": "~1.8.3",
     "angular-animate": "~1.8.3",
@@ -82,19 +70,13 @@
       "": "dist/*.min.js"
     },
     "angular-ui-router": {
-      "": [
-        "release/angular-ui-router.min.js",
-        "release/stateEvents.min.js"
-      ]
+      "": ["release/angular-ui-router.min.js", "release/stateEvents.min.js"]
     },
     "angular-ui-sortable": {
       "": "*.min.js"
     },
     "angular-ui-utils": {
-      "": [
-        "ui-utils.min.js",
-        "validate.min.js"
-      ]
+      "": ["ui-utils.min.js", "validate.min.js"]
     },
     "bootstrap": {
       "css": "dist/css/bootstrap.min.css",
@@ -108,16 +90,10 @@
       "": "public/build/jsondiffpatch.min.js"
     },
     "shepherd.js": {
-      "": [
-        "*.min.js",
-        "css/shepherd-theme-arrows.css"
-      ]
+      "": ["*.min.js", "css/shepherd-theme-arrows.css"]
     },
     "spectrum": {
-      "": [
-        "*.js",
-        "*.css"
-      ]
+      "": ["*.js", "*.css"]
     },
     "FileSaver": {
       "": "*.min.js"
@@ -126,10 +102,7 @@
       "": "*.js"
     },
     "ladda": {
-      "": [
-        "dist/ladda-themeless.min.css",
-        "dist/ladda.min.js"
-      ]
+      "": ["dist/ladda-themeless.min.css", "dist/ladda.min.js"]
     }
   },
   "resolutions": {

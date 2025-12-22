@@ -15,4 +15,3 @@ export function getProxyImpl(log: any): ProxyImpl {
   }
   throw new Error('Your browser does not support proxy settings!');
 }
-

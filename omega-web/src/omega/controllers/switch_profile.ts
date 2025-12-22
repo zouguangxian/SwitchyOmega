@@ -6,11 +6,29 @@ declare const jsondiffpatch: any;
 declare const $script: any;
 
 angular.module('omega').controller('SwitchProfileCtrl', [
-  '$scope', '$rootScope', '$location', '$timeout', '$q', '$uibModal', 'profileIcons', 'getAttachedName', 'omegaTarget',
-  'trFilter', 'downloadFile',
-  function(
-    $scope: any, $rootScope: any, $location: any, $timeout: any, $q: any, $uibModal: any, profileIcons: any,
-    getAttachedName: any, omegaTarget: any, trFilter: any, downloadFile: any
+  '$scope',
+  '$rootScope',
+  '$location',
+  '$timeout',
+  '$q',
+  '$uibModal',
+  'profileIcons',
+  'getAttachedName',
+  'omegaTarget',
+  'trFilter',
+  'downloadFile',
+  function (
+    $scope: any,
+    $rootScope: any,
+    $location: any,
+    $timeout: any,
+    $q: any,
+    $uibModal: any,
+    profileIcons: any,
+    getAttachedName: any,
+    omegaTarget: any,
+    trFilter: any,
+    downloadFile: any,
   ) {
     // == Rule list ==
     $scope.ruleListFormats = OmegaPac.Profiles.ruleListFormats;
@@ -18,7 +36,7 @@ angular.module('omega').controller('SwitchProfileCtrl', [
     const exportRuleList = () => {
       const text = OmegaPac.RuleList.Switchy.compose({
         rules: $scope.profile.rules,
-        defaultProfileName: $scope.attachedOptions.defaultProfileName
+        defaultProfileName: $scope.attachedOptions.defaultProfileName,
       });
 
       const eol = '\r\n';
@@ -29,7 +47,7 @@ angular.module('omega').controller('SwitchProfileCtrl', [
 
       const finalText = text.replace('\n', info);
 
-      const blob = new Blob([finalText], { type: "text/plain;charset=utf-8" });
+      const blob = new Blob([finalText], { type: 'text/plain;charset=utf-8' });
       const fileName = $scope.profile.name.replace(/\W+/g, '_');
       downloadFile(blob, `OmegaRules_${fileName}.sorl`);
     };
@@ -67,14 +85,14 @@ ${wildcardRules}
 ${regexpRules}
 #END
 `;
-      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
       const fileName = $scope.profile.name.replace(/\W+/g, '_');
       downloadFile(blob, `SwitchyRules_${fileName}.ssrl`);
     };
 
     // == Condition types ==
     $scope.conditionHelp = {
-      show: ($location.search().help === 'condition')
+      show: $location.search().help === 'condition',
     };
 
     $scope.basicConditionTypes = [
@@ -84,9 +102,9 @@ ${regexpRules}
           'HostWildcardCondition',
           'UrlWildcardCondition',
           'UrlRegexCondition',
-          'FalseCondition'
-        ]
-      }
+          'FalseCondition',
+        ],
+      },
     ];
 
     $scope.advancedConditionTypes = [
@@ -96,25 +114,17 @@ ${regexpRules}
           'HostWildcardCondition',
           'HostRegexCondition',
           'HostLevelsCondition',
-          'IpCondition'
-        ]
+          'IpCondition',
+        ],
       },
       {
         group: 'url',
-        types: [
-          'UrlWildcardCondition',
-          'UrlRegexCondition',
-          'KeywordCondition'
-        ]
+        types: ['UrlWildcardCondition', 'UrlRegexCondition', 'KeywordCondition'],
       },
       {
         group: 'special',
-        types: [
-          'WeekdayCondition',
-          'TimeCondition',
-          'FalseCondition'
-        ]
-      }
+        types: ['WeekdayCondition', 'TimeCondition', 'FalseCondition'],
+      },
     ];
 
     const expandGroups = (groups: any[]) => {
@@ -141,8 +151,8 @@ ${regexpRules}
     $scope.hasConditionTypes = 0;
     $scope.hasUrlConditions = false;
     $scope.isUrlConditionType = {
-      'UrlWildcardCondition': true,
-      'UrlRegexCondition': true
+      UrlWildcardCondition: true,
+      UrlRegexCondition: true,
     };
 
     const updateHasConditionTypes = () => {
@@ -162,7 +172,7 @@ ${regexpRules}
         if (rule.condition.conditionType === 'TrueCondition') {
           rule.condition = {
             conditionType: 'HostWildcardCondition',
-            pattern: '*'
+            pattern: '*',
           };
         }
         if (!basicConditionTypeSet[rule.condition.conditionType]) {
@@ -199,8 +209,8 @@ ${regexpRules}
         }
       } else {
         $scope.conditionTypes = advancedConditionTypesExpanded;
-        if ($scope.options["-showConditionTypes"] == null) {
-          $scope.options["-showConditionTypes"] = $scope.showConditionTypes;
+        if ($scope.options['-showConditionTypes'] == null) {
+          $scope.options['-showConditionTypes'] = $scope.showConditionTypes;
         }
         if (typeof unwatchRules !== 'undefined') {
           unwatchRules();
@@ -230,7 +240,7 @@ ${regexpRules}
       } else {
         rule = {
           condition: { conditionType: 'HostWildcardCondition', pattern: '' },
-          profileName: $scope.attachedOptions.defaultProfileName
+          profileName: $scope.attachedOptions.defaultProfileName,
         };
       }
       if (rule.condition.pattern) {
@@ -268,8 +278,7 @@ ${regexpRules}
     $scope.updateDay = (condition: any, i: number, selected: boolean) => {
       condition.days = condition.days || '-------';
       const char = selected ? 'SMTWtFs'[i] : '-';
-      condition.days = condition.days.substr(0, i) + char +
-        condition.days.substr(i + 1);
+      condition.days = condition.days.substr(0, i) + char + condition.days.substr(i + 1);
       delete condition.startDay;
       delete condition.endDay;
     };
@@ -284,10 +293,12 @@ ${regexpRules}
         scope.ruleProfile = $scope.profileByName(scope.rule.profileName);
         scope.dispNameFilter = $scope.dispNameFilter;
         scope.options = $scope.options;
-        $uibModal.open({
-          templateUrl: 'partials/rule_remove_confirm.html',
-          scope
-        }).result.then(removeForReal);
+        $uibModal
+          .open({
+            templateUrl: 'partials/rule_remove_confirm.html',
+            scope,
+          })
+          .result.then(removeForReal);
       } else {
         removeForReal();
       }
@@ -308,26 +319,32 @@ ${regexpRules}
       $scope.showNotes = true;
       unwatchRulesShowNote();
     };
-    const unwatchRulesShowNote = $scope.$watch('profile.rules', ((rules: any) => {
-      if (rules && rules.some((rule: any) => !!rule.note)) {
-        $scope.showNotes = true;
-        unwatchRulesShowNote();
-      }
-    }), true);
+    const unwatchRulesShowNote = $scope.$watch(
+      'profile.rules',
+      (rules: any) => {
+        if (rules && rules.some((rule: any) => !!rule.note)) {
+          $scope.showNotes = true;
+          unwatchRulesShowNote();
+        }
+      },
+      true,
+    );
 
     $scope.resetRules = () => {
       const scope = $scope.$new('isolate');
       scope.ruleProfile = $scope.profileByName($scope.attachedOptions.defaultProfileName);
       scope.dispNameFilter = $scope.dispNameFilter;
       scope.options = $scope.options;
-      $uibModal.open({
-        templateUrl: 'partials/rule_reset_confirm.html',
-        scope
-      }).result.then(() => {
-        for (const rule of $scope.profile.rules) {
-          rule.profileName = $scope.attachedOptions.defaultProfileName;
-        }
-      });
+      $uibModal
+        .open({
+          templateUrl: 'partials/rule_reset_confirm.html',
+          scope,
+        })
+        .result.then(() => {
+          for (const rule of $scope.profile.rules) {
+            rule.profileName = $scope.attachedOptions.defaultProfileName;
+          }
+        });
     };
 
     $scope.sortableOptions = {
@@ -336,7 +353,7 @@ ${regexpRules}
       axis: 'y',
       forceHelperSize: true,
       forcePlaceholderSize: true,
-      containment: 'parent'
+      containment: 'parent',
     };
 
     // == Attached ==
@@ -374,7 +391,7 @@ ${regexpRules}
 
     $scope.attachedOptions = { enabled: false };
     $scope.$watch('profile.defaultProfileName', (name: string) => {
-      $scope.attachedOptions.enabled = (name === $scope.attachedName);
+      $scope.attachedOptions.enabled = name === $scope.attachedName;
       if (!$scope.attached || !$scope.attachedOptions.enabled) {
         $scope.attachedOptions.defaultProfileName = name;
       }
@@ -419,7 +436,7 @@ ${regexpRules}
         name: $scope.attachedName,
         defaultProfileName: $scope.profile.defaultProfileName,
         profileType: 'RuleListProfile',
-        color: $scope.profile.color
+        color: $scope.profile.color,
       });
       OmegaPac.Profiles.updateRevision($scope.attached);
       $scope.options[$scope.attachedKey] = $scope.attached;
@@ -433,45 +450,44 @@ ${regexpRules}
       scope.attached = $scope.attached;
       scope.dispNameFilter = $scope.dispNameFilter;
       scope.options = $scope.options;
-      $uibModal.open({
-        templateUrl: 'partials/delete_attached.html',
-        scope
-      }).result.then(() => {
-        $scope.profile.defaultProfileName = $scope.attached.defaultProfileName;
-        delete $scope.options[$scope.attachedKey];
-      });
+      $uibModal
+        .open({
+          templateUrl: 'partials/delete_attached.html',
+          scope,
+        })
+        .result.then(() => {
+          $scope.profile.defaultProfileName = $scope.attached.defaultProfileName;
+          delete $scope.options[$scope.attachedKey];
+        });
     };
 
     // == Edit source ==
     const stateEditorKey = 'web._profileEditor.' + $scope.profile.name;
     $scope.loadRules = false;
     $scope.editSource = false;
-    
+
     const parseOmegaRules = (code: string, { detect, requireResult }: any = {}) => {
       const setError = (error: any) => {
         if (error.reason) {
-          const args = error.args || [
-            error.sourceLineNo,
-            error.source
-          ];
+          const args = error.args || [error.sourceLineNo, error.source];
           const message = trFilter('ruleList_error_' + error.reason, args);
           if (message) error.message = message;
         }
         return { error };
       };
-      
+
       if (detect && !OmegaPac.RuleList.Switchy.detect(code)) {
         return { error: { reason: 'notSwitchy' } };
       }
-      
+
       const refs = OmegaPac.RuleList.Switchy.directReferenceSet({
-        ruleList: code
+        ruleList: code,
       });
-      
+
       if (requireResult && !refs) {
         return setError({ reason: 'resultNotEnabled' });
       }
-      
+
       for (const key in refs) {
         if (refs.hasOwnProperty(key)) {
           const name = refs[key];
@@ -480,23 +496,23 @@ ${regexpRules}
           }
         }
       }
-      
+
       try {
         return {
           rules: OmegaPac.RuleList.Switchy.parseOmega(code, null, null, {
             strict: true,
-            source: false
-          })
+            source: false,
+          }),
         };
       } catch (err) {
         return setError(err);
       }
     };
-    
+
     const parseSource = () => {
       if (!$scope.source) return true;
       const { rules, error } = parseOmegaRules($scope.source.code.trim(), {
-        requireResult: true
+        requireResult: true,
       });
       if (error) {
         $scope.source.error = error;
@@ -509,30 +525,31 @@ ${regexpRules}
       // Try to merge with existing rules if possible.
       const diff = jsondiffpatch.create({
         objectHash: (obj: any) => JSON.stringify(obj),
-        textDiff: { minLength: 1 / 0 }
+        textDiff: { minLength: 1 / 0 },
       });
       const oldRules = angular.fromJson(angular.toJson($scope.profile.rules));
       const patch = diff.diff(oldRules, rules);
       jsondiffpatch.patch($scope.profile.rules, patch);
       return true;
     };
-    
-    $scope.toggleSource = () => $q.all([attachedReady, rulesReady]).then(() => {
-      $scope.editSource = !$scope.editSource;
-      if ($scope.editSource) {
-        const args = {
-          rules: $scope.profile.rules,
-          defaultProfileName: $scope.attachedOptions.defaultProfileName
-        };
-        const code = OmegaPac.RuleList.Switchy.compose(args, { withResult: true });
-        $scope.source = { code };
-      } else {
-        if (!parseSource()) return;
-        $scope.source = null;
-        $scope.loadRules = true;
-      }
-      omegaTarget.state(stateEditorKey, { editSource: $scope.editSource });
-    });
+
+    $scope.toggleSource = () =>
+      $q.all([attachedReady, rulesReady]).then(() => {
+        $scope.editSource = !$scope.editSource;
+        if ($scope.editSource) {
+          const args = {
+            rules: $scope.profile.rules,
+            defaultProfileName: $scope.attachedOptions.defaultProfileName,
+          };
+          const code = OmegaPac.RuleList.Switchy.compose(args, { withResult: true });
+          $scope.source = { code };
+        } else {
+          if (!parseSource()) return;
+          $scope.source = null;
+          $scope.loadRules = true;
+        }
+        omegaTarget.state(stateEditorKey, { editSource: $scope.editSource });
+      });
 
     $rootScope.$on('$stateChangeStart', (event: any, _: any, __: any, fromState: any) => {
       if ($scope.editSource && $scope.source.touched) {
@@ -581,6 +598,5 @@ ${regexpRules}
         });
       }
     });
-  }
+  },
 ]);
-

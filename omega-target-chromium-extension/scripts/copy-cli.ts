@@ -17,7 +17,7 @@ function firstExistingPath(...candidates: string[]): string {
     if (fs.existsSync(candidate)) return candidate;
   }
   throw new Error(
-    `None of the candidate paths exist:\n${candidates.map((c) => `- ${c}`).join('\n')}`
+    `None of the candidate paths exist:\n${candidates.map((c) => `- ${c}`).join('\n')}`,
   );
 }
 
@@ -51,14 +51,17 @@ async function writeBuildManifest(repoRoot: string): Promise<void> {
     repoRoot,
     'omega-target-chromium-extension',
     'overlay',
-    'manifest.json'
+    'manifest.json',
   );
   const raw = fs.readFileSync(manifestPath, 'utf8');
   const manifest = JSON.parse(raw) as { permissions?: unknown };
 
   // Match master behavior: strip "downloads" permission by default.
   // Set SWITCHYOMEGA_KEEP_DOWNLOADS_PERMISSION=1 to keep it.
-  if (process.env.SWITCHYOMEGA_KEEP_DOWNLOADS_PERMISSION !== '1' && Array.isArray(manifest.permissions)) {
+  if (
+    process.env.SWITCHYOMEGA_KEEP_DOWNLOADS_PERMISSION !== '1' &&
+    Array.isArray(manifest.permissions)
+  ) {
     manifest.permissions = manifest.permissions.filter((p) => p !== 'downloads');
   }
 
@@ -74,11 +77,11 @@ async function copyAllFiles(): Promise<void> {
   const repoRoot = path.resolve(__dirname, '..', '..');
   const omegaWebBuildDir = firstExistingPath(
     path.join(repoRoot, 'omega-web', 'build'),
-    path.join('node_modules', 'omega-web', 'build')
+    path.join('node_modules', 'omega-web', 'build'),
   );
   const omegaTargetMinJs = firstExistingPath(
     path.join(repoRoot, 'omega-target', 'omega_target.min.js'),
-    path.join('node_modules', 'omega-target', 'omega_target.min.js')
+    path.join('node_modules', 'omega-target', 'omega_target.min.js'),
   );
 
   // Copy omega-web build
@@ -145,4 +148,3 @@ copyAllFiles().catch((err) => {
   console.error('❌ Copy failed:', err);
   process.exit(1);
 });
-

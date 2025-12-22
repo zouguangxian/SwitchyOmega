@@ -1,28 +1,27 @@
-(function() {
+(function () {
   $script.ready('om-state', updateMenuByState);
   $script.ready('om-page-info', updateMenuByPageInfo);
   $script.ready(['om-state', 'om-page-info'], updateMenuByStateAndPageInfo);
 
-  var profileTemplate = document.getElementById('js-profile-tpl')
-    .cloneNode(true);
+  var profileTemplate = document.getElementById('js-profile-tpl').cloneNode(true);
   profileTemplate.removeAttribute('id');
 
   var iconForProfileType = {
-    'DirectProfile': 'glyphicon-transfer',
-    'SystemProfile': 'glyphicon-off',
-    'AutoDetectProfile': 'glyphicon-file',
-    'FixedProfile': 'glyphicon-globe',
-    'PacProfile': 'glyphicon-file',
-    'VirtualProfile': 'glyphicon-question-sign',
-    'RuleListProfile': 'glyphicon-list',
-    'SwitchProfile': 'glyphicon-retweet',
+    DirectProfile: 'glyphicon-transfer',
+    SystemProfile: 'glyphicon-off',
+    AutoDetectProfile: 'glyphicon-file',
+    FixedProfile: 'glyphicon-globe',
+    PacProfile: 'glyphicon-file',
+    VirtualProfile: 'glyphicon-question-sign',
+    RuleListProfile: 'glyphicon-list',
+    SwitchProfile: 'glyphicon-retweet',
   };
   var orderForType = {
-    'FixedProfile': -2000,
-    'PacProfile': -1000,
-    'VirtualProfile': 1000,
-    'SwitchProfile': 2000,
-    'RuleListProfile': 3000,
+    FixedProfile: -2000,
+    PacProfile: -1000,
+    VirtualProfile: 1000,
+    SwitchProfile: 2000,
+    RuleListProfile: 3000,
   };
 
   return;
@@ -57,8 +56,7 @@
     var info = OmegaPopup.pageInfo;
     if (info && info.errorCount > 0) {
       document.querySelector('.om-reqinfo').classList.remove('om-hidden');
-      var text = OmegaTargetPopup.getMessage('popup_requestErrorCount',
-        [info.errorCount]);
+      var text = OmegaTargetPopup.getMessage('popup_requestErrorCount', [info.errorCount]);
       document.querySelector('.om-reqinfo-text').textContent = text;
     }
   }
@@ -66,8 +64,7 @@
   function updateMenuByStateAndPageInfo() {
     var state = OmegaPopup.state;
     var info = OmegaPopup.pageInfo;
-    if (state.showExternalProfile && state.externalProfile &&
-        (!info || !info.errorCount)) {
+    if (state.showExternalProfile && state.externalProfile && (!info || !info.errorCount)) {
       showMenuForExternalProfile(state);
     }
     if (!info || !info.url) return updateOtherItems(null);
@@ -78,12 +75,12 @@
 
   function showMenuForExternalProfile(state) {
     var profile = state.externalProfile;
-    profile.name = OmegaTargetPopup.getMessage('popup_externalProfile')
+    profile.name = OmegaTargetPopup.getMessage('popup_externalProfile');
     var profileDisp = createMenuItemForProfile(profile);
 
     var link = profileDisp.querySelector('a');
     link.id = 'js-external';
-    link.addEventListener('click', function() {
+    link.addEventListener('click', function () {
       location.href = '../popup.html#!external';
     });
 
@@ -102,8 +99,7 @@
   }
 
   function updateOtherItems(state) {
-    var hasValidResults = state && state.validResultProfiles &&
-      state.validResultProfiles.length;
+    var hasValidResults = state && state.validResultProfiles && state.validResultProfiles.length;
     if (!hasValidResults || !state.currentProfileCanAddRule) {
       document.querySelector('.om-nav-addrule').classList.add('om-hidden');
       document.getElementById('js-addrule').href = '#';
@@ -114,10 +110,10 @@
     }
   }
 
-    var isValidResultProfile = {};
-    validResultProfiles.forEach(function(name) {
-      isValidResultProfile['+' + name] = true;
-    });
+  var isValidResultProfile = {};
+  validResultProfiles.forEach(function (name) {
+    isValidResultProfile['+' + name] = true;
+  });
 
   function createGlobeIcon(targetEl, color) {
     var el = document.createElement('span');
@@ -146,35 +142,34 @@
       if (!systemProfileDisp.querySelector('.glyphicon')) {
         createGlobeIcon(systemProfileDisp, systemProfile.color);
       }
-      systemProfileDisp.setAttribute('title',
-        systemProfile.desc || '');
+      systemProfileDisp.setAttribute('title', systemProfile.desc || '');
     }
     if (directProfile) {
       if (!directProfileDisp.querySelector('.glyphicon')) {
         createGlobeIcon(directProfileDisp, directProfile.color);
       }
-      directProfileDisp.setAttribute('title',
-        directProfile.desc || '');
+      directProfileDisp.setAttribute('title', directProfile.desc || '');
     }
 
     var profilesEnd = document.getElementById('js-profiles-end');
     var profilesContainer = profilesEnd.parentElement;
     var profileCount = 0;
-    var charCodeUnderscore = '_'.charCodeAt(0)
-    var profiles = Object.keys(availableProfiles).map(function(key) {
-      return availableProfiles[key];
-    }).sort(compareProfile);
-    profiles.forEach(function(profile) {
+    var charCodeUnderscore = '_'.charCodeAt(0);
+    var profiles = Object.keys(availableProfiles)
+      .map(function (key) {
+        return availableProfiles[key];
+      })
+      .sort(compareProfile);
+    profiles.forEach(function (profile) {
       if (profile.builtin) return;
       if (profile.name.charCodeAt(0) === charCodeUnderscore) return;
       profileCount++;
 
-      var profileDisp = createMenuItemForProfile(profile,
-        availableProfiles);
+      var profileDisp = createMenuItemForProfile(profile, availableProfiles);
       var link = profileDisp.querySelector('a');
       link.id = 'js-profile-' + profileCount;
-      link.addEventListener('click', function() {
-        $script.ready('om-main', function() {
+      link.addEventListener('click', function () {
+        $script.ready('om-main', function () {
           OmegaPopup.applyProfile(profile.name);
         });
       });
@@ -192,11 +187,10 @@
         icon.setAttribute('class', 'glyphicon glyphicon-chevron-down');
         toggle.appendChild(icon);
 
-        toggle.addEventListener('click', function(e) {
+        toggle.addEventListener('click', function (e) {
           e.stopPropagation();
           e.preventDefault();
-          toggleDropdown(profileDisp,
-            createDefaultProfileDropdown.bind(profileDisp, profile));
+          toggleDropdown(profileDisp, createDefaultProfileDropdown.bind(profileDisp, profile));
         });
 
         link.appendChild(toggle);
@@ -208,8 +202,7 @@
 
   function createMenuItemForProfile(profile, profiles) {
     var profileDisp = profileTemplate.cloneNode(true);
-    var text = OmegaTargetPopup.getMessage('profile_' + profile.name) ||
-      profile.name;
+    var text = OmegaTargetPopup.getMessage('profile_' + profile.name) || profile.name;
     if (profile.defaultProfileName) {
       text += ' [' + profile.defaultProfileName + ']';
     }
@@ -220,12 +213,11 @@
       targetProfile = profiles['+' + profile.defaultProfileName];
     }
 
-    profileDisp.setAttribute('title',
-      targetProfile.desc || targetProfile.name || '');
+    profileDisp.setAttribute('title', targetProfile.desc || targetProfile.name || '');
 
     var iconClass = iconForProfileType[targetProfile.profileType];
     var icon = profileDisp.querySelector('.glyphicon');
-    icon.setAttribute('class', 'glyphicon ' + iconClass)
+    icon.setAttribute('class', 'glyphicon ' + iconClass);
     icon.style.color = targetProfile.color;
     if (targetProfile !== profile) {
       icon.classList.add('om-virtual-profile-icon');
@@ -251,19 +243,23 @@
     var ul = document.createElement('ul');
     var state = OmegaPopup.state;
     var pageInfo = OmegaPopup.pageInfo;
-    var profiles = state.validResultProfiles.map(function(name) {
-      return state.availableProfiles['+' + name];
-    }).sort(compareProfile);
-    profiles.forEach(function(profile) {
+    var profiles = state.validResultProfiles
+      .map(function (name) {
+        return state.availableProfiles['+' + name];
+      })
+      .sort(compareProfile);
+    profiles.forEach(function (profile) {
       if (profile.name.indexOf('__') === 0) return;
-      if ((profile.name === OmegaPopup.state.currentProfileName) &&
-        (!pageInfo.tempRuleProfileName) &&
-        (state.validResultProfiles.length > 1)
-      ) return;
+      if (
+        profile.name === OmegaPopup.state.currentProfileName &&
+        !pageInfo.tempRuleProfileName &&
+        state.validResultProfiles.length > 1
+      )
+        return;
       var li = createMenuItemForProfile(profile, state.availableProfiles);
       var link = li.querySelector('a');
-      link.addEventListener('click', function() {
-        $script.ready('om-main', function() {
+      link.addEventListener('click', function () {
+        $script.ready('om-main', function () {
           OmegaPopup.addTempRule(pageInfo.domain, profile.name);
         });
       });
@@ -278,18 +274,19 @@
   function createDefaultProfileDropdown(profile) {
     var ul = document.createElement('ul');
     var state = OmegaPopup.state;
-    var profiles = profile.validResultProfiles.map(function(name) {
-      return state.availableProfiles['+' + name];
-    }).sort(compareProfile);
-    profiles.forEach(function(resultProfile) {
+    var profiles = profile.validResultProfiles
+      .map(function (name) {
+        return state.availableProfiles['+' + name];
+      })
+      .sort(compareProfile);
+    profiles.forEach(function (resultProfile) {
       if (resultProfile.name.indexOf('__') === 0) return;
-      if ((resultProfile === profile.currentProfileName) &&
-        (profile.validResultProfiles.length > 1)
-      ) return;
+      if (resultProfile === profile.currentProfileName && profile.validResultProfiles.length > 1)
+        return;
       var li = createMenuItemForProfile(resultProfile, state.availableProfiles);
       var link = li.querySelector('a');
-      link.addEventListener('click', function() {
-        $script.ready('om-main', function() {
+      link.addEventListener('click', function () {
+        $script.ready('om-main', function () {
           OmegaPopup.setDefaultProfile(profile.name, resultProfile.name);
         });
       });

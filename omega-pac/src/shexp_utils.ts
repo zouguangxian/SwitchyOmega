@@ -81,4 +81,3 @@ export function shExp2RegExp(pattern: string, options?: ShExpOptions): string {
 }
 
 export const regExpMetaChars = metaCharCodes;
-

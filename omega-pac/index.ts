@@ -7,13 +7,7 @@ const utils = require('./src/utils');
 const url = require('url');
 
 // Export with explicit typing
-export {
-  Conditions,
-  PacGenerator,
-  Profiles,
-  RuleList,
-  ShexpUtils
-};
+export { Conditions, PacGenerator, Profiles, RuleList, ShexpUtils };
 
 // Re-export utils
 export const Revision = utils.Revision;
@@ -25,6 +19,5 @@ export const wildcardForUrl = utils.wildcardForUrl;
 export const Url = {
   parse: url.parse,
   format: url.format,
-  resolve: url.resolve
+  resolve: url.resolve,
 };
-

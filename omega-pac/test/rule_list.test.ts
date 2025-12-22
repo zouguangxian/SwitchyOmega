@@ -6,13 +6,13 @@ chai = require('chai');
 
 should = chai.should();
 
-describe('RuleList', function() {
+describe('RuleList', function () {
   var RuleList;
   RuleList = require('../src/rule_list');
-  describe('AutoProxy', function() {
+  describe('AutoProxy', function () {
     var parse;
     parse = RuleList['AutoProxy'].parse;
-    it('should parse keyword conditions', function() {
+    it('should parse keyword conditions', function () {
       var line, result;
       line = 'example.com';
       result = parse(line, 'match', 'notmatch');
@@ -22,11 +22,11 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'KeywordCondition',
-          pattern: 'example.com'
-        }
+          pattern: 'example.com',
+        },
       });
     });
-    it('should parse keyword conditions with asterisks', function() {
+    it('should parse keyword conditions with asterisks', function () {
       var line, result;
       line = 'example*.com';
       result = parse(line, 'match', 'notmatch');
@@ -36,11 +36,11 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: 'http://*example*.com*'
-        }
+          pattern: 'http://*example*.com*',
+        },
       });
     });
-    it('should parse host conditions', function() {
+    it('should parse host conditions', function () {
       var line, result;
       line = '||example.com';
       result = parse(line, 'match', 'notmatch');
@@ -50,11 +50,11 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*.example.com'
-        }
+          pattern: '*.example.com',
+        },
       });
     });
-    it('should parse "starts-with" conditions', function() {
+    it('should parse "starts-with" conditions', function () {
       var line, result;
       line = '|https://ssl.example.com';
       result = parse(line, 'match', 'notmatch');
@@ -64,11 +64,11 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: 'https://ssl.example.com*'
-        }
+          pattern: 'https://ssl.example.com*',
+        },
       });
     });
-    it('should parse "starts-with" conditions for the HTTP scheme', function() {
+    it('should parse "starts-with" conditions for the HTTP scheme', function () {
       var line, result;
       line = '|http://example.com';
       result = parse(line, 'match', 'notmatch');
@@ -78,11 +78,11 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: 'http://example.com*'
-        }
+          pattern: 'http://example.com*',
+        },
       });
     });
-    it('should parse url regex conditions', function() {
+    it('should parse url regex conditions', function () {
       var line, result;
       line = '/^https?:\\/\\/[^\\/]+example\.com/';
       result = parse(line, 'match', 'notmatch');
@@ -92,16 +92,16 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlRegexCondition',
-          pattern: '^https?:\\/\\/[^\\/]+example\.com'
-        }
+          pattern: '^https?:\\/\\/[^\\/]+example\.com',
+        },
       });
     });
-    it('should ignore comment lines', function() {
+    it('should ignore comment lines', function () {
       var result;
       result = parse('!example.com', 'match', 'notmatch');
       return result.should.have.length(0);
     });
-    it('should parse multiple lines', function() {
+    it('should parse multiple lines', function () {
       var result;
       result = parse('example.com\n!comment\n||example.com', 'match', 'notmatch');
       result.should.have.length(2);
@@ -110,19 +110,19 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'KeywordCondition',
-          pattern: 'example.com'
-        }
+          pattern: 'example.com',
+        },
       });
       return result[1].should.eql({
         source: '||example.com',
         profileName: 'match',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*.example.com'
-        }
+          pattern: '*.example.com',
+        },
       });
     });
-    return it('should put exclusive rules first', function() {
+    return it('should put exclusive rules first', function () {
       var result;
       result = parse('example.com\n@@||example.com', 'match', 'notmatch');
       result.should.have.length(2);
@@ -131,43 +131,43 @@ describe('RuleList', function() {
         profileName: 'notmatch',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*.example.com'
-        }
+          pattern: '*.example.com',
+        },
       });
       return result[1].should.eql({
         source: 'example.com',
         profileName: 'match',
         condition: {
           conditionType: 'KeywordCondition',
-          pattern: 'example.com'
-        }
+          pattern: 'example.com',
+        },
       });
     });
   });
-  describe('Switchy', function() {
+  describe('Switchy', function () {
     var compose, parse;
     parse = RuleList['Switchy'].parse;
-    compose = function(sections) {
+    compose = function (sections) {
       var i, len, list, rule, rules, sec;
       list = '#BEGIN\r\n\r\n';
       for (sec in sections) {
         rules = sections[sec];
-        list += "[" + sec + "]\r\n";
+        list += '[' + sec + ']\r\n';
         for (i = 0, len = rules.length; i < len; i++) {
           rule = rules[i];
           list += rule;
           list += '\r\n';
         }
       }
-      return list += '\r\n\r\n#END\r\n';
+      return (list += '\r\n\r\n#END\r\n');
     };
-    it('should parse empty rule lists', function() {
+    it('should parse empty rule lists', function () {
       var list, result;
       list = compose({});
       result = parse(list, 'match', 'notmatch');
       return result.should.have.length(0);
     });
-    it('should ignore stuff before #BEGIN or after #END.', function() {
+    it('should ignore stuff before #BEGIN or after #END.', function () {
       var list, result;
       list = compose({});
       list += '[RegExp]\r\ntest\r\n';
@@ -175,10 +175,10 @@ describe('RuleList', function() {
       result = parse(list, 'match', 'notmatch');
       return result.should.have.length(0);
     });
-    it('should parse wildcard rules', function() {
+    it('should parse wildcard rules', function () {
       var list, result;
       list = compose({
-        'Wildcard': ['*://example.com/abc/*']
+        Wildcard: ['*://example.com/abc/*'],
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
@@ -187,14 +187,14 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: '*://example.com/abc/*'
-        }
+          pattern: '*://example.com/abc/*',
+        },
       });
     });
-    it('should parse RegExp rules', function() {
+    it('should parse RegExp rules', function () {
       var list, result;
       list = compose({
-        'RegExp': ['^http://www\.example\.com/.*']
+        RegExp: ['^http://www\.example\.com/.*'],
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
@@ -203,14 +203,14 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlRegexCondition',
-          pattern: '^http://www\.example\.com/.*'
-        }
+          pattern: '^http://www\.example\.com/.*',
+        },
       });
     });
-    it('should parse exclusive rules', function() {
+    it('should parse exclusive rules', function () {
       var list, result;
       list = compose({
-        'RegExp': ['!^http://www\.example\.com/.*']
+        RegExp: ['!^http://www\.example\.com/.*'],
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
@@ -219,15 +219,15 @@ describe('RuleList', function() {
         profileName: 'notmatch',
         condition: {
           conditionType: 'UrlRegexCondition',
-          pattern: '^http://www\.example\.com/.*'
-        }
+          pattern: '^http://www\.example\.com/.*',
+        },
       });
     });
-    it('should parse multiple rules in multiple sections', function() {
+    it('should parse multiple rules in multiple sections', function () {
       var list, result;
       list = compose({
-        'Wildcard': ['http://www.example.com/*', 'http://example.com/*'],
-        'RegExp': ['^http://www\.example\.com/.*', '^http://example\.com/.*']
+        Wildcard: ['http://www.example.com/*', 'http://example.com/*'],
+        RegExp: ['^http://www\.example\.com/.*', '^http://example\.com/.*'],
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(4);
@@ -236,39 +236,39 @@ describe('RuleList', function() {
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: 'http://www.example.com/*'
-        }
+          pattern: 'http://www.example.com/*',
+        },
       });
       result[1].should.eql({
         source: 'http://example.com/*',
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: 'http://example.com/*'
-        }
+          pattern: 'http://example.com/*',
+        },
       });
       result[2].should.eql({
         source: '^http://www\.example\.com/.*',
         profileName: 'match',
         condition: {
           conditionType: 'UrlRegexCondition',
-          pattern: '^http://www\.example\.com/.*'
-        }
+          pattern: '^http://www\.example\.com/.*',
+        },
       });
       return result[3].should.eql({
         source: '^http://example\.com/.*',
         profileName: 'match',
         condition: {
           conditionType: 'UrlRegexCondition',
-          pattern: '^http://example\.com/.*'
-        }
+          pattern: '^http://example\.com/.*',
+        },
       });
     });
-    return it('should put exclusive rules first', function() {
+    return it('should put exclusive rules first', function () {
       var list, result;
       list = compose({
-        'Wildcard': ['http://www\.example\.com/*'],
-        'RegExp': ['!^http://www\.example\.com/.*']
+        Wildcard: ['http://www\.example\.com/*'],
+        RegExp: ['!^http://www\.example\.com/.*'],
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(2);
@@ -277,190 +277,195 @@ describe('RuleList', function() {
         profileName: 'notmatch',
         condition: {
           conditionType: 'UrlRegexCondition',
-          pattern: '^http://www.example\.com/.*'
-        }
+          pattern: '^http://www.example\.com/.*',
+        },
       });
       return result[1].should.eql({
         source: 'http://www\.example\.com/*',
         profileName: 'match',
         condition: {
           conditionType: 'UrlWildcardCondition',
-          pattern: 'http://www.example.com/*'
-        }
+          pattern: 'http://www.example.com/*',
+        },
       });
     });
   });
-  return describe('Switchy (omega format)', function() {
+  return describe('Switchy (omega format)', function () {
     var compose, parse;
     parse = RuleList['Switchy'].parse;
     compose = RuleList['Switchy'].compose;
-    it('should parse empty rule lists', function() {
+    it('should parse empty rule lists', function () {
       var list, result;
       list = compose({
-        rules: []
+        rules: [],
       });
       result = parse(list, 'match', 'notmatch');
       return result.should.have.length(0);
     });
-    it('should ignore comment lines.', function() {
+    it('should ignore comment lines.', function () {
       var list, result;
       list = compose({
-        rules: []
+        rules: [],
       });
       list += ';*.example.com \r\n';
       result = parse(list, 'match', 'notmatch');
       return result.should.have.length(0);
     });
-    it('should compose and parse HostWildcardCondition', function() {
+    it('should compose and parse HostWildcardCondition', function () {
       var list, result, rule;
       rule = {
         source: '*.example.com',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*.example.com'
+          pattern: '*.example.com',
         },
-        profileName: 'match'
+        profileName: 'match',
       };
       list = compose({
         rules: [rule],
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
       return result[0].should.eql(rule);
     });
-    it('should compose and parse HostRegexCondition', function() {
+    it('should compose and parse HostRegexCondition', function () {
       var list, result, rule;
       rule = {
         source: 'HostRegex: ^http://www\.example\.com/.*',
         condition: {
           conditionType: 'HostRegexCondition',
-          pattern: '^http://www\.example\.com/.*'
+          pattern: '^http://www\.example\.com/.*',
         },
-        profileName: 'match'
+        profileName: 'match',
       };
       list = compose({
         rules: [rule],
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
       return result[0].should.eql(rule);
     });
-    it('should compose and parse disabled rules', function() {
+    it('should compose and parse disabled rules', function () {
       var list, result, rule;
       rule = {
         source: 'Disabled: *.example.com',
         condition: {
           conditionType: 'FalseCondition',
-          pattern: '*.example.com'
+          pattern: '*.example.com',
         },
-        profileName: 'match'
+        profileName: 'match',
       };
       list = compose({
         rules: [rule],
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
       return result[0].should.eql(rule);
     });
-    it('should compose and parse exclusive rules', function() {
+    it('should compose and parse exclusive rules', function () {
       var list, result, rule;
       rule = {
         source: '!*.example.com',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*.example.com'
+          pattern: '*.example.com',
         },
-        profileName: 'notmatch'
+        profileName: 'notmatch',
       };
       list = compose({
         rules: [rule],
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
       return result[0].should.eql(rule);
     });
-    it('should compose and parse conditions starting with special chars', function() {
+    it('should compose and parse conditions starting with special chars', function () {
       var list, result, rule;
       rule = {
         source: ': ;abc',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: ';abc'
+          pattern: ';abc',
         },
-        profileName: 'match'
+        profileName: 'match',
       };
       list = compose({
         rules: [rule],
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       result.should.have.length(1);
       return result[0].should.eql(rule);
     });
-    it('should parse multiple conditions', function() {
+    it('should parse multiple conditions', function () {
       var list, result, rules;
       rules = [
         {
           source: '*.example.com',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: '*.example.com'
+            pattern: '*.example.com',
           },
-          profileName: 'match'
-        }, {
+          profileName: 'match',
+        },
+        {
           source: '*.example.org',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: '*.example.org'
+            pattern: '*.example.org',
           },
-          profileName: 'match'
-        }
+          profileName: 'match',
+        },
       ];
       list = compose({
         rules: rules,
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       return result.should.eql(rules);
     });
-    it('should respect the top-down order of conditions', function() {
+    it('should respect the top-down order of conditions', function () {
       var list, result, rules;
       rules = [
         {
           source: 'b.example.com',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: 'b.example.com'
+            pattern: 'b.example.com',
           },
-          profileName: 'match'
-        }, {
+          profileName: 'match',
+        },
+        {
           source: '!a.example.org',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: 'a.example.org'
+            pattern: 'a.example.org',
           },
-          profileName: 'notmatch'
-        }
+          profileName: 'notmatch',
+        },
       ];
       list = compose({
         rules: rules,
-        defaultProfileName: 'notmatch'
+        defaultProfileName: 'notmatch',
       });
       result = parse(list, 'match', 'notmatch');
       return result.should.eql(rules);
     });
-    it('should add a default rule when results are enabled', function() {
+    it('should add a default rule when results are enabled', function () {
       var list, result;
-      list = compose({
-        rules: [],
-        defaultProfileName: 'notmatch'
-      }, {
-        withResult: true
-      });
+      list = compose(
+        {
+          rules: [],
+          defaultProfileName: 'notmatch',
+        },
+        {
+          withResult: true,
+        },
+      );
       list.split(/\r|\n/).should.contain('@with result');
       result = parse(list, 'ignored', 'alsoIgnored');
       result.should.have.length(1);
@@ -468,81 +473,89 @@ describe('RuleList', function() {
         source: '*',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*'
+          pattern: '*',
         },
-        profileName: 'notmatch'
+        profileName: 'notmatch',
       });
     });
-    it('should compose and parse conditions with results', function() {
+    it('should compose and parse conditions with results', function () {
       var list, result, rules;
       rules = [
         {
           source: 'b.example.com',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: 'b.example.com'
+            pattern: 'b.example.com',
           },
-          profileName: 'abc'
-        }, {
+          profileName: 'abc',
+        },
+        {
           source: 'a.example.org',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: 'a.example.org'
+            pattern: 'a.example.org',
           },
-          profileName: 'def'
-        }
+          profileName: 'def',
+        },
       ];
-      list = compose({
-        rules: rules,
-        defaultProfileName: 'ghi'
-      }, {
-        withResult: true
-      });
+      list = compose(
+        {
+          rules: rules,
+          defaultProfileName: 'ghi',
+        },
+        {
+          withResult: true,
+        },
+      );
       result = parse(list, 'ignored', 'alsoIgnored');
       rules.push({
         source: '*',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*'
+          pattern: '*',
         },
-        profileName: 'ghi'
+        profileName: 'ghi',
       });
       return result.should.eql(rules);
     });
-    return it('should compose and parse exclusive conditions with results', function() {
+    return it('should compose and parse exclusive conditions with results', function () {
       var list, result, rules;
       rules = [
         {
           source: '!b.example.com',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: 'b.example.com'
+            pattern: 'b.example.com',
           },
-          profileName: 'default profile'
-        }, {
+          profileName: 'default profile',
+        },
+        {
           source: 'a.example.org',
           condition: {
             conditionType: 'HostWildcardCondition',
-            pattern: 'a.example.org'
+            pattern: 'a.example.org',
           },
-          profileName: 'some profile'
-        }
+          profileName: 'some profile',
+        },
       ];
-      list = compose({
-        rules: rules,
-        defaultProfileName: 'default profile'
-      }, {
-        withResult: true,
-        useExclusive: true
-      });
+      list = compose(
+        {
+          rules: rules,
+          defaultProfileName: 'default profile',
+        },
+        {
+          withResult: true,
+          useExclusive: true,
+        },
+      );
       result = parse(list, 'ignored', 'alsoIgnored');
       rules.push({
         source: '*',
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: '*'
+          pattern: '*',
         },
-        profileName: 'default profile'
+        profileName: 'default profile',
       });
       return result.should.eql(rules);
     });

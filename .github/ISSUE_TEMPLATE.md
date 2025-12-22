@@ -25,9 +25,7 @@ CLEAR ABOVE AFTER READ / 阅读后可删除以上内容 -->
 
 ### SwitchyOmega version / SwitchyOmega 版本
 
-
 ### Browser version & OS version / 浏览器名称、版本及操作系统版本
-
 
 ### Problem description / 问题描述
 
@@ -44,6 +42,4 @@ CLEAR ABOVE AFTER READ / 阅读后可删除以上内容 -->
 
 #### Expected behavior / 期望发生的情况
 
-
 #### Actual (or suggested) behavior / 实际发生的情况（或建议修改后的行为）
-

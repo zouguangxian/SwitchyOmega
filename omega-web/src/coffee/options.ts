@@ -24,27 +24,39 @@ $script('lib/spin.js/spin.js', () => {
 
 $script.ready(['angular-loader'], () => {
   angular.module('omega', [
-    'ngLocale', 'ngAnimate', 'ngSanitize',
-    'ui.bootstrap', 'ui.router', 'ui.router.state.events', 'ngProgress', 'ui.sortable',
-    'angularSpectrumColorpicker', 'ui.validate', 'angular-ladda', 'omegaTarget',
-    'omegaDecoration'
+    'ngLocale',
+    'ngAnimate',
+    'ngSanitize',
+    'ui.bootstrap',
+    'ui.router',
+    'ui.router.state.events',
+    'ngProgress',
+    'ui.sortable',
+    'angularSpectrumColorpicker',
+    'ui.validate',
+    'angular-ladda',
+    'omegaTarget',
+    'omegaDecoration',
   ]);
   $script.ready(['omega-pac'], () => {
     $script('js/omega.js', 'omega');
   });
 
-  $script([
-    'js/omega_target_web.js',
-    'js/omega_decoration.js',
-    'lib/angular-animate/angular-animate.min.js',
-    'lib/angular-bootstrap/ui-bootstrap-tpls.min.js',
-    'lib/ngprogress/ngProgress.min.js',
-    'lib/angular-ui-sortable/sortable.min.js',
-    'lib/angular-ui-utils/ui-utils.min.js',
-    'lib/angular-ui-utils/validate.min.js',
-    'lib/jsondiffpatch/jsondiffpatch.min.js',
-    'lib/angular-spectrum-colorpicker/angular-spectrum-colorpicker.min.js'
-  ], 'omega-deps');
+  $script(
+    [
+      'js/omega_target_web.js',
+      'js/omega_decoration.js',
+      'lib/angular-animate/angular-animate.min.js',
+      'lib/angular-bootstrap/ui-bootstrap-tpls.min.js',
+      'lib/ngprogress/ngProgress.min.js',
+      'lib/angular-ui-sortable/sortable.min.js',
+      'lib/angular-ui-utils/ui-utils.min.js',
+      'lib/angular-ui-utils/validate.min.js',
+      'lib/jsondiffpatch/jsondiffpatch.min.js',
+      'lib/angular-spectrum-colorpicker/angular-spectrum-colorpicker.min.js',
+    ],
+    'omega-deps',
+  );
 });
 
 $script.ready(['jquery'], () => {
@@ -69,13 +81,13 @@ $script.ready(['angular'], () => {
 
   const locales: Record<string, string> = {
     '': 'en-us',
-    'en': 'en-us',
-    'zh': 'zh-cn',
+    en: 'en-us',
+    zh: 'zh-cn',
     'zh-hans': 'zh-cn',
     'zh-hant': 'zh-tw',
     'zh-cn': 'zh-cn',
     'zh-hk': 'zh-hk',
-    'zh-tw': 'zh-tw'
+    'zh-tw': 'zh-tw',
   };
 
   const lang = navigator.language;
@@ -84,11 +96,21 @@ $script.ready(['angular'], () => {
   $script('lib/angular-i18n/angular-locale_' + locale + '.js', 'angular-i18n');
 });
 
-$script.ready([
-  'angular', 'omega', 'omega-deps', 'angular-ui-router',
-  'jquery-ui', 'spectrum', 'filesaver', 'blob', 'angular-ladda',
-  'angular-sanitize', 'angular-i18n'
-], () => {
-  angular.bootstrap(document, ['omega']);
-});
-
+$script.ready(
+  [
+    'angular',
+    'omega',
+    'omega-deps',
+    'angular-ui-router',
+    'jquery-ui',
+    'spectrum',
+    'filesaver',
+    'blob',
+    'angular-ladda',
+    'angular-sanitize',
+    'angular-i18n',
+  ],
+  () => {
+    angular.bootstrap(document, ['omega']);
+  },
+);

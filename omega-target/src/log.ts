@@ -3,11 +3,11 @@
 const replacer = (key: string, value: any): any => {
   switch (key) {
     // Hide values for a few keys with privacy concerns.
-    case "username":
-    case "password":
-    case "host":
-    case "port":
-      return "<secret>";
+    case 'username':
+    case 'password':
+    case 'host':
+    case 'port':
+      return '<secret>';
     default:
       return value;
   }
@@ -76,8 +76,7 @@ const Log = {
    */
   method(name: string, self: any, args: IArguments | any[]): void {
     this.log(this.str(self), '<<', name, Array.prototype.slice.call(args));
-  }
+  },
 };
 
 export default Log;
-

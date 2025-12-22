@@ -4,7 +4,9 @@ import * as fs from 'fs';
 const isDev = process.argv.includes('--watch');
 const isProd = process.env.NODE_ENV === 'production';
 
-console.log(`Building omega-target-chromium-extension (${isDev ? 'watch' : isProd ? 'production' : 'development'} mode)...`);
+console.log(
+  `Building omega-target-chromium-extension (${isDev ? 'watch' : isProd ? 'production' : 'development'} mode)...`,
+);
 
 // Common options
 const commonOptions: esbuild.BuildOptions = {
@@ -15,13 +17,13 @@ const commonOptions: esbuild.BuildOptions = {
   minify: isProd,
   define: {
     'process.env.NODE_ENV': JSON.stringify(isProd ? 'production' : 'development'),
-    'global': 'globalThis',  // Service worker compat: map global -> globalThis
-    'UglifyJS_NoUnsafeEval': 'true',  // MV3 CSP: disable eval/new Function in UglifyJS
+    global: 'globalThis', // Service worker compat: map global -> globalThis
+    UglifyJS_NoUnsafeEval: 'true', // MV3 CSP: disable eval/new Function in UglifyJS
   },
   alias: {
-    'querystring': 'querystring-es3',
-    'url': 'url',
-    'buffer': 'buffer',
+    querystring: 'querystring-es3',
+    url: 'url',
+    buffer: 'buffer',
   },
 };
 
@@ -48,8 +50,8 @@ async function buildEsbuild() {
       entryPoints: ['src/coffee/background.ts'],
       outfile: 'build/js/background.js',
       format: 'iife', // IIFE format for service worker
-      minify: true,  // Required to remove dead code (if (false) branches)
-      treeShaking: true,  // Remove unused code
+      minify: true, // Required to remove dead code (if (false) branches)
+      treeShaking: true, // Remove unused code
       // Bundle everything - no externals
     }),
 
@@ -97,7 +99,7 @@ async function buildEsbuild() {
   if (isDev) {
     console.log('👀 Watching for changes...');
     await Promise.all(contexts.map((ctx) => ctx.watch()));
-    
+
     // Keep process alive
     await new Promise(() => {});
   } else {

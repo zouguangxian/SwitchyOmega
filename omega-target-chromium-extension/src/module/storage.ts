@@ -17,12 +17,21 @@ class ChromeStorage extends OmegaTarget.Storage {
   areaName: string;
 
   static onChangedListenerInstalled: boolean = false;
-  static watchers: Record<string, Record<string, { keys: StorageKeys | Record<string, boolean>; callback: (changes: Record<string, any>) => void }>> = {};
+  static watchers: Record<
+    string,
+    Record<
+      string,
+      {
+        keys: StorageKeys | Record<string, boolean>;
+        callback: (changes: Record<string, any>) => void;
+      }
+    >
+  > = {};
 
   static parseStorageErrors(err: any): Promise<never> {
     if (err?.message) {
       const sustainedPerMinute = 'MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE';
-      
+
       if (err.message.indexOf('QUOTA_BYTES_PER_ITEM') >= 0) {
         const quotaErr: any = new OmegaTarget.Storage.QuotaExceededError();
         quotaErr.perItem = true;
@@ -50,7 +59,9 @@ class ChromeStorage extends OmegaTarget.Storage {
         // This could happen if the storage area is not available. For example,
         // some Chromium-based browsers disable access to the sync storage.
         err = new OmegaTarget.Storage.StorageUnavailableError();
-      } else if (err.message.indexOf('Please set webextensions.storage.sync.enabled to true') >= 0) {
+      } else if (
+        err.message.indexOf('Please set webextensions.storage.sync.enabled to true') >= 0
+      ) {
         // This happens when sync storage is disabled in flags.
         err = new OmegaTarget.Storage.StorageUnavailableError();
       }
@@ -62,7 +73,7 @@ class ChromeStorage extends OmegaTarget.Storage {
   constructor(areaName: string) {
     super();
     this.areaName = areaName;
-    
+
     if ((browser as any)?.storage?.[areaName]) {
       this.storage = (browser as any).storage[areaName] as ChromeStorageAPI;
     } else {
@@ -70,7 +81,7 @@ class ChromeStorage extends OmegaTarget.Storage {
         get: chromeApiPromisify((chrome.storage as any)[areaName], 'get'),
         set: chromeApiPromisify((chrome.storage as any)[areaName], 'set'),
         remove: chromeApiPromisify((chrome.storage as any)[areaName], 'remove'),
-        clear: chromeApiPromisify((chrome.storage as any)[areaName], 'clear')
+        clear: chromeApiPromisify((chrome.storage as any)[areaName], 'clear'),
       };
     }
   }
@@ -98,15 +109,16 @@ class ChromeStorage extends OmegaTarget.Storage {
     if (Array.isArray(keys) && keys.length === 0) {
       return Promise.resolve();
     }
-    return Promise.resolve(this.storage.remove(keys as string | string[]))
-      .catch(ChromeStorage.parseStorageErrors);
+    return Promise.resolve(this.storage.remove(keys as string | string[])).catch(
+      ChromeStorage.parseStorageErrors,
+    );
   }
 
   watch(keys: StorageKeys, callback: (changes: Record<string, any>) => void): () => void {
     if (!ChromeStorage.watchers[this.areaName]) {
       ChromeStorage.watchers[this.areaName] = {};
     }
-    
+
     const area = ChromeStorage.watchers[this.areaName];
     let id = Date.now().toString();
     while (area[id]) {
@@ -121,31 +133,34 @@ class ChromeStorage extends OmegaTarget.Storage {
       }
       processedKeys = keyMap;
     }
-    
+
     area[id] = { keys: processedKeys, callback };
-    
+
     if (!ChromeStorage.onChangedListenerInstalled) {
       chrome.storage.onChanged.addListener(ChromeStorage.onChangedListener);
       ChromeStorage.onChangedListenerInstalled = true;
     }
-    
+
     return () => {
       delete area[id];
     };
   }
 
-  static onChangedListener(changes: Record<string, chrome.storage.StorageChange>, areaName: string): void {
+  static onChangedListener(
+    changes: Record<string, chrome.storage.StorageChange>,
+    areaName: string,
+  ): void {
     const watchers = ChromeStorage.watchers[areaName];
     if (!watchers) return;
-    
+
     let map: Record<string, any> | null = null;
-    
+
     for (const watcherId in watchers) {
       if (!watchers.hasOwnProperty(watcherId)) continue;
-      
+
       const watcher = watchers[watcherId];
       let match = watcher.keys === null;
-      
+
       if (!match) {
         for (const key in changes) {
           if (changes.hasOwnProperty(key)) {
@@ -156,7 +171,7 @@ class ChromeStorage extends OmegaTarget.Storage {
           }
         }
       }
-      
+
       if (match) {
         if (map == null) {
           map = {};
@@ -173,4 +188,3 @@ class ChromeStorage extends OmegaTarget.Storage {
 }
 
 export default ChromeStorage;
-

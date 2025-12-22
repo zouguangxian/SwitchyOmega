@@ -19,9 +19,7 @@ declare const saveAs: any;
 
 angular.module('omega').constant('builtinProfiles', OmegaPac.Profiles.builtinProfiles);
 
-const profileColors = [
-  '#9ce', '#9d9', '#fa8', '#fe9', '#d497ee', '#47b', '#5b5', '#d63', '#ca0'
-];
+const profileColors = ['#9ce', '#9d9', '#fa8', '#fe9', '#d497ee', '#47b', '#5b5', '#d63', '#ca0'];
 const colors = [].concat(profileColors);
 const profileColorPalette: string[][] = [];
 while (colors.length) {
@@ -51,21 +49,32 @@ angular.module('omega').constant('isProfileNameHidden', (name: string) => {
 });
 angular.module('omega').constant('isProfileNameReserved', (name: string) => {
   // Reserve profile names beginning with double-underscore.
-  return (name.charCodeAt(0) === charCodeUnderscore &&
-    name.charCodeAt(1) === charCodeUnderscore);
+  return name.charCodeAt(0) === charCodeUnderscore && name.charCodeAt(1) === charCodeUnderscore;
 });
 
 angular.module('omega').config([
-  '$stateProvider', '$urlRouterProvider', '$httpProvider', '$animateProvider', '$compileProvider',
-  function($stateProvider: any, $urlRouterProvider: any, $httpProvider: any, $animateProvider: any, $compileProvider: any) {
+  '$stateProvider',
+  '$urlRouterProvider',
+  '$httpProvider',
+  '$animateProvider',
+  '$compileProvider',
+  function (
+    $stateProvider: any,
+    $urlRouterProvider: any,
+    $httpProvider: any,
+    $animateProvider: any,
+    $compileProvider: any,
+  ) {
     $compileProvider.aHrefSanitizationWhitelist(
-      /^\s*(https?|ftp|mailto|chrome-extension|moz-extension):/);
+      /^\s*(https?|ftp|mailto|chrome-extension|moz-extension):/,
+    );
     $compileProvider.imgSrcSanitizationWhitelist(
-      /^\s*(https?|local|data|chrome-extension|moz-extension):/);
+      /^\s*(https?|local|data|chrome-extension|moz-extension):/,
+    );
     $animateProvider.classNameFilter(/angular-animate/);
 
     $urlRouterProvider.otherwise('/about');
-    
+
     $urlRouterProvider.otherwise(($injector: any, $location: any) => {
       if ($location.path() === '') {
         return $injector.get('omegaTarget').lastUrl() || '/about';
@@ -73,52 +82,58 @@ angular.module('omega').config([
         return '/about';
       }
     });
-    
+
     $stateProvider
       .state('ui', {
         url: '/ui',
-        templateUrl: 'partials/ui.html'
+        templateUrl: 'partials/ui.html',
       })
       .state('general', {
         url: '/general',
-        templateUrl: 'partials/general.html'
+        templateUrl: 'partials/general.html',
       })
       .state('io', {
         url: '/io',
         templateUrl: 'partials/io.html',
-        controller: 'IoCtrl'
+        controller: 'IoCtrl',
       })
       .state('profile', {
         url: '/profile/*name',
         templateUrl: 'partials/profile.html',
-        controller: 'ProfileCtrl'
+        controller: 'ProfileCtrl',
       })
       .state('about', {
         url: '/about',
         templateUrl: 'partials/about.html',
-        controller: 'AboutCtrl'
+        controller: 'AboutCtrl',
       });
-  }
+  },
 ]);
 
-angular.module('omega').factory('$exceptionHandler', ['$log', function($log: any) {
-  return (exception: any, cause?: any) => {
-    if (exception.message === 'transition aborted') return;
-    if (exception.message === 'transition superseded') return;
-    if (exception.message === 'transition prevented') return;
-    if (exception.message === 'transition failed') return;
-    $log.error(exception, cause);
-  };
-}]);
+angular.module('omega').factory('$exceptionHandler', [
+  '$log',
+  function ($log: any) {
+    return (exception: any, cause?: any) => {
+      if (exception.message === 'transition aborted') return;
+      if (exception.message === 'transition superseded') return;
+      if (exception.message === 'transition prevented') return;
+      if (exception.message === 'transition failed') return;
+      $log.error(exception, cause);
+    };
+  },
+]);
 
-angular.module('omega').factory('omegaDebug', ['$window', '$rootScope', '$injector',
-  function($window: any, $rootScope: any, $injector: any) {
+angular.module('omega').factory('omegaDebug', [
+  '$window',
+  '$rootScope',
+  '$injector',
+  function ($window: any, $rootScope: any, $injector: any) {
     const omegaDebug = $window.OmegaDebug || {};
 
     if (!omegaDebug.downloadLog) {
       omegaDebug.downloadLog = () => {
         const downloadFile = $injector.get('downloadFile') || saveAs;
-        const blob = new Blob([localStorage['log']], { type: "text/plain;charset=utf-8" });
+        const blob = new Blob([localStorage['log']], { type: 'text/plain;charset=utf-8' });
         downloadFile(blob, `OmegaLog_${Date.now()}.txt`);
       };
     }
@@ -136,7 +151,7 @@ angular.module('omega').factory('omegaDebug', ['$window', '$rootScope', '$inject
     }
 
     return omegaDebug;
-  }
+  },
 ]);
 
 angular.module('omega').factory('downloadFile', () => {
@@ -156,4 +171,3 @@ angular.module('omega').factory('downloadFile', () => {
     };
   }
 });
-

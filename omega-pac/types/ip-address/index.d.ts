@@ -28,4 +28,3 @@ declare module 'ip-address' {
     }
   }
 }
-

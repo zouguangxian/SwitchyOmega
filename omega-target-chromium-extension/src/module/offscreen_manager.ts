@@ -31,7 +31,7 @@ class OffscreenManager {
       try {
         // Check if offscreen document already exists
         const existingContexts = await chrome.runtime.getContexts({
-          contextTypes: ['OFFSCREEN_DOCUMENT' as chrome.runtime.ContextType]
+          contextTypes: ['OFFSCREEN_DOCUMENT' as chrome.runtime.ContextType],
         });
 
         if (existingContexts.length > 0) {
@@ -43,11 +43,11 @@ class OffscreenManager {
         await chrome.offscreen.createDocument({
           url: 'offscreen.html',
           reasons: ['DISPLAY_MEDIA' as chrome.offscreen.Reason],
-          justification: 'Icon generation requires canvas rendering'
+          justification: 'Icon generation requires canvas rendering',
         });
 
         // Wait a bit for the document to be ready
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         this.ready = true;
       } catch (error) {
         console.error('Failed to create offscreen document:', error);
@@ -63,7 +63,7 @@ class OffscreenManager {
   async drawIcon(
     resultColor: string,
     profileColor: string | undefined,
-    size: number
+    size: number,
   ): Promise<ImageData | null> {
     await this.ensureOffscreenDocument();
 
@@ -73,7 +73,7 @@ class OffscreenManager {
           type: 'drawIcon',
           resultColor,
           profileColor,
-          size
+          size,
         },
         (response) => {
           if (chrome.runtime.lastError) {
@@ -96,7 +96,7 @@ class OffscreenManager {
           } else {
             resolve(null);
           }
-        }
+        },
       );
     });
   }
@@ -112,4 +112,3 @@ class OffscreenManager {
 }
 
 export const offscreenManager = new OffscreenManager();
-

@@ -23,4 +23,3 @@ export * from './src/errors';
 
 // Re-export default options
 export { default as defaultOptions } from './src/default_options';
-

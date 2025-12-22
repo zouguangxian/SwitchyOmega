@@ -8,11 +8,11 @@ should = chai.should();
 
 lolex = require('lolex');
 
-describe('Conditions', function() {
+describe('Conditions', function () {
   var Conditions, U2, testCond;
   Conditions = require('../src/conditions');
   U2 = require('uglify-js');
-  testCond = function(condition, request, should_match) {
+  testCond = function (condition, request, should_match) {
     var compileResult, condExpr, friendlyError, matchResult, o_request, testFunc;
     o_request = request;
     should_match = !!should_match;
@@ -24,27 +24,35 @@ describe('Conditions', function() {
     testFunc = new U2.AST_Function({
       argnames: [
         new U2.AST_SymbolFunarg({
-          name: 'url'
-        }), new U2.AST_SymbolFunarg({
-          name: 'host'
-        }), new U2.AST_SymbolFunarg({
-          name: 'scheme'
-        })
+          name: 'url',
+        }),
+        new U2.AST_SymbolFunarg({
+          name: 'host',
+        }),
+        new U2.AST_SymbolFunarg({
+          name: 'scheme',
+        }),
       ],
       body: [
         new U2.AST_Return({
-          value: condExpr
-        })
-      ]
+          value: condExpr,
+        }),
+      ],
     });
     testFunc = eval('(' + testFunc.print_to_string() + ')');
     compileResult = testFunc(request.url, request.host, request.scheme);
-    friendlyError = function(compiled) {
+    friendlyError = function (compiled) {
       var msg, printCompiled, printCond, printMatch;
       printCond = JSON.stringify(condition);
       printCompiled = compiled ? 'COMPILED ' : '';
       printMatch = should_match ? 'to match' : 'not to match';
-      msg = ("expect " + printCompiled + "condition " + printCond + " ") + (printMatch + " request " + o_request);
+      msg =
+        'expect ' +
+        printCompiled +
+        'condition ' +
+        printCond +
+        ' ' +
+        (printMatch + ' request ' + o_request);
       return chai.assert(false, msg);
     };
     if (matchResult !== should_match) {
@@ -55,152 +63,160 @@ describe('Conditions', function() {
     }
     return matchResult;
   };
-  describe('TrueCondition', function() {
-    return it('should always return true', function() {
-      return testCond({
-        conditionType: 'TrueCondition'
-      }, {}, 'match');
+  describe('TrueCondition', function () {
+    return it('should always return true', function () {
+      return testCond(
+        {
+          conditionType: 'TrueCondition',
+        },
+        {},
+        'match',
+      );
     });
   });
-  describe('FalseCondition', function() {
-    return it('should always return false', function() {
-      return testCond({
-        conditionType: 'FalseCondition'
-      }, {}, !'match');
+  describe('FalseCondition', function () {
+    return it('should always return false', function () {
+      return testCond(
+        {
+          conditionType: 'FalseCondition',
+        },
+        {},
+        !'match',
+      );
     });
   });
-  describe('UrlRegexCondition', function() {
+  describe('UrlRegexCondition', function () {
     var cond;
     cond = {
       conditionType: 'UrlRegexCondition',
-      pattern: 'example\\.com'
+      pattern: 'example\\.com',
     };
-    it('should match requests based on regex pattern', function() {
+    it('should match requests based on regex pattern', function () {
       return testCond(cond, 'http://www.example.com/', 'match');
     });
-    it('should not match requests not matching the pattern', function() {
+    it('should not match requests not matching the pattern', function () {
       return testCond(cond, 'http://www.example.net/', !'match');
     });
-    it('should support regex meta chars', function() {
+    it('should support regex meta chars', function () {
       var con;
       con = {
         conditionType: 'UrlRegexCondition',
-        pattern: 'exam.*\\.com'
+        pattern: 'exam.*\\.com',
       };
       return testCond(con, 'http://www.example.com/', 'match');
     });
-    return it('should fallback to not match if pattern is invalid', function() {
+    return it('should fallback to not match if pattern is invalid', function () {
       var con;
       con = {
         conditionType: 'UrlRegexCondition',
-        pattern: ')Invalid('
+        pattern: ')Invalid(',
       };
       return testCond(con, 'http://www.example.com/', !'match');
     });
   });
-  describe('UrlWildcardCondition', function() {
+  describe('UrlWildcardCondition', function () {
     var cond;
     cond = {
       conditionType: 'UrlWildcardCondition',
-      pattern: '*example.com*'
+      pattern: '*example.com*',
     };
-    it('should match requests based on wildcard pattern', function() {
+    it('should match requests based on wildcard pattern', function () {
       return testCond(cond, 'http://www.example.com/', 'match');
     });
-    it('should not match requests not matching the pattern', function() {
+    it('should not match requests not matching the pattern', function () {
       return testCond(cond, 'http://www.example.net/', !'match');
     });
-    it('should support wildcard question marks', function() {
+    it('should support wildcard question marks', function () {
       cond = {
         conditionType: 'UrlWildcardCondition',
-        pattern: '*exam???.com*'
+        pattern: '*exam???.com*',
       };
       return testCond(cond, 'http://www.example.com/', 'match');
     });
-    it('should not support regex meta chars', function() {
+    it('should not support regex meta chars', function () {
       cond = {
         conditionType: 'UrlWildcardCondition',
-        pattern: '.*example.com.*'
+        pattern: '.*example.com.*',
       };
       return testCond(cond, 'http://example.com/', !'match');
     });
-    return it('should support multiple patterns in one condition', function() {
+    return it('should support multiple patterns in one condition', function () {
       cond = {
         conditionType: 'UrlWildcardCondition',
-        pattern: '*.example.com/*|*.example.net/*'
+        pattern: '*.example.com/*|*.example.net/*',
       };
       testCond(cond, 'http://a.example.com/abc', 'match');
       testCond(cond, 'http://b.example.net/def', 'match');
       return testCond(cond, 'http://c.example.org/ghi', !'match');
     });
   });
-  describe('HostRegexCondition', function() {
+  describe('HostRegexCondition', function () {
     var cond;
     cond = {
       conditionType: 'HostRegexCondition',
-      pattern: '.*\\.example\\.com'
+      pattern: '.*\\.example\\.com',
     };
-    it('should match requests based on regex pattern', function() {
+    it('should match requests based on regex pattern', function () {
       return testCond(cond, 'http://www.example.com/', 'match');
     });
-    it('should not match requests not matching the pattern', function() {
+    it('should not match requests not matching the pattern', function () {
       return testCond(cond, 'http://example.com/', !'match');
     });
-    return it('should not match URL parts other than the host', function() {
-      return testCond(cond, 'http://example.net/www.example.com').should.be["false"];
+    return it('should not match URL parts other than the host', function () {
+      return testCond(cond, 'http://example.net/www.example.com').should.be['false'];
     });
   });
-  describe('HostWildcardCondition', function() {
+  describe('HostWildcardCondition', function () {
     var cond;
     cond = {
       conditionType: 'HostWildcardCondition',
-      pattern: '*.example.com'
+      pattern: '*.example.com',
     };
-    it('should match requests based on wildcard pattern', function() {
+    it('should match requests based on wildcard pattern', function () {
       return testCond(cond, 'http://www.example.com/', 'match');
     });
-    it('should also match hostname without the optional level', function() {
+    it('should also match hostname without the optional level', function () {
       return testCond(cond, 'http://example.com/', 'match');
     });
-    it('should process patterns like *.*example.com correctly', function() {
+    it('should process patterns like *.*example.com correctly', function () {
       var con;
       con = {
         conditionType: 'HostWildcardCondition',
-        pattern: '*.*example.com'
+        pattern: '*.*example.com',
       };
       testCond(con, 'http://example.com/', 'match');
       testCond(con, 'http://www.example.com/', 'match');
       testCond(con, 'http://www.some-example.com/', 'match');
       return testCond(con, 'http://xample.com/', !'match');
     });
-    it('should allow override of the magical behavior', function() {
+    it('should allow override of the magical behavior', function () {
       var con;
       con = {
         conditionType: 'HostWildcardCondition',
-        pattern: '**.example.com'
+        pattern: '**.example.com',
       };
       testCond(con, 'http://www.example.com/', 'match');
       return testCond(con, 'http://example.com/', !'match');
     });
-    it('should not match URL parts other than the host', function() {
-      return testCond(cond, 'http://example.net/www.example.com').should.be["false"];
+    it('should not match URL parts other than the host', function () {
+      return testCond(cond, 'http://example.net/www.example.com').should.be['false'];
     });
-    return it('should support multiple patterns in one condition', function() {
+    return it('should support multiple patterns in one condition', function () {
       cond = {
         conditionType: 'HostWildcardCondition',
-        pattern: '*.example.com|*.example.net'
+        pattern: '*.example.com|*.example.net',
       };
       testCond(cond, 'http://a.example.com/abc', 'match');
       testCond(cond, 'http://example.net/def', 'match');
       return testCond(cond, 'http://c.example.org/ghi', !'match');
     });
   });
-  describe('BypassCondition', function() {
-    it('should correctly support patterns containing hosts', function() {
+  describe('BypassCondition', function () {
+    it('should correctly support patterns containing hosts', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '.example.com'
+        pattern: '.example.com',
       };
       testCond(cond, 'http://www.example.com/', 'match');
       testCond(cond, 'http://example.com/', !'match');
@@ -215,116 +231,116 @@ describe('Conditions', function() {
       testCond(cond, 'http://www.example.com/', 'match');
       return testCond(cond, 'http://anotherexample.com/', 'match');
     });
-    it('should match the scheme specified in the pattern', function() {
+    it('should match the scheme specified in the pattern', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: 'http://example.com'
+        pattern: 'http://example.com',
       };
       testCond(cond, 'http://example.com/', 'match');
       return testCond(cond, 'https://example.com/', !'match');
     });
-    it('should match the port specified in the pattern', function() {
+    it('should match the port specified in the pattern', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: 'http://example.com:8080'
+        pattern: 'http://example.com:8080',
       };
       testCond(cond, 'http://example.com:8080/', 'match');
       return testCond(cond, 'http://example.com:888/', !'match');
     });
-    it('should correctly support patterns using IPv4 literals', function() {
+    it('should correctly support patterns using IPv4 literals', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: 'http://127.0.0.1:8080'
+        pattern: 'http://127.0.0.1:8080',
       };
       testCond(cond, 'http://127.0.0.1:8080/', 'match');
       return testCond(cond, 'http://127.0.0.2:8080/', !'match');
     });
-    it('should correctly support IPv6 canonicalization', function() {
+    it('should correctly support IPv6 canonicalization', function () {
       var cond, result;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: 'http://[0:0::1]:8080'
+        pattern: 'http://[0:0::1]:8080',
       };
       result = Conditions.analyze(cond);
       testCond(cond, 'http://[::1]:8080/', 'match');
       return testCond(cond, 'http://[1::1]:8080/', !'match');
     });
-    it('should correctly support IPv6 canonicalization 2', function() {
+    it('should correctly support IPv6 canonicalization 2', function () {
       var cond, result;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '[::1]'
+        pattern: '[::1]',
       };
       result = Conditions.analyze(cond);
       testCond(cond, 'http://[::1]:8080/', 'match');
       return testCond(cond, 'http://[1::1]:8080/', !'match');
     });
-    it('should parse IPv4 CIDR notation', function() {
+    it('should parse IPv4 CIDR notation', function () {
       var cond, result;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '192.168.0.0/16'
+        pattern: '192.168.0.0/16',
       };
       result = Conditions.analyze(cond).analyzed;
       should.exist(result.ip);
       return result.ip.should.eql({
         conditionType: 'IpCondition',
         ip: '192.168.0.0',
-        prefixLength: 16
+        prefixLength: 16,
       });
     });
-    it('should parse IPv6 CIDR notation', function() {
+    it('should parse IPv6 CIDR notation', function () {
       var cond, result;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: 'fefe:13::abc/33'
+        pattern: 'fefe:13::abc/33',
       };
       result = Conditions.analyze(cond).analyzed;
       should.exist(result.ip);
       return result.ip.should.eql({
         conditionType: 'IpCondition',
         ip: 'fefe:13::abc',
-        prefixLength: 33
+        prefixLength: 33,
       });
     });
-    it('should parse IPv6 CIDR notation with zero prefixLength', function() {
+    it('should parse IPv6 CIDR notation with zero prefixLength', function () {
       var cond, result;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '::/0'
+        pattern: '::/0',
       };
       result = Conditions.analyze(cond).analyzed;
       should.exist(result.ip);
       return result.ip.should.eql({
         conditionType: 'IpCondition',
         ip: '::',
-        prefixLength: 0
+        prefixLength: 0,
       });
     });
-    it('should match 127.0.0.1 when <local> is used', function() {
+    it('should match 127.0.0.1 when <local> is used', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '<local>'
+        pattern: '<local>',
       };
       return testCond(cond, 'http://127.0.0.1:8080/', 'match');
     });
-    it('should match [::1] when <local> is used', function() {
+    it('should match [::1] when <local> is used', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '<local>'
+        pattern: '<local>',
       };
       return testCond(cond, 'http://[::1]:8080/', 'match');
     });
-    return it('should match any host without dots when <local> is used', function() {
+    return it('should match any host without dots when <local> is used', function () {
       var cond;
       cond = {
         conditionType: 'BypassCondition',
-        pattern: '<local>'
+        pattern: '<local>',
       };
       testCond(cond, 'http://localhost:8080/', 'match');
       testCond(cond, 'http://intranet:8080/', 'match');
@@ -334,95 +350,98 @@ describe('Conditions', function() {
       return testCond(cond, 'http://[::1.2.3.4]/', !'match');
     });
   });
-  describe('IpCondition', function() {
-    it('should support IPv4 subnet', function() {
+  describe('IpCondition', function () {
+    it('should support IPv4 subnet', function () {
       var compiled, cond, request;
       cond = {
-        conditionType: "IpCondition",
+        conditionType: 'IpCondition',
         ip: '192.168.1.1',
-        prefixLength: 16
+        prefixLength: 16,
       };
       request = Conditions.requestFromUrl('http://192.168.4.4/');
-      Conditions.match(cond, request).should.be["true"];
+      Conditions.match(cond, request).should.be['true'];
       compiled = Conditions.compile(cond).print_to_string();
       return compiled.should.contain('isInNet(host,"192.168.1.1","255.255.0.0")');
     });
-    it('should support IPv6 subnet', function() {
+    it('should support IPv6 subnet', function () {
       var compiled, cond, request;
       cond = {
-        conditionType: "IpCondition",
+        conditionType: 'IpCondition',
         ip: 'fefe:13::abc',
-        prefixLength: 33
+        prefixLength: 33,
       };
       request = Conditions.requestFromUrl('http://[fefe:13::def]/');
-      Conditions.match(cond, request).should.be["true"];
+      Conditions.match(cond, request).should.be['true'];
       compiled = Conditions.compile(cond).print_to_string();
       compiled.should.contain('isInNet(host,"fefe:13::abc","ffff:ffff:8000::")');
       return compiled.should.contain('isInNetEx(host,"fefe:13::abc/33")');
     });
-    it('should support IPv6 subnet with zero prefixLength', function() {
+    it('should support IPv6 subnet with zero prefixLength', function () {
       var compiled, cond, request;
       cond = {
-        conditionType: "IpCondition",
+        conditionType: 'IpCondition',
         ip: '::',
-        prefixLength: 0
+        prefixLength: 0,
       };
       request = Conditions.requestFromUrl('http://[fefe:13::def]/');
-      Conditions.match(cond, request).should.be["true"];
+      Conditions.match(cond, request).should.be['true'];
       compiled = Conditions.compile(cond).print_to_string();
       return compiled.indexOf('indexOf(').should.be.above(0);
     });
-    it('should not match domain name to IP subnet', function() {
+    it('should not match domain name to IP subnet', function () {
       var cond, request;
       cond = {
-        conditionType: "IpCondition",
+        conditionType: 'IpCondition',
         ip: '::',
-        prefixLength: 0
+        prefixLength: 0,
       };
       request = Conditions.requestFromUrl('http://www.example.com/');
-      return Conditions.match(cond, request).should.be["false"];
+      return Conditions.match(cond, request).should.be['false'];
     });
-    return it('should not pass domain name to isInNet function', function() {
+    return it('should not pass domain name to isInNet function', function () {
       var compiledFunc, ipToCompiledFunc;
-      ipToCompiledFunc = function(ip, prefixLen) {
+      ipToCompiledFunc = function (ip, prefixLen) {
         var cond, dummyIsInNet, testFunc;
         cond = {
-          conditionType: "IpCondition",
+          conditionType: 'IpCondition',
           ip: ip,
-          prefixLength: prefixLen
+          prefixLength: prefixLen,
         };
         dummyIsInNet = new U2.AST_Function({
           argnames: [],
           body: [
             new U2.AST_Return({
-              value: new U2.AST_True
-            })
-          ]
+              value: new U2.AST_True(),
+            }),
+          ],
         });
         testFunc = new U2.AST_Function({
           argnames: [
             new U2.AST_SymbolFunarg({
-              name: 'url'
-            }), new U2.AST_SymbolFunarg({
-              name: 'host'
-            }), new U2.AST_SymbolFunarg({
-              name: 'scheme'
-            })
+              name: 'url',
+            }),
+            new U2.AST_SymbolFunarg({
+              name: 'host',
+            }),
+            new U2.AST_SymbolFunarg({
+              name: 'scheme',
+            }),
           ],
           body: [
             new U2.AST_Var({
               definitions: [
                 new U2.AST_VarDef({
                   name: new U2.AST_SymbolVar({
-                    name: 'isInNet'
+                    name: 'isInNet',
                   }),
-                  value: dummyIsInNet
-                })
-              ]
-            }), new U2.AST_Return({
-              value: Conditions.compile(cond)
-            })
-          ]
+                  value: dummyIsInNet,
+                }),
+              ],
+            }),
+            new U2.AST_Return({
+              value: Conditions.compile(cond),
+            }),
+          ],
         });
         return eval('(' + testFunc.print_to_string() + ')');
       };
@@ -440,42 +459,42 @@ describe('Conditions', function() {
       return compiledFunc(null, '::1').should.equal(true);
     });
   });
-  describe('KeywordCondition', function() {
+  describe('KeywordCondition', function () {
     var cond;
     cond = {
       conditionType: 'KeywordCondition',
-      pattern: 'example.com'
+      pattern: 'example.com',
     };
-    it('should match requests based on substring', function() {
+    it('should match requests based on substring', function () {
       testCond(cond, 'http://www.example.com/', 'match');
       return testCond(cond, 'http://www.example.net/', !'match');
     });
-    return it('should not match HTTPS requests', function() {
+    return it('should not match HTTPS requests', function () {
       testCond(cond, 'https://example.com/', !'match');
       return testCond(cond, 'https://example.net/', !'match');
     });
   });
-  describe('WeekdayCondition', function() {
+  describe('WeekdayCondition', function () {
     var clock, testCondDay;
     clock = null;
-    before(function() {
-      return clock = lolex.install({ now: 0, toFake: ['Date'] });
+    before(function () {
+      return (clock = lolex.install({ now: 0, toFake: ['Date'] }));
     });
-    after(function() {
+    after(function () {
       return clock.uninstall();
     });
-    testCondDay = function(cond, day, match) {
+    testCondDay = function (cond, day, match) {
       var date;
       date = day > 0 ? day : 7;
-      clock.setSystemTime(new Date("2016-02-0" + date + "T00:00:00Z").getTime());
-      return testCond(cond, "http://weekday-" + day + "/", match);
+      clock.setSystemTime(new Date('2016-02-0' + date + 'T00:00:00Z').getTime());
+      return testCond(cond, 'http://weekday-' + day + '/', match);
     };
-    it('should match requests based on date range', function() {
+    it('should match requests based on date range', function () {
       var cond;
       cond = {
         conditionType: 'WeekdayCondition',
         startDay: 3,
-        endDay: 5
+        endDay: 5,
       };
       testCondDay(cond, 0, !'match');
       testCondDay(cond, 1, !'match');
@@ -485,12 +504,12 @@ describe('Conditions', function() {
       testCondDay(cond, 5, 'match');
       return testCondDay(cond, 6, !'match');
     });
-    it('should match the day if startDay == endDay', function() {
+    it('should match the day if startDay == endDay', function () {
       var cond;
       cond = {
         conditionType: 'WeekdayCondition',
         startDay: 3,
-        endDay: 3
+        endDay: 3,
       };
       testCondDay(cond, 0, !'match');
       testCondDay(cond, 1, !'match');
@@ -500,12 +519,12 @@ describe('Conditions', function() {
       testCondDay(cond, 5, !'match');
       return testCondDay(cond, 6, !'match');
     });
-    it('should not match anything if startDay > endDay', function() {
+    it('should not match anything if startDay > endDay', function () {
       var cond;
       cond = {
         conditionType: 'WeekdayCondition',
         startDay: 4,
-        endDay: 3
+        endDay: 3,
       };
       testCondDay(cond, 0, !'match');
       testCondDay(cond, 1, !'match');
@@ -515,11 +534,11 @@ describe('Conditions', function() {
       testCondDay(cond, 5, !'match');
       return testCondDay(cond, 6, !'match');
     });
-    it('should match according to .days', function() {
+    it('should match according to .days', function () {
       var cond;
       cond = {
         conditionType: 'WeekdayCondition',
-        days: 'SMTWtFs'
+        days: 'SMTWtFs',
       };
       testCondDay(cond, 0, 'match');
       testCondDay(cond, 1, 'match');
@@ -530,7 +549,7 @@ describe('Conditions', function() {
       testCondDay(cond, 6, 'match');
       cond = {
         conditionType: 'WeekdayCondition',
-        days: 'S-TW-F-'
+        days: 'S-TW-F-',
       };
       testCondDay(cond, 0, 'match');
       testCondDay(cond, 1, !'match');
@@ -540,13 +559,13 @@ describe('Conditions', function() {
       testCondDay(cond, 5, 'match');
       return testCondDay(cond, 6, !'match');
     });
-    return it('should prefer .days to .startDay and .endDay', function() {
+    return it('should prefer .days to .startDay and .endDay', function () {
       var cond;
       cond = {
         conditionType: 'WeekdayCondition',
         days: '--TW---',
         startDay: 0,
-        endDay: 0
+        endDay: 0,
       };
       testCondDay(cond, 0, !'match');
       testCondDay(cond, 1, !'match');
@@ -557,25 +576,25 @@ describe('Conditions', function() {
       return testCondDay(cond, 6, !'match');
     });
   });
-  describe('TimeCondition', function() {
+  describe('TimeCondition', function () {
     var clock, testCondTime;
     clock = null;
-    before(function() {
-      return clock = lolex.install({ now: 0, toFake: ['Date'] });
+    before(function () {
+      return (clock = lolex.install({ now: 0, toFake: ['Date'] }));
     });
-    after(function() {
+    after(function () {
       return clock.uninstall();
     });
-    testCondTime = function(cond, time, match) {
-      clock.setSystemTime(new Date("01 Feb 2016 " + time).getTime());
-      return testCond(cond, "http://time-" + time + "/", match);
+    testCondTime = function (cond, time, match) {
+      clock.setSystemTime(new Date('01 Feb 2016 ' + time).getTime());
+      return testCond(cond, 'http://time-' + time + '/', match);
     };
-    it('should match requests based on hour range', function() {
+    it('should match requests based on hour range', function () {
       var cond;
       cond = {
         conditionType: 'TimeCondition',
         startHour: 7,
-        endHour: 9
+        endHour: 9,
       };
       testCondTime(cond, '00:00:00', !'match');
       testCondTime(cond, '06:00:00', !'match');
@@ -587,12 +606,12 @@ describe('Conditions', function() {
       testCondTime(cond, '19:00:00', !'match');
       return testCondTime(cond, '23:00:00', !'match');
     });
-    it('should match the hour if startHour == endHour', function() {
+    it('should match the hour if startHour == endHour', function () {
       var cond;
       cond = {
         conditionType: 'TimeCondition',
         startHour: 7,
-        endHour: 7
+        endHour: 7,
       };
       testCondTime(cond, '00:00:00', !'match');
       testCondTime(cond, '06:00:00', !'match');
@@ -602,12 +621,12 @@ describe('Conditions', function() {
       testCondTime(cond, '08:00:00', !'match');
       return testCondTime(cond, '19:00:00', !'match');
     });
-    return it('should not match anything if startHour > endHour', function() {
+    return it('should not match anything if startHour > endHour', function () {
       var cond;
       cond = {
         conditionType: 'TimeCondition',
         startHour: 7,
-        endHour: 6
+        endHour: 6,
       };
       testCondTime(cond, '00:00:00', !'match');
       testCondTime(cond, '06:00:00', !'match');
@@ -620,93 +639,93 @@ describe('Conditions', function() {
       return testCondTime(cond, '23:00:00', !'match');
     });
   });
-  describe('#typeFromAbbr', function() {
-    return it('should get condition types by abbrs', function() {
+  describe('#typeFromAbbr', function () {
+    return it('should get condition types by abbrs', function () {
       Conditions.typeFromAbbr('True').should.equal('TrueCondition');
       return Conditions.typeFromAbbr('HR').should.equal('HostRegexCondition');
     });
   });
-  return describe('#str and #fromStr', function() {
-    it('should encode & decode TrueCondition correctly', function() {
+  return describe('#str and #fromStr', function () {
+    it('should encode & decode TrueCondition correctly', function () {
       var cond, condition, result;
       condition = {
-        conditionType: 'TrueCondition'
+        conditionType: 'TrueCondition',
       };
       result = Conditions.str(condition);
       result.should.equal('True:');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode conditions with pattern correctly', function() {
+    it('should encode & decode conditions with pattern correctly', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'UrlWildcardCondition',
-        pattern: '*://*.example.com/*'
+        pattern: '*://*.example.com/*',
       };
       result = Conditions.str(condition);
       result.should.equal('UrlWildcard: ' + condition.pattern);
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode False while preserving pattern', function() {
+    it('should encode & decode False while preserving pattern', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'FalseCondition',
-        pattern: 'a b c'
+        pattern: 'a b c',
       };
       result = Conditions.str(condition);
       result.should.equal('Disabled: a b c');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode FalseCondition without any pattern', function() {
+    it('should encode & decode FalseCondition without any pattern', function () {
       var cond, condition, result;
       condition = {
-        conditionType: 'FalseCondition'
+        conditionType: 'FalseCondition',
       };
       result = Conditions.str(condition);
       result.should.equal('Disabled:');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode HostWildcardCondition using shorthand syntax', function() {
+    it('should encode & decode HostWildcardCondition using shorthand syntax', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'HostWildcardCondition',
-        pattern: '*.example.com'
+        pattern: '*.example.com',
       };
       result = Conditions.str(condition);
       result.should.equal(condition.pattern);
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode HostWildcardCondition ending with colon', function() {
+    it('should encode & decode HostWildcardCondition ending with colon', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'HostWildcardCondition',
-        pattern: 'bogus:'
+        pattern: 'bogus:',
       };
       result = Conditions.str(condition);
       result.should.equal('HostWildcard: ' + condition.pattern);
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode BypassCondition correctly', function() {
+    it('should encode & decode BypassCondition correctly', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'BypassCondition',
-        pattern: '127.0.0.1/16'
+        pattern: '127.0.0.1/16',
       };
       result = Conditions.str(condition);
       result.should.equal('Bypass: 127.0.0.1/16');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should add brackets for IPv6 hosts in BypassCondition', function() {
+    it('should add brackets for IPv6 hosts in BypassCondition', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'BypassCondition',
-        pattern: '::1'
+        pattern: '::1',
       };
       result = Conditions.str(condition);
       result.should.equal('Bypass: [::1]');
@@ -714,11 +733,11 @@ describe('Conditions', function() {
       cond.conditionType.should.equal('BypassCondition');
       return cond.pattern.should.equal('[::1]');
     });
-    it('should add brackets for IPv6 hosts with scheme in BypassCondition', function() {
+    it('should add brackets for IPv6 hosts with scheme in BypassCondition', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'BypassCondition',
-        pattern: 'http://::1'
+        pattern: 'http://::1',
       };
       result = Conditions.str(condition);
       result.should.equal('Bypass: http://[::1]');
@@ -726,116 +745,116 @@ describe('Conditions', function() {
       cond.conditionType.should.equal('BypassCondition');
       return cond.pattern.should.equal('http://[::1]');
     });
-    it('should encode & decode IpCondition correctly', function() {
+    it('should encode & decode IpCondition correctly', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'IpCondition',
         ip: '127.0.0.1',
-        prefixLength: 16
+        prefixLength: 16,
       };
       result = Conditions.str(condition);
       result.should.equal('Ip: 127.0.0.1/16');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should provide sensible fallbacks for invalid IpCondition', function() {
+    it('should provide sensible fallbacks for invalid IpCondition', function () {
       var cond;
       cond = Conditions.fromStr('Ip: foo/-233');
       cond.should.eql({
         conditionType: 'IpCondition',
         ip: '0.0.0.0',
-        prefixLength: 0
+        prefixLength: 0,
       });
       cond = Conditions.fromStr('Ip: nonsense stuff');
       return cond.should.eql({
         conditionType: 'IpCondition',
         ip: '0.0.0.0',
-        prefixLength: 0
+        prefixLength: 0,
       });
     });
-    it('should assume full match for IpCondition without prefixLength', function() {
+    it('should assume full match for IpCondition without prefixLength', function () {
       var cond;
       cond = Conditions.fromStr('Ip: 127.0.0.1');
       cond.should.eql({
         conditionType: 'IpCondition',
         ip: '127.0.0.1',
-        prefixLength: 32
+        prefixLength: 32,
       });
       cond = Conditions.fromStr('Ip: ::1');
       return cond.should.eql({
         conditionType: 'IpCondition',
         ip: '::1',
-        prefixLength: 128
+        prefixLength: 128,
       });
     });
-    it('should provide sensible fallbacks for invalid IpCondition', function() {
+    it('should provide sensible fallbacks for invalid IpCondition', function () {
       var cond;
       cond = Conditions.fromStr('Ip: 0.0.0.0/-233');
       return cond.should.eql({
         conditionType: 'IpCondition',
         ip: '0.0.0.0',
-        prefixLength: 0
+        prefixLength: 0,
       });
     });
-    it('should encode & decode HostLevelsCondition correctly', function() {
+    it('should encode & decode HostLevelsCondition correctly', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'HostLevelsCondition',
         minValue: 4,
-        maxValue: 7
+        maxValue: 7,
       };
       result = Conditions.str(condition);
       result.should.equal('HostLevels: 4~7');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should provide sensible fallbacks for HostLevels out of range', function() {
+    it('should provide sensible fallbacks for HostLevels out of range', function () {
       var cond;
       cond = Conditions.fromStr('HostLevels: A~-1');
       cond.should.eql({
         conditionType: 'HostLevelsCondition',
         minValue: 1,
-        maxValue: 1
+        maxValue: 1,
       });
       cond = Conditions.fromStr('HostLevels: nonsense');
       return cond.should.eql({
         conditionType: 'HostLevelsCondition',
         minValue: 1,
-        maxValue: 1
+        maxValue: 1,
       });
     });
-    it('should encode & decode WeekdayCondition correctly', function() {
+    it('should encode & decode WeekdayCondition correctly', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'WeekdayCondition',
         startDay: 3,
-        endDay: 6
+        endDay: 6,
       };
       result = Conditions.str(condition);
       result.should.equal('Weekday: 3~6');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should provide sensible fallbacks for Weekday out of range', function() {
+    it('should provide sensible fallbacks for Weekday out of range', function () {
       var cond;
       cond = Conditions.fromStr('Weekday: -1~100');
       cond.should.eql({
         conditionType: 'WeekdayCondition',
         startDay: 0,
-        endDay: 0
+        endDay: 0,
       });
       cond = Conditions.fromStr('Weekday: nonsense');
       return cond.should.eql({
         conditionType: 'WeekdayCondition',
         startDay: 0,
-        endDay: 0
+        endDay: 0,
       });
     });
-    it('should encode & decode WeekdayCondition with days', function() {
+    it('should encode & decode WeekdayCondition with days', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'WeekdayCondition',
-        days: 'SMTWtFs'
+        days: 'SMTWtFs',
       };
       result = Conditions.str(condition);
       result.should.equal('Weekday: SMTWtFs');
@@ -843,56 +862,56 @@ describe('Conditions', function() {
       cond.should.eql(condition);
       condition = {
         conditionType: 'WeekdayCondition',
-        days: 'SM-W-Fs'
+        days: 'SM-W-Fs',
       };
       result = Conditions.str(condition);
       result.should.equal('Weekday: SM-W-Fs');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should encode & decode TimeCondition correctly', function() {
+    it('should encode & decode TimeCondition correctly', function () {
       var cond, condition, result;
       condition = {
         conditionType: 'TimeCondition',
         startHour: 7,
-        endHour: 23
+        endHour: 23,
       };
       result = Conditions.str(condition);
       result.should.equal('Hour: 7~23');
       cond = Conditions.fromStr(result);
       return cond.should.eql(condition);
     });
-    it('should provide sensible fallbacks for Hour out of range', function() {
+    it('should provide sensible fallbacks for Hour out of range', function () {
       var cond;
       cond = Conditions.fromStr('Hour: -1~100');
       cond.should.eql({
         conditionType: 'TimeCondition',
         startHour: 0,
-        endHour: 0
+        endHour: 0,
       });
       cond = Conditions.fromStr('Hour: nonsense');
       return cond.should.eql({
         conditionType: 'TimeCondition',
         startHour: 0,
-        endHour: 0
+        endHour: 0,
       });
     });
-    it('should parse conditions with extra spaces correctly', function() {
+    it('should parse conditions with extra spaces correctly', function () {
       return Conditions.fromStr('url:    *abcde*   ').should.eql({
         conditionType: 'UrlWildcardCondition',
-        pattern: '*abcde*'
+        pattern: '*abcde*',
       });
     });
-    it('should parse abbreviated condition types correctly', function() {
+    it('should parse abbreviated condition types correctly', function () {
       return Conditions.fromStr('url: *://*.example.com/*').should.eql({
         conditionType: 'UrlWildcardCondition',
-        pattern: '*://*.example.com/*'
+        pattern: '*://*.example.com/*',
       });
     });
-    return it('should parse escaped HostWildcardCondition starting with colon', function() {
+    return it('should parse escaped HostWildcardCondition starting with colon', function () {
       return Conditions.fromStr(': :bogus:').should.eql({
         conditionType: 'HostWildcardCondition',
-        pattern: ':bogus:'
+        pattern: ':bogus:',
       });
     });
   });

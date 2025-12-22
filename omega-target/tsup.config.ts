@@ -29,8 +29,8 @@ export default defineConfig([
     target: 'es2019',
     esbuildOptions(options) {
       options.alias = {
-        'url': 'url',
-        'buffer': 'buffer',
+        url: 'url',
+        buffer: 'buffer',
       };
     },
     outExtension() {
@@ -38,4 +38,3 @@ export default defineConfig([
     },
   },
 ]);
-

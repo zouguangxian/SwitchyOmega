@@ -4,19 +4,24 @@ declare const angular: any;
 declare const jQuery: any;
 
 const module = angular.module('omegaPopup', [
-  'omegaTarget', 'omegaDecoration',
-  'ui.bootstrap', 'ui.validate'
+  'omegaTarget',
+  'omegaDecoration',
+  'ui.bootstrap',
+  'ui.validate',
 ]);
 
 module.filter('tr', ['omegaTarget', (omegaTarget: any) => omegaTarget.getMessage]);
-module.filter('dispName', ['omegaTarget', (omegaTarget: any) => {
-  return (name: any) => {
-    if (typeof name === 'object') {
-      name = name.name;
-    }
-    return omegaTarget.getMessage('profile_' + name) || name;
-  };
-}]);
+module.filter('dispName', [
+  'omegaTarget',
+  (omegaTarget: any) => {
+    return (name: any) => {
+      if (typeof name === 'object') {
+        name = name.name;
+      }
+      return omegaTarget.getMessage('profile_' + name) || name;
+    };
+  },
+]);
 
 const moveUp = (activeIndex: number, items: any) => {
   const i = activeIndex - 1;
@@ -41,7 +46,7 @@ const shortcutKeys: Record<number, string | number | ((i: number, items: any) =>
   61: 'addRule', // =
   84: 'tempRule', // t
   79: 'option', // o
-  82: 'requestInfo' // r
+  82: 'requestInfo', // r
 };
 
 for (let i = 1; i <= 9; i++) {
@@ -62,7 +67,7 @@ jQuery(document).on('keydown', (e: any) => {
   const handler = shortcutKeys[e.keyCode];
   if (!handler) return;
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  
+
   switch (typeof handler) {
     case 'string':
       switch (handler) {
@@ -81,11 +86,11 @@ jQuery(document).on('keydown', (e: any) => {
           const keys: Record<string, string> = {
             '+direct': '0',
             '+system': 'S',
-            'external': 'E',
-            'addRule': 'A',
-            'tempRule': 'T',
-            'option': 'O',
-            'requestInfo': 'R'
+            external: 'E',
+            addRule: 'A',
+            tempRule: 'T',
+            option: 'O',
+            requestInfo: 'R',
           };
           for (const shortcut in keys) {
             if (keys.hasOwnProperty(shortcut)) {
@@ -104,7 +109,9 @@ jQuery(document).on('keydown', (e: any) => {
       }
       break;
     case 'number':
-      customProfiles().eq(handler - 1)?.click();
+      customProfiles()
+        .eq(handler - 1)
+        ?.click();
       break;
     case 'function': {
       const items = jQuery('.popup-menu-nav > li:not(.ng-hide) > a');
@@ -121,11 +128,23 @@ jQuery(document).on('keydown', (e: any) => {
 });
 
 module.controller('PopupCtrl', [
-  '$scope', '$window', '$q', 'omegaTarget',
-  'profileIcons', 'profileOrder', 'dispNameFilter', 'getVirtualTarget',
-  function(
-    $scope: any, $window: any, $q: any, omegaTarget: any,
-    profileIcons: any, profileOrder: any, dispNameFilter: any, getVirtualTarget: any
+  '$scope',
+  '$window',
+  '$q',
+  'omegaTarget',
+  'profileIcons',
+  'profileOrder',
+  'dispNameFilter',
+  'getVirtualTarget',
+  function (
+    $scope: any,
+    $window: any,
+    $q: any,
+    omegaTarget: any,
+    profileIcons: any,
+    profileOrder: any,
+    dispNameFilter: any,
+    getVirtualTarget: any,
   ) {
     $scope.closePopup = () => {
       $window.close();
@@ -146,10 +165,10 @@ module.controller('PopupCtrl', [
         $window.close();
       }
     };
-    
+
     $scope.profileIcons = profileIcons;
     $scope.dispNameFilter = dispNameFilter;
-    
+
     $scope.isActive = (profileName: string) => {
       if ($scope.isSystemProfile) {
         return profileName === 'system';
@@ -157,11 +176,11 @@ module.controller('PopupCtrl', [
         return $scope.currentProfileName === profileName;
       }
     };
-    
+
     $scope.isEffective = (profileName: string) => {
       return $scope.isSystemProfile && $scope.currentProfileName === profileName;
     };
-    
+
     $scope.getIcon = (profile: any, normal: boolean) => {
       if (!profile) return;
       if (!normal && $scope.isEffective(profile.name)) {
@@ -170,7 +189,7 @@ module.controller('PopupCtrl', [
         return undefined;
       }
     };
-    
+
     $scope.getProfileTitle = (profile: any, normal: boolean) => {
       let desc = '';
       while (profile) {
@@ -179,13 +198,13 @@ module.controller('PopupCtrl', [
       }
       return desc || profile?.name || '';
     };
-    
+
     $scope.openOptions = (hash?: string) => {
       omegaTarget.openOptions(hash).then(() => {
         $window.close();
       });
     };
-    
+
     $scope.openConditionHelp = () => {
       const pname = encodeURIComponent($scope.currentProfileName);
       $scope.openOptions(`#/profile/${pname}?help=condition`);
@@ -201,15 +220,18 @@ module.controller('PopupCtrl', [
           });
         }
       };
-      
+
       let apply: any;
       if (!refreshOnProfileChange) {
         omegaTarget.applyProfileNoReply(profile.name);
         apply = next();
       } else {
-        apply = omegaTarget.applyProfile(profile.name).then(() => {
-          return omegaTarget.refreshActivePage();
-        }).then(next);
+        apply = omegaTarget
+          .applyProfile(profile.name)
+          .then(() => {
+            return omegaTarget.refreshActivePage();
+          })
+          .then(next);
       }
 
       if (apply) {
@@ -221,7 +243,7 @@ module.controller('PopupCtrl', [
 
     $scope.tempRuleMenu = { open: false };
     $scope.nameExternal = { open: false };
-    
+
     $scope.addTempRule = (domain: string, profileName: string) => {
       $scope.tempRuleMenu.open = false;
       omegaTarget.addTempRule(domain, profileName).then(() => {
@@ -235,7 +257,7 @@ module.controller('PopupCtrl', [
         refresh();
       });
     };
-    
+
     $scope.addCondition = (condition: any, profileName: string) => {
       omegaTarget.addCondition(condition, profileName).then(() => {
         omegaTarget.state('lastProfileNameForCondition', profileName);
@@ -249,7 +271,7 @@ module.controller('PopupCtrl', [
         if (domains.hasOwnProperty(domain) && domains[domain]) {
           conditions.push({
             conditionType: 'HostWildcardCondition',
-            pattern: domain
+            pattern: domain,
           });
         }
       }
@@ -258,10 +280,10 @@ module.controller('PopupCtrl', [
         refresh();
       });
     };
-    
+
     $scope.validateProfileName = {
       conflict: '!$value || !availableProfiles["+" + $value]',
-      hidden: '!$value || $value[0] != "_"'
+      hidden: '!$value || $value[0] != "_"',
     };
 
     $scope.saveExternal = () => {
@@ -293,73 +315,86 @@ module.controller('PopupCtrl', [
       $scope.nameExternal = { open: true };
     }
 
-    omegaTarget.state([
-      'availableProfiles', 'currentProfileName', 'isSystemProfile',
-      'validResultProfiles', 'refreshOnProfileChange', 'externalProfile',
-      'proxyNotControllable', 'lastProfileNameForCondition'
-    ]).then((values: any[]) => {
-      const [
-        availableProfiles, currentProfileName, isSystemProfile,
-        validResultProfiles, refresh, externalProfile,
-        proxyNotControllable, lastProfileNameForCondition
-      ] = values;
-      
-      $scope.proxyNotControllable = proxyNotControllable;
-      if (proxyNotControllable) return;
-      
-      $scope.availableProfiles = availableProfiles;
-      $scope.currentProfile = availableProfiles['+' + currentProfileName];
-      $scope.currentProfileName = currentProfileName;
-      $scope.isSystemProfile = isSystemProfile;
-      $scope.externalProfile = externalProfile;
-      refreshOnProfileChange = refresh;
+    omegaTarget
+      .state([
+        'availableProfiles',
+        'currentProfileName',
+        'isSystemProfile',
+        'validResultProfiles',
+        'refreshOnProfileChange',
+        'externalProfile',
+        'proxyNotControllable',
+        'lastProfileNameForCondition',
+      ])
+      .then((values: any[]) => {
+        const [
+          availableProfiles,
+          currentProfileName,
+          isSystemProfile,
+          validResultProfiles,
+          refresh,
+          externalProfile,
+          proxyNotControllable,
+          lastProfileNameForCondition,
+        ] = values;
 
-      const charCodeUnderscore = '_'.charCodeAt(0);
-      const profilesByNames = (names: string[]) => {
-        const profiles: any[] = [];
-        for (const name of names) {
-          const shown = (name.charCodeAt(0) !== charCodeUnderscore ||
-                        name.charCodeAt(1) !== charCodeUnderscore);
-          if (shown) {
-            profiles.push(availableProfiles['+' + name]);
+        $scope.proxyNotControllable = proxyNotControllable;
+        if (proxyNotControllable) return;
+
+        $scope.availableProfiles = availableProfiles;
+        $scope.currentProfile = availableProfiles['+' + currentProfileName];
+        $scope.currentProfileName = currentProfileName;
+        $scope.isSystemProfile = isSystemProfile;
+        $scope.externalProfile = externalProfile;
+        refreshOnProfileChange = refresh;
+
+        const charCodeUnderscore = '_'.charCodeAt(0);
+        const profilesByNames = (names: string[]) => {
+          const profiles: any[] = [];
+          for (const name of names) {
+            const shown =
+              name.charCodeAt(0) !== charCodeUnderscore ||
+              name.charCodeAt(1) !== charCodeUnderscore;
+            if (shown) {
+              profiles.push(availableProfiles['+' + name]);
+            }
+          }
+          return profiles;
+        };
+
+        $scope.validResultProfiles = profilesByNames(validResultProfiles);
+
+        if (lastProfileNameForCondition) {
+          for (const profile of $scope.validResultProfiles) {
+            if (profile.name === lastProfileNameForCondition) {
+              preselectedProfileNameForCondition = lastProfileNameForCondition;
+              break;
+            }
           }
         }
-        return profiles;
-      };
 
-      $scope.validResultProfiles = profilesByNames(validResultProfiles);
-
-      if (lastProfileNameForCondition) {
-        for (const profile of $scope.validResultProfiles) {
-          if (profile.name === lastProfileNameForCondition) {
-            preselectedProfileNameForCondition = lastProfileNameForCondition;
-            break;
+        $scope.builtinProfiles = [];
+        $scope.customProfiles = [];
+        for (const key in availableProfiles) {
+          if (availableProfiles.hasOwnProperty(key)) {
+            const profile = availableProfiles[key];
+            if (profile.builtin) {
+              $scope.builtinProfiles.push(profile);
+            } else if (profile.name.charCodeAt(0) !== charCodeUnderscore) {
+              $scope.customProfiles.push(profile);
+            }
+            if (profile.validResultProfiles) {
+              profile.validResultProfiles = profilesByNames(profile.validResultProfiles);
+            }
           }
         }
-      }
 
-      $scope.builtinProfiles = [];
-      $scope.customProfiles = [];
-      for (const key in availableProfiles) {
-        if (availableProfiles.hasOwnProperty(key)) {
-          const profile = availableProfiles[key];
-          if (profile.builtin) {
-            $scope.builtinProfiles.push(profile);
-          } else if (profile.name.charCodeAt(0) !== charCodeUnderscore) {
-            $scope.customProfiles.push(profile);
-          }
-          if (profile.validResultProfiles) {
-            profile.validResultProfiles = profilesByNames(profile.validResultProfiles);
-          }
-        }
-      }
-
-      $scope.customProfiles.sort(profileOrder);
-    });
+        $scope.customProfiles.sort(profileOrder);
+      });
 
     $scope.domainsForCondition = {};
     $scope.requestInfoProvided = null;
-    
+
     omegaTarget.setRequestInfoCallback((info: any) => {
       info.domains = [];
       for (const domain in info.summary) {
@@ -372,43 +407,45 @@ module.controller('PopupCtrl', [
       info.domains.sort((a: any, b: any) => b.errorCount - a.errorCount);
       $scope.$apply(() => {
         $scope.requestInfo = info;
-        $scope.requestInfoProvided = $scope.requestInfoProvided ?? (info?.domains.length > 0);
+        $scope.requestInfoProvided = $scope.requestInfoProvided ?? info?.domains.length > 0;
         for (const domain of info.domains) {
-          $scope.domainsForCondition[domain.domain] = $scope.domainsForCondition[domain.domain] ?? true;
+          $scope.domainsForCondition[domain.domain] =
+            $scope.domainsForCondition[domain.domain] ?? true;
         }
         $scope.profileForDomains = $scope.profileForDomains ?? preselectedProfileNameForCondition;
       });
     });
 
-    $q.all([
-      omegaTarget.state('currentProfileCanAddRule'),
-      omegaTarget.getActivePageInfo(),
-    ]).then((values: any[]) => {
-      const [canAddRule, info] = values;
-      $scope.currentProfileCanAddRule = canAddRule;
-      if (info) {
-        $scope.currentTempRuleProfile = info.tempRuleProfileName;
-        if ($scope.currentTempRuleProfile) {
-          preselectedProfileNameForCondition = $scope.currentTempRuleProfile;
+    $q.all([omegaTarget.state('currentProfileCanAddRule'), omegaTarget.getActivePageInfo()]).then(
+      (values: any[]) => {
+        const [canAddRule, info] = values;
+        $scope.currentProfileCanAddRule = canAddRule;
+        if (info) {
+          $scope.currentTempRuleProfile = info.tempRuleProfileName;
+          if ($scope.currentTempRuleProfile) {
+            preselectedProfileNameForCondition = $scope.currentTempRuleProfile;
+          }
+          $scope.currentDomain = info.domain;
+          if ($window.location.hash === '#!addRule') {
+            $scope.prepareConditionForm();
+          }
         }
-        $scope.currentDomain = info.domain;
-        if ($window.location.hash === '#!addRule') {
-          $scope.prepareConditionForm();
-        }
-      }
-    });
+      },
+    );
 
     $scope.prepareConditionForm = () => {
       let currentDomain = $scope.currentDomain;
       let currentDomainEscaped = currentDomain.replace(/\./g, '\\.');
       let domainLooksLikeIp = false;
-      
+
       if (currentDomain.indexOf(':') >= 0) {
         domainLooksLikeIp = true;
         if (currentDomain[0] !== '[') {
           currentDomain = '[' + currentDomain + ']';
-          currentDomainEscaped = currentDomain.replace(/\./g, '\\.')
-            .replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+          currentDomainEscaped = currentDomain
+            .replace(/\./g, '\\.')
+            .replace(/\[/g, '\\[')
+            .replace(/\]/g, '\\]');
         }
       } else if (currentDomain[currentDomain.length - 1] >= 0) {
         domainLooksLikeIp = true;
@@ -417,36 +454,35 @@ module.controller('PopupCtrl', [
       let conditionSuggestion: Record<string, string>;
       if (domainLooksLikeIp) {
         conditionSuggestion = {
-          'HostWildcardCondition': currentDomain,
-          'HostRegexCondition': '^' + currentDomainEscaped + '$',
-          'UrlWildcardCondition': '*://' + currentDomain + '/*',
-          'UrlRegexCondition': '://' + currentDomainEscaped + '(:\\d+)?/',
-          'KeywordCondition': currentDomain
+          HostWildcardCondition: currentDomain,
+          HostRegexCondition: '^' + currentDomainEscaped + '$',
+          UrlWildcardCondition: '*://' + currentDomain + '/*',
+          UrlRegexCondition: '://' + currentDomainEscaped + '(:\\d+)?/',
+          KeywordCondition: currentDomain,
         };
       } else {
         conditionSuggestion = {
-          'HostWildcardCondition': '*.' + currentDomain,
-          'HostRegexCondition': '(^|\\.)' + currentDomainEscaped + '$',
-          'UrlWildcardCondition': '*://*.' + currentDomain + '/*',
-          'UrlRegexCondition': '://([^/.]+\\.)*' + currentDomainEscaped + '(:\\d+)?/',
-          'KeywordCondition': currentDomain
+          HostWildcardCondition: '*.' + currentDomain,
+          HostRegexCondition: '(^|\\.)' + currentDomainEscaped + '$',
+          UrlWildcardCondition: '*://*.' + currentDomain + '/*',
+          UrlRegexCondition: '://([^/.]+\\.)*' + currentDomainEscaped + '(:\\d+)?/',
+          KeywordCondition: currentDomain,
         };
       }
 
       $scope.rule = {
         condition: {
           conditionType: 'HostWildcardCondition',
-          pattern: conditionSuggestion['HostWildcardCondition']
+          pattern: conditionSuggestion['HostWildcardCondition'],
         },
-        profileName: preselectedProfileNameForCondition
+        profileName: preselectedProfileNameForCondition,
       };
-      
+
       $scope.$watch('rule.condition.conditionType', (type: string) => {
         $scope.rule.condition.pattern = conditionSuggestion[type];
       });
 
       $scope.showConditionForm = true;
     };
-  }
+  },
 ]);
-

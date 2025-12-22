@@ -1,1 +1,1 @@
-module.exports = OmegaTarget
+module.exports = OmegaTarget;

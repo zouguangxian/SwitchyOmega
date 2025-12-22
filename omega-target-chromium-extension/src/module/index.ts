@@ -18,9 +18,8 @@ export {
   ExternalApi,
   WebRequestMonitor,
   Inspect,
-  proxy
+  proxy,
 };
 
 // Re-export everything from omega-target
 export * from 'omega-target';
-

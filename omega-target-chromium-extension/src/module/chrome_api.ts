@@ -1,6 +1,9 @@
 /** @module omega-target-chromium-extension/chrome_api */
 
-export function chromeApiPromisify<T = any>(target: any, method: string): (...args: any[]) => Promise<T> {
+export function chromeApiPromisify<T = any>(
+  target: any,
+  method: string,
+): (...args: any[]) => Promise<T> {
   return (...args: any[]) => {
     return new Promise<T>((resolve, reject) => {
       const callback = (...callbackArgs: any[]) => {
@@ -21,4 +24,3 @@ export function chromeApiPromisify<T = any>(target: any, method: string): (...ar
     });
   };
 }
-

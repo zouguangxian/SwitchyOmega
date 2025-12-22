@@ -1,60 +1,57 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/rust
 {
-    "name": "devcon",
-    // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-    // "image": "mcr.microsoft.com/devcontainers/base:1-noble",
-    "build": {
-		"dockerfile": "Dockerfile"
-	},
-    "features": {
-        "ghcr.io/devcontainers/features/common-utils:2": {
-            "installZsh": true,
-            "configureZshAsDefaultShell": true,
-            "installOhMyZsh": true,
-            "installOhMyZshConfig": false,
-            "upgradePackages": false,
-            // username should be root and installOhMyZshConfig should be false to avoid overwriting .zshrc in the base image
-            "username": "root"
-        },
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {
-            // Docker Compose v2 is required for or compatible with the repository
-            "dockerDashComposeVersion": "v2.29.1",
-            // https://github.com/devcontainers/features/issues/573#issuecomment-1593854983
-            "moby": false
-        }
+  "name": "devcon",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  // "image": "mcr.microsoft.com/devcontainers/base:1-noble",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": true,
+      "configureZshAsDefaultShell": true,
+      "installOhMyZsh": true,
+      "installOhMyZshConfig": false,
+      "upgradePackages": false,
+      // username should be root and installOhMyZshConfig should be false to avoid overwriting .zshrc in the base image
+      "username": "root"
     },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      // Docker Compose v2 is required for or compatible with the repository
+      "dockerDashComposeVersion": "v2.29.1",
+      // https://github.com/devcontainers/features/issues/573#issuecomment-1593854983
+      "moby": false
+    }
+  },
 
-    // Use 'mounts' to make the cargo cache persistent in a Docker Volume.
-    // "mounts": [
-    // 	{
-    // 		"source": "devcontainer-cargo-cache-${devcontainerId}",
-    // 		"target": "/usr/local/cargo",
-    // 		"type": "volume"
-    // 	}
-    // ]
+  // Use 'mounts' to make the cargo cache persistent in a Docker Volume.
+  // "mounts": [
+  // 	{
+  // 		"source": "devcontainer-cargo-cache-${devcontainerId}",
+  // 		"target": "/usr/local/cargo",
+  // 		"type": "volume"
+  // 	}
+  // ]
 
-    // Features to add to the dev container. More info: https://containers.dev/features.
-    // "features": {},
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
 
-    // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    // "forwardPorts": [],
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
 
-    // Use 'postCreateCommand' to run commands after the container is created.
-    "postCreateCommand": "./.devcontainer/post-create",
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "./.devcontainer/post-create",
 
-    // Configure tool-specific properties.
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "eamodio.gitlens",
-                "EditorConfig.EditorConfig"
-            ]
-        }
-    },
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": ["eamodio.gitlens", "EditorConfig.EditorConfig"]
+    }
+  },
 
-    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-    "remoteUser": "root",
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "root",
 
-    "remoteEnv": {}
+  "remoteEnv": {}
 }

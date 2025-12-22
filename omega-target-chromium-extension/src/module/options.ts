@@ -15,13 +15,15 @@ function withTimeout<T>(promise: Promise<T>, ms: number, errorFactory?: () => Er
       reject(errorFactory ? errorFactory() : new Error('Operation timed out'));
     }, ms);
 
-    promise.then((value) => {
-      clearTimeout(timer);
-      resolve(value);
-    }).catch((err) => {
-      clearTimeout(timer);
-      reject(err);
-    });
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
   });
 }
 
@@ -64,7 +66,7 @@ class ChromeOptions extends OmegaTarget.Options {
   private _inspect: InspectModule | null = null;
   switchySharp?: SwitchySharpModule;
   externalApi: ExternalApiModule | null = null;
-  
+
   private _proxyNotControllable: string | null = null;
   private _badgeTitle: string | null = null;
   private _quickSwitchInit: boolean = false;
@@ -77,7 +79,10 @@ class ChromeOptions extends OmegaTarget.Options {
 
   fetchUrl = fetchUrl;
 
-  updateProfile(name?: string | string[] | null, opt_bypass_cache?: boolean): Promise<Record<string, Profile | Error>> {
+  updateProfile(
+    name?: string | string[] | null,
+    opt_bypass_cache?: boolean,
+  ): Promise<Record<string, Profile | Error>> {
     return super.updateProfile(name, opt_bypass_cache).then((results) => {
       let error = false;
       for (const profileName in results) {
@@ -89,7 +94,7 @@ class ChromeOptions extends OmegaTarget.Options {
           }
         }
       }
-      
+
       if (error) {
         // TODO(catus): Find a better way to notify the user.
         /*
@@ -111,7 +116,7 @@ class ChromeOptions extends OmegaTarget.Options {
   setProxyNotControllable(reason: string | null, badge?: BadgeOptions): void {
     this._proxyNotControllable = reason;
     if (reason) {
-      this._state.set({ 'proxyNotControllable': reason });
+      this._state.set({ proxyNotControllable: reason });
       this.setBadge(badge);
     } else {
       this._state.remove(['proxyNotControllable']);
@@ -125,10 +130,10 @@ class ChromeOptions extends OmegaTarget.Options {
         ? { text: '=', color: '#da4f49' }
         : { text: '?', color: '#49afcd' };
     }
-    
+
     chrome.action.setBadgeText({ text: options.text });
     chrome.action.setBadgeBackgroundColor({ color: options.color });
-    
+
     if (options.title) {
       this._badgeTitle = options.title;
       chrome.action.setTitle({ title: options.title });
@@ -139,11 +144,11 @@ class ChromeOptions extends OmegaTarget.Options {
 
   clearBadge(): void {
     if (this.externalApi.disabled) return;
-    
+
     if (this._badgeTitle) {
       this.currentProfileChanged('clearBadge');
     }
-    
+
     if (this._proxyNotControllable) {
       this.setBadge();
     } else {
@@ -153,49 +158,51 @@ class ChromeOptions extends OmegaTarget.Options {
 
   private ensureQuickSwitchMenu(): Promise<void> {
     if (!this._quickSwitchMenuPromise) {
-      this._quickSwitchMenuPromise = import('../coffee/background_preload').then(({ setQuickSwitchHandler }) => {
-        setQuickSwitchHandler((info: chrome.contextMenus.OnClickData) => {
-          const changes: Record<string, any> = {};
-          changes['-enableQuickSwitch'] = info.checked;
-          const setOptions = this._setOptions(changes);
-          
-          if (info.checked && !this._quickSwitchCanEnable) {
-            setOptions.then(() => {
-              chrome.tabs.create({
-                url: chrome.extension.getURL('options.html#/ui'),
+      this._quickSwitchMenuPromise = import('../coffee/background_preload').then(
+        ({ setQuickSwitchHandler }) => {
+          setQuickSwitchHandler((info: chrome.contextMenus.OnClickData) => {
+            const changes: Record<string, any> = {};
+            changes['-enableQuickSwitch'] = info.checked;
+            const setOptions = this._setOptions(changes);
+
+            if (info.checked && !this._quickSwitchCanEnable) {
+              setOptions.then(() => {
+                chrome.tabs.create({
+                  url: chrome.extension.getURL('options.html#/ui'),
+                });
               });
-            });
-          }
-        });
-      });
+            }
+          });
+        },
+      );
     }
     return this._quickSwitchMenuPromise;
   }
 
   async setQuickSwitch(quickSwitch: string[] | null, canEnable: boolean): Promise<void> {
     this._quickSwitchCanEnable = canEnable;
-    
+
     await this.ensureQuickSwitchMenu();
 
     if (quickSwitch || !chrome.action.setPopup) {
       chrome.action.setPopup?.({ popup: '' });
-      
+
       if (!this._quickSwitchInit) {
         this._quickSwitchInit = true;
         chrome.action.onClicked.addListener((tab) => {
           this.clearBadge();
-          
+
           if (!this._options['-enableQuickSwitch']) {
             // If we reach here, then the browser does not support popup.
             // Let's open the popup page in a tab.
             chrome.tabs.create({ url: 'popup/index.html' });
             return;
           }
-          
+
           const profiles = this._options['-quickSwitchProfiles'];
           let index = profiles.indexOf(this._currentProfileName);
           index = (index + 1) % profiles.length;
-          
+
           this.applyProfile(profiles[index]).then(() => {
             if (this._options['-refreshOnProfileChange']) {
               const url = tab.url;
@@ -230,41 +237,41 @@ class ChromeOptions extends OmegaTarget.Options {
 
   setMonitorWebRequests(enabled: boolean): Promise<void> {
     this._monitorWebRequests = enabled;
-    
+
     if (enabled && !this._requestMonitor) {
       this._tabRequestInfoPorts = {};
       const wildcardForReq = (req: { url: string }) => OmegaPac.wildcardForUrl(req.url);
       this._requestMonitor = new WebRequestMonitor(wildcardForReq);
-      
+
       this._requestMonitor.watchTabs((tabId, info) => {
         if (!this._monitorWebRequests) return;
-        
+
         if (info.errorCount > 0) {
           info.badgeSet = true;
           const badge = { text: info.errorCount.toString(), color: '#f0ad4e' };
           chrome.action.setBadgeText({ text: badge.text, tabId });
           chrome.action.setBadgeBackgroundColor({
             color: badge.color,
-            tabId
+            tabId,
           });
         } else if (info.badgeSet) {
           info.badgeSet = false;
           chrome.action.setBadgeText({ text: '', tabId });
         }
-        
+
         this._tabRequestInfoPorts![tabId]?.postMessage({
           errorCount: info.errorCount,
-          summary: info.summary
+          summary: info.summary,
         });
       });
 
       chrome.runtime.onConnect.addListener((rawPort) => {
         if (rawPort.name !== 'tabRequestInfo') return;
         if (!this._monitorWebRequests) return;
-        
+
         let tabId: number | null = null;
         const port = new ChromePort(rawPort);
-        
+
         port.onMessage.addListener((msg: { tabId: number }) => {
           tabId = msg.tabId;
           this._tabRequestInfoPorts![tabId] = port;
@@ -272,11 +279,11 @@ class ChromeOptions extends OmegaTarget.Options {
           if (info) {
             port.postMessage({
               errorCount: info.errorCount,
-              summary: info.summary
+              summary: info.summary,
             });
           }
         });
-        
+
         port.onDisconnect.addListener(() => {
           if (tabId != null) {
             delete this._tabRequestInfoPorts![tabId];
@@ -284,36 +291,36 @@ class ChromeOptions extends OmegaTarget.Options {
         });
       });
     }
-    
+
     return Promise.resolve();
   }
 
   schedule(name: string, periodInMinutes: number, callback: () => void): Promise<void> {
     name = 'omega.' + name;
-    
+
     if (!this._alarms) {
       this._alarms = {};
       chrome.alarms.onAlarm.addListener((alarm) => {
         this._alarms![alarm.name]?.();
       });
     }
-    
+
     if (periodInMinutes < 0) {
       delete this._alarms[name];
       chrome.alarms.clear(name);
     } else {
       this._alarms[name] = callback;
       chrome.alarms.create(name, {
-        periodInMinutes
+        periodInMinutes,
       });
     }
-    
+
     return Promise.resolve();
   }
 
   printFixedProfile(profile: Profile): string | null {
     if (profile.profileType !== 'FixedProfile') return null;
-    
+
     let result = '';
     for (const scheme of OmegaPac.Profiles.schemes) {
       const profileData = profile as Record<string, unknown>;
@@ -326,7 +333,7 @@ class ChromeOptions extends OmegaTarget.Options {
         }
       }
     }
-    
+
     result = result || chrome.i18n.getMessage('browserAction_profileDetails_DirectProfile');
     return result;
   }
@@ -347,19 +354,19 @@ class ChromeOptions extends OmegaTarget.Options {
   }
 
   upgrade(
-    options: OmegaTarget.Mutable<OmegaTarget.OmegaOptions> | null, 
-    changes?: Record<string, unknown>
+    options: OmegaTarget.Mutable<OmegaTarget.OmegaOptions> | null,
+    changes?: Record<string, unknown>,
   ): Promise<[OmegaTarget.OmegaOptions, Record<string, unknown>]> {
     return super.upgrade(options, changes).catch((err: unknown) => {
       if (options?.['schemaVersion']) {
         return Promise.reject(err);
       }
-      
+
       let getOldOptions = this.switchySharp
         ? withTimeout(
             (this.switchySharp as { getOptions(): Promise<unknown> }).getOptions(),
             1000,
-            () => new Error('SwitchySharp upgrade timed out')
+            () => new Error('SwitchySharp upgrade timed out'),
           )
         : Promise.reject();
 
@@ -368,7 +375,7 @@ class ChromeOptions extends OmegaTarget.Options {
           return Promise.resolve(options);
         } else if (storageWrapper.get('config')) {
           return Promise.resolve({
-            config: storageWrapper.get('config')
+            config: storageWrapper.get('config'),
           });
         } else {
           return Promise.reject(new OmegaTarget.Options.NoOptionsError());
@@ -377,22 +384,25 @@ class ChromeOptions extends OmegaTarget.Options {
 
       return getOldOptions.then(async (oldOptions: unknown) => {
         const i18n = {
-          upgrade_profile_auto: chrome.i18n.getMessage('upgrade_profile_auto')
+          upgrade_profile_auto: chrome.i18n.getMessage('upgrade_profile_auto'),
         };
-        
+
         let upgraded: OmegaTarget.Mutable<OmegaTarget.OmegaOptions>;
         try {
           // Upgrade from SwitchySharp.
-          upgraded = require('./upgrade')(oldOptions, i18n) as OmegaTarget.Mutable<OmegaTarget.OmegaOptions>;
+          upgraded = require('./upgrade')(
+            oldOptions,
+            i18n,
+          ) as OmegaTarget.Mutable<OmegaTarget.OmegaOptions>;
         } catch (ex) {
           this.log.error(ex);
           return Promise.reject(ex);
         }
-        
+
         if (storageWrapper.get('config')) {
           await storageWrapper.clear();
         }
-        this._state.set({ 'firstRun': 'upgrade' });
+        this._state.set({ firstRun: 'upgrade' });
         return super.upgrade(upgraded, upgraded);
       });
     });
@@ -405,7 +415,7 @@ class ChromeOptions extends OmegaTarget.Options {
   getPageInfo({ tabId, url }: PageInfoRequest): Promise<PageInfoResult | null> {
     const errorCount = this._requestMonitor?.tabInfo[tabId]?.errorCount;
     const result: PageInfoResult | null = errorCount ? { errorCount } : null;
-    
+
     const getBadge = new Promise<string>((resolve, reject) => {
       if (!chrome.action.getBadgeText) {
         resolve('');
@@ -417,7 +427,7 @@ class ChromeOptions extends OmegaTarget.Options {
     });
 
     const getInspectUrl = this._state.get({ inspectUrl: '' });
-    
+
     return Promise.all([getBadge, getInspectUrl]).then(([badge, inspectData]) => {
       const inspectUrl = inspectData?.inspectUrl;
       if (badge === '#' && inspectUrl) {
@@ -425,9 +435,9 @@ class ChromeOptions extends OmegaTarget.Options {
       } else {
         this.clearBadge();
       }
-      
+
       if (!url) return result;
-      
+
       if (url.substr(0, 6) === 'chrome') {
         const errorPagePrefix = 'chrome://errorpage/';
         if (url.substr(0, errorPagePrefix.length) === errorPagePrefix) {
@@ -438,26 +448,26 @@ class ChromeOptions extends OmegaTarget.Options {
           return result;
         }
       }
-      
+
       if (url.substr(0, 6) === 'about:') return result;
       if (url.substr(0, 4) === 'moz-') return result;
-      
+
       // Use native URL API
       const domain = OmegaPac.getBaseDomain(new URL(url).hostname);
-      const subdomain = typeof (OmegaPac as any).getSubdomain === 'function'
-        ? (OmegaPac as any).getSubdomain(url)
-        : null;
+      const subdomain =
+        typeof (OmegaPac as any).getSubdomain === 'function'
+          ? (OmegaPac as any).getSubdomain(url)
+          : null;
 
       return {
         url,
         domain,
         subdomain,
         tempRuleProfileName: this.queryTempRule(domain),
-        errorCount
+        errorCount,
       };
     });
   }
 }
 
 export default ChromeOptions;
-

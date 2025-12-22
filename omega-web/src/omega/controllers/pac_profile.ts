@@ -3,13 +3,17 @@
 declare const angular: any;
 declare const OmegaPac: any;
 
-angular.module('omega').controller('PacProfileCtrl', ['$scope', '$uibModal',
-  function($scope: any, $uibModal: any) {
+angular.module('omega').controller('PacProfileCtrl', [
+  '$scope',
+  '$uibModal',
+  function ($scope: any, $uibModal: any) {
     // https://github.com/angular/angular.js/blob/master/src/ng/directive/input.js#L13
-    $scope.urlRegex = /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
+    $scope.urlRegex =
+      /^(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
     // With the file: scheme added to the pattern:
-    $scope.urlWithFile = /^(ftp|http|https|file):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
-    
+    $scope.urlWithFile =
+      /^(ftp|http|https|file):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/;
+
     $scope.isFileUrl = OmegaPac.Profiles.isFileUrl;
     $scope.pacUrlCtrl = { ctrl: null };
 
@@ -19,10 +23,10 @@ angular.module('omega').controller('PacProfileCtrl', ['$scope', '$uibModal',
     let oldPacUrl: string | null = null;
     let oldLastUpdate: any = null;
     let oldPacScript: any = null;
-    
+
     const onProfileChange = (profile: any, oldProfile: any) => {
       if (!profile || !oldProfile) return;
-      
+
       if (profile.pacUrl !== oldProfile.pacUrl) {
         if (profile.lastUpdate) {
           oldPacUrl = oldProfile.pacUrl;
@@ -43,22 +47,23 @@ angular.module('omega').controller('PacProfileCtrl', ['$scope', '$uibModal',
       const auth = $scope.profile.auth?.[prop];
       const scope = $scope.$new('isolate');
       scope.auth = auth && angular.copy(auth);
-      
-      $uibModal.open({
-        templateUrl: 'partials/fixed_auth_edit.html',
-        scope,
-        size: 'sm'
-      }).result.then((auth: any) => {
-        if (!auth?.username) {
-          if ($scope.profile.auth) {
-            $scope.profile.auth[prop] = undefined;
-          }
-        } else {
-          $scope.profile.auth = $scope.profile.auth || {};
-          $scope.profile.auth[prop] = auth;
-        }
-      });
-    };
-  }
-]);
 
+      $uibModal
+        .open({
+          templateUrl: 'partials/fixed_auth_edit.html',
+          scope,
+          size: 'sm',
+        })
+        .result.then((auth: any) => {
+          if (!auth?.username) {
+            if ($scope.profile.auth) {
+              $scope.profile.auth[prop] = undefined;
+            }
+          } else {
+            $scope.profile.auth = $scope.profile.auth || {};
+            $scope.profile.auth[prop] = auth;
+          }
+        });
+    };
+  },
+]);

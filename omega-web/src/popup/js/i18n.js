@@ -1,4 +1,4 @@
-$script.ready('om-page-info', function() {
+$script.ready('om-page-info', function () {
   document.querySelector('#js-direct .om-profile-name').textContent =
     OmegaTargetPopup.getMessage('profile_direct');
   document.querySelector('#js-system .om-profile-name').textContent =

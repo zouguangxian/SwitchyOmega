@@ -30,7 +30,7 @@ export const Revision = {
       return -1;
     }
     return 0;
-  }
+  },
 };
 
 type CacheEntry<TValue> = {
@@ -42,7 +42,7 @@ type TagFunction<TObject> = (obj: TObject) => unknown;
 
 export class AttachedCache<
   TValue = unknown,
-  TObject extends Record<string, unknown> = Record<string, unknown>
+  TObject extends Record<string, unknown> = Record<string, unknown>,
 > {
   private readonly prop: string;
   private readonly tagFn: TagFunction<TObject>;
@@ -117,7 +117,7 @@ export function wildcardForDomain(domain: string): string {
 
 export function wildcardForUrl(url: string): string {
   const parsed = parseUrl(url);
-  const hostname = typeof parsed === 'string' ? undefined : parsed?.hostname ?? undefined;
+  const hostname = typeof parsed === 'string' ? undefined : (parsed?.hostname ?? undefined);
   if (!hostname) {
     throw new Error(`Unable to determine hostname from url: ${url}`);
   }
@@ -127,4 +127,3 @@ export function wildcardForUrl(url: string): string {
 export function getSubdomain(url: string): string | null {
   return tld.getSubdomain(url) ?? null;
 }
-

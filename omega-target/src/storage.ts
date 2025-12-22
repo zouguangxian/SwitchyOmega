@@ -22,11 +22,7 @@ export interface OperationsArgs<T = unknown> {
 /**
  * Storage key types - supporting various query patterns
  */
-export type StorageKeys = 
-  | string 
-  | readonly string[] 
-  | null 
-  | Readonly<Record<string, unknown>>;
+export type StorageKeys = string | readonly string[] | null | Readonly<Record<string, unknown>>;
 
 /**
  * Storage change detail
@@ -88,7 +84,7 @@ class Storage<T = unknown> {
    */
   static operationsForChanges<T = unknown>(
     changes: Readonly<Record<string, T | undefined>>,
-    args: OperationsArgs<T> = {}
+    args: OperationsArgs<T> = {},
   ): WriteOperations<T> {
     const { base, merge } = args;
     const set: Record<string, T> = {};
@@ -96,18 +92,18 @@ class Storage<T = unknown> {
 
     for (const key in changes) {
       if (!Object.prototype.hasOwnProperty.call(changes, key)) continue;
-      
+
       let newVal = changes[key];
       const oldVal = base?.[key];
-      
+
       // Always call merge if provided, even for deletions (undefined values)
       // The merge function decides whether to accept the deletion or keep the value
       if (merge) {
         newVal = merge(key, newVal as T, oldVal);
       }
-      
+
       if (base != null && newVal === oldVal) continue;
-      
+
       if (newVal === undefined) {
         if (oldVal !== undefined || base == null) {
           remove.push(key);
@@ -116,7 +112,7 @@ class Storage<T = unknown> {
         set[key] = newVal;
       }
     }
-    
+
     return { set, remove };
   }
 
@@ -127,13 +123,13 @@ class Storage<T = unknown> {
    */
   get(keys: StorageKeys): Promise<Readonly<Record<string, T | undefined>>> {
     Log.method('Storage#get', this, arguments);
-    
+
     if (!this._items) {
       return Promise.resolve({});
     }
-    
+
     const map: Record<string, T | undefined> = {};
-    
+
     if (keys == null) {
       Object.assign(map, this._items);
     } else if (typeof keys === 'string') {
@@ -151,7 +147,7 @@ class Storage<T = unknown> {
         }
       }
     }
-    
+
     return Promise.resolve(map);
   }
 
@@ -162,17 +158,17 @@ class Storage<T = unknown> {
    */
   set(items: Readonly<Record<string, T>>): Promise<Readonly<Record<string, T>>> {
     Log.method('Storage#set', this, arguments);
-    
+
     if (!this._items) {
       this._items = {};
     }
-    
+
     for (const key in items) {
       if (Object.prototype.hasOwnProperty.call(items, key)) {
         this._items[key] = items[key];
       }
     }
-    
+
     return Promise.resolve(items);
   }
 
@@ -183,7 +179,7 @@ class Storage<T = unknown> {
    */
   remove(keys?: string | readonly string[] | null): Promise<void> {
     Log.method('Storage#remove', this, arguments);
-    
+
     if (this._items != null) {
       if (keys == null) {
         this._items = {};
@@ -195,7 +191,7 @@ class Storage<T = unknown> {
         delete this._items[keys];
       }
     }
-    
+
     return Promise.resolve();
   }
 
@@ -205,10 +201,7 @@ class Storage<T = unknown> {
    * @param callback Called everytime something changes.
    * @returns Calling the returned function will stop watching.
    */
-  watch(
-    keys: StorageKeys,
-    callback: StorageChangeCallback<T>
-  ): () => void {
+  watch(keys: StorageKeys, callback: StorageChangeCallback<T>): () => void {
     Log.method('Storage#watch', this, arguments);
     return () => {};
   }
@@ -219,7 +212,9 @@ class Storage<T = unknown> {
    * @returns A promise that fulfills on operation success.
    */
   apply(
-    operations: WriteOperations<T> | (OperationsArgs<T> & { changes: Readonly<Record<string, T | undefined>> })
+    operations:
+      | WriteOperations<T>
+      | (OperationsArgs<T> & { changes: Readonly<Record<string, T | undefined>> }),
   ): Promise<WriteOperations<T>> {
     if ('changes' in operations) {
       const ops = Storage.operationsForChanges(operations.changes, operations);
@@ -227,7 +222,7 @@ class Storage<T = unknown> {
         .then(() => this.remove(ops.remove))
         .then(() => ops);
     }
-    
+
     return this.set(operations.set)
       .then(() => this.remove(operations.remove))
       .then(() => operations);
@@ -235,4 +230,3 @@ class Storage<T = unknown> {
 }
 
 export default Storage;
-

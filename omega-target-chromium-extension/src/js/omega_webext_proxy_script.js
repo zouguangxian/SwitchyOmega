@@ -28,7 +28,7 @@ FindProxyForURL = (function () {
     var profile = activeProfile;
     var matchResult, next;
     while (profile) {
-      matchResult = OmegaPac.Profiles.match(profile, request)
+      matchResult = OmegaPac.Profiles.match(profile, request);
       if (!matchResult) {
         if (profile.profileType === 'DirectProfile') {
           return 'DIRECT';
@@ -71,11 +71,11 @@ FindProxyForURL = (function () {
           return next.replace(/SOCKS5 /g, 'SOCKS ');
         }
       } else if (matchResult.profileName) {
-        next = OmegaPac.Profiles.nameAsKey(matchResult.profileName)
+        next = OmegaPac.Profiles.nameAsKey(matchResult.profileName);
       } else {
         return fallbackResult;
       }
-      profile = OmegaPac.Profiles.byKey(next, options)
+      profile = OmegaPac.Profiles.byKey(next, options);
     }
     warn('Warning: Cannot find profile: ' + next);
     return fallbackResult;
@@ -94,18 +94,17 @@ FindProxyForURL = (function () {
   }
 
   function init() {
-    browser.runtime.onMessage.addListener(function(message) {
+    browser.runtime.onMessage.addListener(function (message) {
       if (message.event === 'proxyScriptStateChanged') {
         state = message.state;
         options = message.options;
         if (!state.currentProfileName) {
           activeProfile = state.tempProfile;
         } else {
-          activeProfile = OmegaPac.Profiles.byName(state.currentProfileName,
-            options);
+          activeProfile = OmegaPac.Profiles.byName(state.currentProfileName, options);
         }
       }
     });
-    browser.runtime.sendMessage({event: 'proxyScriptLoaded'});
+    browser.runtime.sendMessage({ event: 'proxyScriptLoaded' });
   }
 })();

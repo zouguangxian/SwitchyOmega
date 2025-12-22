@@ -14,7 +14,7 @@ class TrackedEvent {
   constructor(event: chrome.events.Event<any>) {
     this.event = event;
     const methods = ['hasListener', 'hasListeners', 'addRules', 'getRules', 'removeRules'];
-    
+
     for (const methodName of methods) {
       const method = (event as any)[methodName];
       if (method) {
@@ -68,7 +68,7 @@ class TrackedEvent {
   dispose(): void {
     this.removeAllListeners();
     if (this.event && (this.event as any).hasListeners?.()) {
-      throw new Error("Underlying Event still has listeners!");
+      throw new Error('Underlying Event still has listeners!');
     }
     this.event = null;
     this.callbacks = [];
@@ -82,7 +82,7 @@ class ChromePort {
   onDisconnect: TrackedEvent;
   disconnect: () => void;
   postMessage: (...args: any[]) => void;
-  
+
   private port: chrome.runtime.Port;
 
   constructor(port: chrome.runtime.Port) {

@@ -18,11 +18,8 @@ describe('OptionsSync', () => {
     (Log.log as any).restore();
   });
 
-  function hookPostBasic<T extends (...args: any[]) => any>(
-    func: T,
-    hook: T
-  ): T {
-    return function(this: any, ...args: Parameters<T>) {
+  function hookPostBasic<T extends (...args: any[]) => any>(func: T, hook: T): T {
+    return function (this: any, ...args: Parameters<T>) {
       const result = func.apply(this, args);
       hook.apply(this, args);
       return result;
@@ -43,37 +40,37 @@ describe('OptionsSync', () => {
 
   describe('#merge', () => {
     const sync = new OptionsSync();
-    
+
     it('should choose the one with newer revision', () => {
       const newVal = { revision: '2' };
       const oldVal = { revision: '1' };
       sync.merge('example', newVal, oldVal).should.equal(newVal);
     });
-    
+
     it('should use oldVal when sync is disabled in newVal', () => {
       const newVal = { revision: '2', is: 'newVal', syncOptions: 'disabled' };
       const oldVal = { revision: '1', is: 'oldVal' };
       sync.merge('example', newVal, oldVal).should.equal(oldVal);
     });
-    
+
     it('should use oldVal when sync is disabled in oldVal', () => {
       const newVal = { revision: '2', is: 'newVal' };
       const oldVal = { revision: '1', is: 'oldVal', syncOptions: 'disabled' };
       sync.merge('example', newVal, oldVal).should.equal(oldVal);
     });
-    
+
     it('should favor oldVal when revisions are equal', () => {
       const newVal = { revision: '1', is: 'newVal' };
       const oldVal = { revision: '1', is: 'oldVal' };
       sync.merge('example', newVal, oldVal).should.equal(oldVal);
     });
-    
+
     it('should favor oldVal when newVal deeply equals oldVal', () => {
       const newVal = { they: 'are', the: 'same' };
       const oldVal = { they: 'are', the: 'same' };
       sync.merge('example', newVal, oldVal).should.equal(oldVal);
     });
-    
+
     it('should choose newVal when newVal is different', () => {
       const newVal = { they: 'are', not: 'equal' };
       const oldVal = { they: 'are', not: 'identical' };
@@ -90,7 +87,7 @@ describe('OptionsSync', () => {
       sync.requestPush({ a: 1 });
       sync.pendingChanges().should.eql({ a: 1 });
     });
-    
+
     it('should schedule storage write', (done) => {
       const check = () => {
         if ((storage.set as any).callCount === 0 || (storage.remove as any).callCount === 0) return;
@@ -142,7 +139,7 @@ describe('OptionsSync', () => {
     it('should disable syncing for the profiles if quota is exceeded', (done) => {
       const options: any = {
         '+a': { is: 'a', oversized: true },
-        'b': { is: 'b' }
+        b: { is: 'b' },
       };
 
       const storage = new Storage();
@@ -251,4 +248,3 @@ describe('OptionsSync', () => {
     });
   });
 });
-

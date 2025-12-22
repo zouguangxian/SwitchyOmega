@@ -1,5 +1,5 @@
 var drawOmega = function (ctx, outerCircleColor, innerCircleColor) {
-  ctx.globalCompositeOperation = "source-over";
+  ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = outerCircleColor;
   ctx.beginPath();
   ctx.arc(0.5, 0.5, 0.5, 0, Math.PI * 2, true);
@@ -9,7 +9,7 @@ var drawOmega = function (ctx, outerCircleColor, innerCircleColor) {
   if (innerCircleColor != null) {
     ctx.fillStyle = innerCircleColor;
   } else {
-    ctx.globalCompositeOperation = "destination-out";
+    ctx.globalCompositeOperation = 'destination-out';
   }
 
   ctx.beginPath();

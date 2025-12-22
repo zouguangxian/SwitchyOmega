@@ -3,43 +3,47 @@
 declare const angular: any;
 declare const OmegaPac: any;
 
-angular.module('omega')
-  .directive('inputGroupClear', ['$timeout', function($timeout: any) {
-    return {
-      restrict: 'A',
-      templateUrl: 'partials/input_group_clear.html',
-      scope: {
-        'model': '=model',
-        'type': '@type',
-        'ngPattern': '=?ngPattern',
-        'placeholder': '@placeholder',
-        'controller': '=?controller'
-      },
-      link: (scope: any, element: any, attrs: any) => {
-        scope.catchAll = new RegExp('');
-        $timeout(() => {
-          scope.controller = element.find('input').controller('ngModel');
-        });
+angular
+  .module('omega')
+  .directive('inputGroupClear', [
+    '$timeout',
+    function ($timeout: any) {
+      return {
+        restrict: 'A',
+        templateUrl: 'partials/input_group_clear.html',
+        scope: {
+          model: '=model',
+          type: '@type',
+          ngPattern: '=?ngPattern',
+          placeholder: '@placeholder',
+          controller: '=?controller',
+        },
+        link: (scope: any, element: any, attrs: any) => {
+          scope.catchAll = new RegExp('');
+          $timeout(() => {
+            scope.controller = element.find('input').controller('ngModel');
+          });
 
-        scope.oldModel = '';
-        scope.controller = scope.input;
-        scope.modelChange = () => {
-          if (scope.model) {
-            scope.oldModel = '';
-          }
-        };
-        scope.toggleClear = () => {
-          [scope.model, scope.oldModel] = [scope.oldModel, scope.model];
-        };
-      }
-    };
-  }])
+          scope.oldModel = '';
+          scope.controller = scope.input;
+          scope.modelChange = () => {
+            if (scope.model) {
+              scope.oldModel = '';
+            }
+          };
+          scope.toggleClear = () => {
+            [scope.model, scope.oldModel] = [scope.oldModel, scope.model];
+          };
+        },
+      };
+    },
+  ])
   .directive('omegaUpload', () => {
     return {
       restrict: 'A',
       scope: {
         success: '&omegaUpload',
-        error: '&omegaError'
+        error: '&omegaError',
       },
       link: (scope: any, element: any, attrs: any) => {
         const input = element[0];
@@ -48,19 +52,19 @@ angular.module('omega')
             const reader = new FileReader();
             reader.addEventListener('load', (e: any) => {
               scope.$apply(() => {
-                scope.success({ '$content': e.target.result });
+                scope.success({ $content: e.target.result });
               });
             });
             reader.addEventListener('error', (e: any) => {
               scope.$apply(() => {
-                scope.error({ '$error': e.target.error });
+                scope.error({ $error: e.target.error });
               });
             });
             reader.readAsText(input.files[0]);
             input.value = '';
           }
         });
-      }
+      },
     };
   })
   .directive('omegaIp2str', () => {
@@ -83,7 +87,6 @@ angular.module('omega')
             return '';
           }
         });
-      }
+      },
     };
   });
-

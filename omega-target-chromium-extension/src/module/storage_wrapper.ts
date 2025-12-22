@@ -92,27 +92,26 @@ export const localStorageCompat = {
   getItem(key: string): string | null {
     return storageWrapper.get(key);
   },
-  
+
   setItem(key: string, value: string): void {
     storageWrapper.set(key, value);
   },
-  
+
   removeItem(key: string): void {
     storageWrapper.removeItem(key);
   },
-  
+
   clear(): void {
     storageWrapper.clear();
   },
-  
+
   // BrowserStorage enumeration support
   get length(): number {
     return storageWrapper.keys().length;
   },
-  
+
   key(index: number): string | null {
     const keys = storageWrapper.keys();
     return keys[index] || null;
-  }
+  },
 };
-

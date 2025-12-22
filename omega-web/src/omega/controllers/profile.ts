@@ -4,21 +4,39 @@ declare const angular: any;
 declare const OmegaPac: any;
 
 angular.module('omega').controller('ProfileCtrl', [
-  '$scope', '$stateParams', '$location', '$rootScope', '$timeout', '$state', '$uibModal', 'profileColorPalette',
-  'getAttachedName', 'getParentName', 'getVirtualTarget',
-  function(
-    $scope: any, $stateParams: any, $location: any, $rootScope: any, $timeout: any, $state: any, $uibModal: any,
-    profileColorPalette: any, getAttachedName: any, getParentName: any, getVirtualTarget: any
+  '$scope',
+  '$stateParams',
+  '$location',
+  '$rootScope',
+  '$timeout',
+  '$state',
+  '$uibModal',
+  'profileColorPalette',
+  'getAttachedName',
+  'getParentName',
+  'getVirtualTarget',
+  function (
+    $scope: any,
+    $stateParams: any,
+    $location: any,
+    $rootScope: any,
+    $timeout: any,
+    $state: any,
+    $uibModal: any,
+    profileColorPalette: any,
+    getAttachedName: any,
+    getParentName: any,
+    getVirtualTarget: any,
   ) {
     const name = $stateParams.name;
     const profileTemplates: Record<string, string> = {
-      'FixedProfile': 'profile_fixed.html',
-      'PacProfile': 'profile_pac.html',
-      'VirtualProfile': 'profile_virtual.html',
-      'SwitchProfile': 'profile_switch.html',
-      'RuleListProfile': 'profile_rule_list.html'
+      FixedProfile: 'profile_fixed.html',
+      PacProfile: 'profile_pac.html',
+      VirtualProfile: 'profile_virtual.html',
+      SwitchProfile: 'profile_switch.html',
+      RuleListProfile: 'profile_rule_list.html',
     };
-    
+
     $scope.spectrumOptions = {
       localStorageKey: 'spectrum.profileColor',
       palette: profileColorPalette,
@@ -28,7 +46,7 @@ angular.module('omega').controller('ProfileCtrl', [
       showInput: true,
       showPalette: true,
       showSelectionPalette: true,
-      maxSelectionSize: 5
+      maxSelectionSize: 5,
     };
 
     $scope.getProfileColor = () => {
@@ -75,34 +93,36 @@ angular.module('omega').controller('ProfileCtrl', [
         scope.refs = refProfiles;
         $uibModal.open({
           templateUrl: 'partials/cannot_delete_profile.html',
-          scope
+          scope,
         });
         return;
       } else {
-        $uibModal.open({
-          templateUrl: 'partials/delete_profile.html',
-          scope
-        }).result.then(() => {
-          const attachedName = getAttachedName(profileName);
-          delete $rootScope.options[OmegaPac.Profiles.nameAsKey(attachedName)];
-          delete $rootScope.options[OmegaPac.Profiles.nameAsKey(profileName)];
-          if ($rootScope.options['-startupProfileName'] === profileName) {
-            $rootScope.options['-startupProfileName'] = "";
-          }
-          const quickSwitch = $rootScope.options['-quickSwitchProfiles'];
-          for (let i = 0; i < quickSwitch.length; i++) {
-            if (profileName === quickSwitch[i]) {
-              quickSwitch.splice(i, 1);
-              break;
+        $uibModal
+          .open({
+            templateUrl: 'partials/delete_profile.html',
+            scope,
+          })
+          .result.then(() => {
+            const attachedName = getAttachedName(profileName);
+            delete $rootScope.options[OmegaPac.Profiles.nameAsKey(attachedName)];
+            delete $rootScope.options[OmegaPac.Profiles.nameAsKey(profileName)];
+            if ($rootScope.options['-startupProfileName'] === profileName) {
+              $rootScope.options['-startupProfileName'] = '';
             }
-          }
-          $state.go('ui');
-        });
+            const quickSwitch = $rootScope.options['-quickSwitchProfiles'];
+            for (let i = 0; i < quickSwitch.length; i++) {
+              if (profileName === quickSwitch[i]) {
+                quickSwitch.splice(i, 1);
+                break;
+              }
+            }
+            $state.go('ui');
+          });
       }
     };
 
     // The watcher should be applied on the calling scope.
-    $scope.watchAndUpdateRevision = function(this: any, expression: string) {
+    $scope.watchAndUpdateRevision = function (this: any, expression: string) {
       let revisionChanged = false;
       const onChange = (profile: any, oldProfile: any) => {
         if (profile === oldProfile || !profile || !oldProfile) return profile;
@@ -123,36 +143,38 @@ angular.module('omega').controller('ProfileCtrl', [
       $scope.exportRuleListOptions = options;
     };
 
-    const unwatch = $scope.$watch(() => $scope.options?.['+' + name], (profile: any) => {
-      if (!profile) {
-        if ($scope.options) {
-          unwatch();
-          $location.path('/');
-        } else {
-          const unwatch2 = $scope.$watch('options', () => {
-            if ($scope.options) {
-              unwatch2();
-              if (!$scope.options['+' + name]) {
-                unwatch();
-                $location.path('/');
+    const unwatch = $scope.$watch(
+      () => $scope.options?.['+' + name],
+      (profile: any) => {
+        if (!profile) {
+          if ($scope.options) {
+            unwatch();
+            $location.path('/');
+          } else {
+            const unwatch2 = $scope.$watch('options', () => {
+              if ($scope.options) {
+                unwatch2();
+                if (!$scope.options['+' + name]) {
+                  unwatch();
+                  $location.path('/');
+                }
               }
-            }
-          });
+            });
+          }
+          return;
         }
-        return;
-      }
-      if (OmegaPac.Profiles.formatByType[profile.profileType]) {
-        profile.format = OmegaPac.Profiles.formatByType[profile.profileType];
-        profile.profileType = 'RuleListProfile';
-      }
-      $scope.profile = profile;
-      const type = $scope.profile.profileType;
-      const templ = profileTemplates[type] || 'profile_unsupported.html';
-      $scope.profileTemplate = 'partials/' + templ;
-      $scope.scriptable = true;
+        if (OmegaPac.Profiles.formatByType[profile.profileType]) {
+          profile.format = OmegaPac.Profiles.formatByType[profile.profileType];
+          profile.profileType = 'RuleListProfile';
+        }
+        $scope.profile = profile;
+        const type = $scope.profile.profileType;
+        const templ = profileTemplates[type] || 'profile_unsupported.html';
+        $scope.profileTemplate = 'partials/' + templ;
+        $scope.scriptable = true;
 
-      $scope.watchAndUpdateRevision('profile');
-    });
-  }
+        $scope.watchAndUpdateRevision('profile');
+      },
+    );
+  },
 ]);
-

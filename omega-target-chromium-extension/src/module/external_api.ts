@@ -7,7 +7,7 @@ import ChromePort from './chrome_port';
 class ExternalApi {
   options: any;
   knownExts: Record<string, number> = {
-    'padekgcemlokbadohgkifijomclgjgif': 32
+    padekgcemlokbadohgkifijomclgjgif: 32,
   };
   disabled: boolean = false;
   private _previousProfileName: string | null = null;
@@ -18,7 +18,7 @@ class ExternalApi {
 
   listen(): void {
     if (!chrome.runtime.onConnectExternal) return;
-    
+
     chrome.runtime.onConnectExternal.addListener((rawPort) => {
       const port = new ChromePort(rawPort);
       port.onMessage.addListener((msg: any) => this.onMessage(msg, port));
@@ -49,12 +49,12 @@ class ExternalApi {
 
   onMessage(msg: any, port: chrome.runtime.Port): void {
     this.options.log.log(`${port.sender!.id} -> ${msg.action}`, msg);
-    
+
     switch (msg.action) {
       case 'disable':
         if (!this.checkPerm(port, 16)) return;
         if (this.disabled) return;
-        
+
         this.disabled = true;
         this._previousProfileName = this.options.currentProfile()?.name || 'system';
         this.options.applyProfile('system').then(() => {
@@ -67,26 +67,25 @@ class ExternalApi {
         chrome.action.setPopup?.({ popup: 'popup/index.html' });
         (port as any).postMessage({ action: 'state', state: 'disabled' });
         break;
-      
+
       case 'enable':
         this.reenable();
         (port as any).postMessage({ action: 'state', state: 'enabled' });
         break;
-      
+
       case 'getOptions':
         if (!this.checkPerm(port, 8)) return;
         (port as any).postMessage({ action: 'options', options: this.options.getAll() });
         break;
-      
+
       default:
         (port as any).postMessage({
           action: 'error',
           error: 'noSuchAction',
-          action_name: msg.action
+          action_name: msg.action,
         });
     }
   }
 }
 
 export default ExternalApi;
-

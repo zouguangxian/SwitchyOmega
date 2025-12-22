@@ -1,4 +1,4 @@
-(function() {
+(function () {
   var keyHandler = {
     38: moveUp, // Up
     40: moveDown, // Down
@@ -31,13 +31,11 @@
   return init();
 
   function init() {
-    walker = document.createTreeWalker(
-      document.querySelector('.om-nav'),
-      NodeFilter.SHOW_ELEMENT,
-      {acceptNode: tabbableElementsOnly}
-    );
+    walker = document.createTreeWalker(document.querySelector('.om-nav'), NodeFilter.SHOW_ELEMENT, {
+      acceptNode: tabbableElementsOnly,
+    });
 
-    window.addEventListener('keydown', function(e) {
+    window.addEventListener('keydown', function (e) {
       var handler = keyHandler[e.keyCode];
       if (!handler) console.log(e.keyCode);
       if (handler == null) return;
@@ -49,7 +47,7 @@
       }
     });
 
-    $script.ready('om-profile-items', function() {
+    $script.ready('om-profile-items', function () {
       var activeNavLink = document.querySelector('.om-nav-item.om-active > a');
       if (activeNavLink) activeNavLink.focus();
     });
@@ -58,8 +56,10 @@
   function tabbableElementsOnly(node) {
     if (node.classList.contains('om-hidden')) {
       return NodeFilter.FILTER_REJECT;
-    } else if (node.classList.contains('om-dropdown') &&
-      !node.parentElement.classList.contains('om-open')) {
+    } else if (
+      node.classList.contains('om-dropdown') &&
+      !node.parentElement.classList.contains('om-open')
+    ) {
       return NodeFilter.FILTER_REJECT;
     } else if (node.tabIndex >= 0) {
       return NodeFilter.FILTER_ACCEPT;
@@ -130,5 +130,4 @@
     var element = document.getElementById(id);
     if (element) element.click();
   }
-
 })();

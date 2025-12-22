@@ -2,8 +2,21 @@
 
 declare const angular: any;
 
-angular.module('omega').controller('IoCtrl', ['$scope', '$rootScope', '$window', '$http', 'omegaTarget', 'downloadFile',
-  function($scope: any, $rootScope: any, $window: any, $http: any, omegaTarget: any, downloadFile: any) {
+angular.module('omega').controller('IoCtrl', [
+  '$scope',
+  '$rootScope',
+  '$window',
+  '$http',
+  'omegaTarget',
+  'downloadFile',
+  function (
+    $scope: any,
+    $rootScope: any,
+    $window: any,
+    $http: any,
+    omegaTarget: any,
+    downloadFile: any,
+  ) {
     omegaTarget.state('web.restoreOnlineUrl').then((url: string) => {
       if (url) {
         $scope.restoreOnlineUrl = url;
@@ -14,8 +27,8 @@ angular.module('omega').controller('IoCtrl', ['$scope', '$rootScope', '$window',
       $rootScope.applyOptionsConfirm().then(() => {
         const plainOptions = angular.fromJson(angular.toJson($rootScope.options));
         const content = JSON.stringify(plainOptions);
-        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-        downloadFile(blob, "OmegaOptions.bak");
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        downloadFile(blob, 'OmegaOptions.bak');
       });
     };
 
@@ -23,26 +36,32 @@ angular.module('omega').controller('IoCtrl', ['$scope', '$rootScope', '$window',
       $rootScope.showAlert({
         type: 'success',
         i18n: 'options_importSuccess',
-        message: 'Options imported.'
+        message: 'Options imported.',
       });
     };
 
     $scope.restoreLocal = (content: string) => {
       $scope.restoringLocal = true;
-      $rootScope.resetOptions(content).then(() => {
-        $scope.importSuccess();
-      }, () => {
-        $scope.restoreLocalError();
-      }).finally(() => {
-        $scope.restoringLocal = false;
-      });
+      $rootScope
+        .resetOptions(content)
+        .then(
+          () => {
+            $scope.importSuccess();
+          },
+          () => {
+            $scope.restoreLocalError();
+          },
+        )
+        .finally(() => {
+          $scope.restoringLocal = false;
+        });
     };
 
     $scope.restoreLocalError = () => {
       $rootScope.showAlert({
         type: 'error',
         i18n: 'options_importFormatError',
-        message: 'Invalid backup file!'
+        message: 'Invalid backup file!',
       });
     };
 
@@ -50,7 +69,7 @@ angular.module('omega').controller('IoCtrl', ['$scope', '$rootScope', '$window',
       $rootScope.showAlert({
         type: 'error',
         i18n: 'options_importDownloadError',
-        message: 'Error downloading backup file!'
+        message: 'Error downloading backup file!',
       });
     };
 
@@ -66,16 +85,21 @@ angular.module('omega').controller('IoCtrl', ['$scope', '$rootScope', '$window',
         url: $scope.restoreOnlineUrl,
         cache: false,
         timeout: 10000,
-        responseType: "text"
-      }).then((result: any) => {
-        $rootScope.resetOptions(result.data).then(() => {
-          $scope.importSuccess();
-        }, () => {
-          $scope.restoreLocalError();
+        responseType: 'text',
+      })
+        .then((result: any) => {
+          $rootScope.resetOptions(result.data).then(
+            () => {
+              $scope.importSuccess();
+            },
+            () => {
+              $scope.restoreLocalError();
+            },
+          );
+        }, $scope.downloadError)
+        .finally(() => {
+          $scope.restoringOnline = false;
         });
-      }, $scope.downloadError).finally(() => {
-        $scope.restoringOnline = false;
-      });
     };
 
     $scope.enableOptionsSync = (args: any) => {
@@ -106,6 +130,5 @@ angular.module('omega').controller('IoCtrl', ['$scope', '$rootScope', '$window',
         });
       });
     };
-  }
+  },
 ]);
-

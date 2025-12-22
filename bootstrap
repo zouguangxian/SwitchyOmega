@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+log() { printf '%s\n' "[bootstrap] $*"; }
+die() { printf '%s\n' "[bootstrap] ERROR: $*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+Usage: ./bootstrap [options]
+
+Options:
+  --toolchain-only   Install proto + pinned toolchain, but do not run yarn install
+  --deps-only        Run yarn install only (assumes toolchain already installed)
+  --skip-proto       Do not attempt to install proto automatically
+  -h, --help         Show this help
+EOF
+}
+
+have_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+ensure_proto() {
+  if have_cmd proto; then
+    return 0
+  fi
+
+if [[ "${SKIP_PROTO:-0}" == "1" ]]; then
+    die "proto is missing and --skip-proto was provided"
+  fi
+
+  log "proto not found; installing proto..."
+  bash <(curl -fsSL https://moonrepo.dev/install/proto.sh) --yes
+  export PATH="$HOME/.proto/bin:$HOME/.proto/shims:$PATH"
+
+  have_cmd proto || die "proto install succeeded but proto is still not on PATH"
+}
+
+install_toolchain() {
+  log "Installing pinned toolchain from .prototools..."
+  (cd "$ROOT_DIR" && proto install)
+
+  log "Toolchain:"
+  node --version
+  yarn --version
+}
+
+install_deps() {
+  # less@4.5.1 runs a postinstall that tries to download Playwright browsers via pnpm.
+  # This repo does not need Playwright, so skip it to keep installs fast/deterministic.
+  export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+  log "Installing dependencies (skipping Playwright browser downloads)..."
+  (cd "$ROOT_DIR" && yarn install)
+}
+
+main() {
+  TOOLCHAIN_ONLY=0
+  DEPS_ONLY=0
+  SKIP_PROTO=0
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --toolchain-only) TOOLCHAIN_ONLY=1 ;;
+      --deps-only) DEPS_ONLY=1 ;;
+      --skip-proto) SKIP_PROTO=1 ;;
+      -h|--help) usage; exit 0 ;;
+      *) die "Unknown argument: $1 (use --help)" ;;
+    esac
+    shift
+  done
+
+  if [[ "$TOOLCHAIN_ONLY" == "1" && "$DEPS_ONLY" == "1" ]]; then
+    die "Cannot use --toolchain-only and --deps-only together"
+  fi
+
+  if [[ "$DEPS_ONLY" != "1" ]]; then
+    ensure_proto
+    install_toolchain
+  fi
+
+  if [[ "$TOOLCHAIN_ONLY" != "1" ]]; then
+    install_deps
+  fi
+
+  log "Done. Try: yarn build"
+}
+
+main "$@"
+
+

@@ -53,7 +53,7 @@ class ChromeTabs {
         }
       });
     });
-    
+
     if (chrome.action.setPopup) {
       chrome.action.setTitle({ title: action.title });
     } else {
@@ -92,13 +92,13 @@ class ChromeTabs {
       if (this._defaultAction && tab.id != null) {
         chrome.action.setTitle({
           title: this._defaultAction.title,
-          tabId: tab.id
+          tabId: tab.id,
         });
         this.clearIcon(tab.id);
       }
       return;
     }
-    
+
     this.actionForUrl(tabUrl).then((action) => {
       if (!action) {
         if (tab.id != null) {
@@ -126,16 +126,16 @@ class ChromeTabs {
       chrome.action.setBadgeText?.({ text: badge.text, tabId: tab.id });
       chrome.action.setBadgeBackgroundColor?.({
         color: badge.color,
-        tabId: tab.id
+        tabId: tab.id,
       });
     }
   }
 
   setIcon(icon: any, tabId?: number): void {
     if (icon == null) return;
-    
+
     const params: any = {
-      imageData: icon
+      imageData: icon,
     };
     if (tabId != null) {
       params.tabId = tabId;
@@ -157,10 +157,9 @@ class ChromeTabs {
     if (!this._defaultAction?.icon) return;
     this._chromeSetIcon({
       imageData: this._defaultAction.icon,
-      tabId: tabId
+      tabId: tabId,
     });
   }
 }
 
 export default ChromeTabs;
-

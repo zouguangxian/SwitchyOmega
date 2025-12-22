@@ -6,28 +6,28 @@ chai = require('chai');
 
 should = chai.should();
 
-describe('ShexpUtils', function() {
+describe('ShexpUtils', function () {
   var ShexpUtils;
   ShexpUtils = require('../src/shexp_utils');
-  describe('#escapeSlash', function() {
-    it('should escape all forward slashes', function() {
+  describe('#escapeSlash', function () {
+    it('should escape all forward slashes', function () {
       var regex;
       regex = ShexpUtils.escapeSlash('/test/');
       return regex.should.equal('\\/test\\/');
     });
-    it('should not escape slashes that are already escaped', function() {
+    it('should not escape slashes that are already escaped', function () {
       var regex;
       regex = ShexpUtils.escapeSlash('\\/test\\/');
       return regex.should.equal('\\/test\\/');
     });
-    return it('should know the difference between escaped and unescaped slashes', function() {
+    return it('should know the difference between escaped and unescaped slashes', function () {
       var regex;
       regex = ShexpUtils.escapeSlash('\\\\/\\/test\\/');
       return regex.should.equal('\\\\\\/\\/test\\/');
     });
   });
-  return describe('#shExp2RegExp', function() {
-    return it('should escape regex meta chars and back slashes', function() {
+  return describe('#shExp2RegExp', function () {
+    return it('should escape regex meta chars and back slashes', function () {
       var regex;
       regex = ShexpUtils.shExp2RegExp('this.is|a\\test+');
       return regex.should.equal('^this\\.is\\|a\\\\test\\+$');

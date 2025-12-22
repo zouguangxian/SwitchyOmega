@@ -30,7 +30,7 @@ class BrowserStorage<T = unknown> extends Storage<T> {
 
   get(keys: StorageKeys): Promise<Readonly<Record<string, T | undefined>>> {
     let map: Record<string, T | undefined> = {};
-    
+
     if (typeof keys === 'string') {
       map[keys] = undefined;
     } else if (Array.isArray(keys)) {
@@ -46,10 +46,10 @@ class BrowserStorage<T = unknown> extends Storage<T> {
         }
       }
     }
-    
+
     for (const key in map) {
       if (!Object.prototype.hasOwnProperty.call(map, key)) continue;
-      
+
       try {
         const rawValue = this.storageAPI.getItem(this.prefix + key);
         if (rawValue !== null) {
@@ -66,14 +66,14 @@ class BrowserStorage<T = unknown> extends Storage<T> {
         // Ignore JSON parse errors - keep default value
       }
     }
-    
+
     return Promise.resolve(map);
   }
 
   set(items: Readonly<Record<string, T>>): Promise<Readonly<Record<string, T>>> {
     for (const key in items) {
       if (!Object.prototype.hasOwnProperty.call(items, key)) continue;
-      
+
       const value = JSON.stringify(items[key]);
       this.storageAPI.setItem(this.prefix + key, value);
     }
@@ -90,7 +90,7 @@ class BrowserStorage<T = unknown> extends Storage<T> {
         while (true) {
           const key = this.storageAPI.key(index);
           if (key === null) break;
-          
+
           if (key.startsWith(this.prefix)) {
             this.storageAPI.removeItem(key);
           } else {
@@ -105,10 +105,9 @@ class BrowserStorage<T = unknown> extends Storage<T> {
         this.storageAPI.removeItem(this.prefix + key);
       }
     }
-    
+
     return Promise.resolve();
   }
 }
 
 export default BrowserStorage;
-

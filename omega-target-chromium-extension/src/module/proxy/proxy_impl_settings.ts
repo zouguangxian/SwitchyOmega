@@ -27,30 +27,33 @@ class SettingsProxyImpl extends ProxyImpl {
     if (!meta) {
       meta = profile;
     }
-    
+
     if (profile.profileType === 'SystemProfile') {
       // Clear proxy settings, returning proxy control to Chromium.
-      return chromeApiPromisify(chrome.proxy.settings, 'clear')({}).then(() => {
+      return chromeApiPromisify(
+        chrome.proxy.settings,
+        'clear',
+      )({}).then(() => {
         chrome.proxy.settings.get({}, this._proxyChangeListener.bind(this));
       });
     }
-    
+
     let config: ProxyConfig = {};
-    
+
     if (profile.profileType === 'DirectProfile') {
       config['mode'] = 'direct';
     } else if (profile.profileType === 'PacProfile') {
       config['mode'] = 'pac_script';
-      
-      config['pacScript'] = 
-        (!profile.pacScript || OmegaPac.Profiles.isFileUrl(profile.pacUrl))
+
+      config['pacScript'] =
+        !profile.pacScript || OmegaPac.Profiles.isFileUrl(profile.pacUrl)
           ? {
               url: profile.pacUrl,
-              mandatory: true
+              mandatory: true,
             }
           : {
               data: OmegaPac.PacGenerator.ascii(profile.pacScript),
-              mandatory: true
+              mandatory: true,
             };
     } else if (profile.profileType === 'FixedProfile') {
       config = this._fixedProfileConfig(profile);
@@ -58,15 +61,17 @@ class SettingsProxyImpl extends ProxyImpl {
       config['mode'] = 'pac_script';
       config['pacScript'] = {
         mandatory: true,
-        data: this.getProfilePacScript(profile, meta, options)
+        data: this.getProfilePacScript(profile, meta, options),
       };
     }
-    
-    return this.setProxyAuth(profile, options).then(() => {
-      return chromeApiPromisify(chrome.proxy.settings, 'set')({ value: config });
-    }).then(() => {
-      chrome.proxy.settings.get({}, this._proxyChangeListener.bind(this));
-    });
+
+    return this.setProxyAuth(profile, options)
+      .then(() => {
+        return chromeApiPromisify(chrome.proxy.settings, 'set')({ value: config });
+      })
+      .then(() => {
+        chrome.proxy.settings.get({}, this._proxyChangeListener.bind(this));
+      });
   }
 
   private _fixedProfileConfig(profile: any): ProxyConfig {
@@ -75,7 +80,7 @@ class SettingsProxyImpl extends ProxyImpl {
     const rules: any = {};
     const protocols = ['proxyForHttp', 'proxyForHttps', 'proxyForFtp'];
     let protocolProxySet = false;
-    
+
     for (const protocol of protocols) {
       if (profile[protocol] != null) {
         rules[protocol] = profile[protocol];
@@ -112,7 +117,7 @@ class SettingsProxyImpl extends ProxyImpl {
       rules['bypassList'] = bypassList;
       config['rules'] = rules;
     }
-    
+
     return config;
   }
 
@@ -123,7 +128,7 @@ class SettingsProxyImpl extends ProxyImpl {
   }
 
   private _proxyChangeListener(details: any): void {
-    for (const watcher of (this._proxyChangeWatchers || [])) {
+    for (const watcher of this._proxyChangeWatchers || []) {
       watcher(details);
     }
   }
@@ -132,9 +137,7 @@ class SettingsProxyImpl extends ProxyImpl {
     if (!this._proxyChangeWatchers) {
       this._proxyChangeWatchers = [];
       if (chrome?.proxy?.settings?.onChange) {
-        chrome.proxy.settings.onChange.addListener(
-          this._proxyChangeListener.bind(this)
-        );
+        chrome.proxy.settings.onChange.addListener(this._proxyChangeListener.bind(this));
       }
     }
     this._proxyChangeWatchers.push(callback);
@@ -144,21 +147,21 @@ class SettingsProxyImpl extends ProxyImpl {
     if (details.name) {
       return details;
     }
-    
+
     switch (details.value.mode) {
       case 'system':
         return OmegaPac.Profiles.byName('system');
-      
+
       case 'direct':
         return OmegaPac.Profiles.byName('direct');
-      
+
       case 'auto_detect':
         return OmegaPac.Profiles.create({
           profileType: 'PacProfile',
           name: '',
-          pacUrl: 'http://wpad/wpad.dat'
+          pacUrl: 'http://wpad/wpad.dat',
         });
-      
+
       case 'pac_script': {
         const url = details.value.pacScript.url;
         if (url) {
@@ -168,11 +171,14 @@ class SettingsProxyImpl extends ProxyImpl {
               profile = p;
             }
           });
-          return profile || OmegaPac.Profiles.create({
-            profileType: 'PacProfile',
-            name: '',
-            pacUrl: url
-          });
+          return (
+            profile ||
+            OmegaPac.Profiles.create({
+              profileType: 'PacProfile',
+              name: '',
+              pacUrl: url,
+            })
+          );
         } else {
           let profile: any = null;
           let script = details.value.pacScript.data;
@@ -181,9 +187,9 @@ class SettingsProxyImpl extends ProxyImpl {
               profile = p;
             }
           });
-          
+
           if (profile) return profile;
-          
+
           // Try to parse the prefix used by this class.
           script = script.trim();
           const magic = '/*OmegaProfile*';
@@ -192,13 +198,13 @@ class SettingsProxyImpl extends ProxyImpl {
             if (end > 0) {
               const tokens = script.substring(magic.length, end).split('*');
               let [profileName, revision] = tokens;
-              
+
               try {
                 profileName = JSON.parse(profileName);
               } catch (e) {
                 profileName = null;
               }
-              
+
               if (profileName && revision) {
                 profile = OmegaPac.Profiles.byName(profileName, options);
                 if (profile && OmegaPac.Revision.compare(profile.revision, revision) === 0) {
@@ -207,20 +213,25 @@ class SettingsProxyImpl extends ProxyImpl {
               }
             }
           }
-          
+
           return OmegaPac.Profiles.create({
             profileType: 'PacProfile',
             name: '',
-            pacScript: script
+            pacScript: script,
           });
         }
       }
-      
+
       case 'fixed_servers': {
-        const props = ['proxyForHttp', 'proxyForHttps', 'proxyForFtp',
-          'fallbackProxy', 'singleProxy'];
+        const props = [
+          'proxyForHttp',
+          'proxyForHttps',
+          'proxyForFtp',
+          'fallbackProxy',
+          'singleProxy',
+        ];
         const proxies: Record<string, string> = {};
-        
+
         for (const prop of props) {
           const result = OmegaPac.Profiles.pacResult(details.value.rules[prop]);
           if (prop === 'singleProxy' && details.value.rules[prop] != null) {
@@ -229,17 +240,17 @@ class SettingsProxyImpl extends ProxyImpl {
             proxies[prop] = result;
           }
         }
-        
+
         const bypassSet: Record<string, boolean> = {};
         let bypassCount = 0;
-        
+
         if (details.value.rules.bypassList) {
           for (const pattern of details.value.rules.bypassList) {
             bypassSet[pattern] = true;
             bypassCount++;
           }
         }
-        
+
         if (bypassSet['<local>']) {
           for (const host of OmegaPac.Conditions.localHosts) {
             if (bypassSet[host]) {
@@ -248,24 +259,24 @@ class SettingsProxyImpl extends ProxyImpl {
             }
           }
         }
-        
+
         let profile: any = null;
         OmegaPac.Profiles.each(options, (key: string, p: any) => {
           if (p.profileType !== 'FixedProfile') return;
           if (p.bypassList.length !== bypassCount) return;
-          
+
           for (const condition of p.bypassList) {
             if (!bypassSet[condition.pattern]) return;
           }
-          
+
           const rules = this._fixedProfileConfig(p).rules;
           if (rules['singleProxy']) {
             rules['fallbackProxy'] = rules['singleProxy'];
             delete rules['singleProxy'];
           }
-          
+
           if (!rules) return;
-          
+
           for (const prop of props) {
             if (rules[prop] || proxies[prop]) {
               if (OmegaPac.Profiles.pacResult(rules[prop]) !== proxies[prop]) {
@@ -273,18 +284,18 @@ class SettingsProxyImpl extends ProxyImpl {
               }
             }
           }
-          
+
           profile = p;
         });
-        
+
         if (profile) {
           return profile;
         } else {
           profile = OmegaPac.Profiles.create({
             profileType: 'FixedProfile',
-            name: ''
+            name: '',
           });
-          
+
           for (const prop of props) {
             if (details.value.rules[prop]) {
               if (prop === 'singleProxy') {
@@ -294,17 +305,17 @@ class SettingsProxyImpl extends ProxyImpl {
               }
             }
           }
-          
+
           profile.bypassList = [];
           for (const pattern in bypassSet) {
             if (bypassSet.hasOwnProperty(pattern)) {
               profile.bypassList.push({
                 conditionType: 'BypassCondition',
-                pattern
+                pattern,
               });
             }
           }
-          
+
           return profile;
         }
       }
@@ -313,4 +324,3 @@ class SettingsProxyImpl extends ProxyImpl {
 }
 
 export default SettingsProxyImpl;
-

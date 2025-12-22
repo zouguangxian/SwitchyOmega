@@ -10,13 +10,13 @@ $script('lib/tether/tether.js', () => {
     const tour = new Shepherd.Tour({
       defaults: {
         classes: 'shepherd-theme-arrows',
-        scrollTo: true
-      }
+        scrollTo: true,
+      },
     });
 
     const targetAnchorClick = {
       selector: '.shepherd-target a',
-      event: 'click'
+      event: 'click',
     };
 
     tour.addStep('fixed-profile-step', {
@@ -27,9 +27,9 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep('fixed-servers-step', {
@@ -39,9 +39,9 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep('auto-switch-profile-step', {
@@ -52,9 +52,9 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     tour.addStep('add-more-profiles-step', {
@@ -65,12 +65,11 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideDone'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     tour.start();
   });
 });
-

@@ -14,7 +14,7 @@ type OmegaCanvasContext = OffscreenCanvasRenderingContext2D | CanvasRenderingCon
 function drawOmegaSymbol(
   ctx: OmegaCanvasContext,
   outerCircleColor: string,
-  innerCircleColor?: string
+  innerCircleColor?: string,
 ): void {
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = outerCircleColor;
@@ -87,7 +87,7 @@ setInterval(() => {
 // Logging setup
 async function _writeLogToStorage(content: string): Promise<void> {
   try {
-    const currentLog = await storageWrapper.getItem('log') || '';
+    const currentLog = (await storageWrapper.getItem('log')) || '';
     await storageWrapper.setItem('log', currentLog + content);
   } catch (_) {
     // Maybe we have reached our limit here. See #1288. Try trimming it.
@@ -163,7 +163,7 @@ function drawIconsWithLocalCanvas(resultColor: string, profileColor?: string): I
 
 async function drawIconsWithOffscreenDocument(
   resultColor: string,
-  profileColor: string | undefined
+  profileColor: string | undefined,
 ): Promise<IconSet> {
   const icon: IconSet = {};
   for (const size of ICON_SIZES) {
@@ -185,7 +185,7 @@ let drawError: Error | null = null;
 async function drawIcon(resultColor: string, profileColor?: string): Promise<IconSet | null> {
   const cacheKey = `omega+${resultColor || ''}+${profileColor || ''}`;
   const cachedIcon = iconCache[cacheKey];
-  
+
   // Return cached value if available
   if (cachedIcon !== undefined) {
     if (cachedIcon instanceof Promise) {
@@ -224,10 +224,7 @@ async function drawIcon(resultColor: string, profileColor?: string): Promise<Ico
 // Helper functions
 const charCodeUnderscore = '_'.charCodeAt(0);
 function isHidden(name: string): boolean {
-  return (
-    name.charCodeAt(0) === charCodeUnderscore &&
-    name.charCodeAt(1) === charCodeUnderscore
-  );
+  return name.charCodeAt(0) === charCodeUnderscore && name.charCodeAt(1) === charCodeUnderscore;
 }
 
 function dispName(name: string): string {
@@ -317,7 +314,7 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
 
       if (!details) {
         details = options.printProfile(
-          realCurrentName ? options.profile(realCurrentName) : current
+          realCurrentName ? options.profile(realCurrentName) : current,
         );
       }
 
@@ -328,10 +325,7 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
       if (direct) {
         resultColor = options.profile('direct').color;
         profileColor = profile.color;
-      } else if (
-        profile.name === current.name &&
-        options.isCurrentProfileStatic()
-      ) {
+      } else if (profile.name === current.name && options.isCurrentProfileStatic()) {
         resultColor = profileColor = profile.color;
         icon = await drawIcon(profile.color);
       } else {
@@ -366,7 +360,7 @@ function actionForUrl(url: string): Promise<ActionResult | null> {
 // Initialize storage and options (async to wait for storage to be ready)
 async function initializeExtension() {
   // Wait for storage cache to be loaded
-  await storageWrapper.ready.catch(e => {
+  await storageWrapper.ready.catch((e) => {
     console.error('Failed to init storage:', e);
   });
 
@@ -389,14 +383,7 @@ async function initializeExtension() {
   const proxyImpl = OmegaTargetCurrent.proxy.getProxyImpl(Log);
   state.set({ proxyImplFeatures: proxyImpl.features });
 
-  const options = new OmegaTargetCurrent.Options(
-    null,
-    storage,
-    state,
-    Log,
-    sync,
-    proxyImpl
-  );
+  const options = new OmegaTargetCurrent.Options(null, storage, state, Log, sync, proxyImpl);
 
   options.externalApi = new OmegaTargetCurrent.ExternalApi(options);
   options.externalApi.listen();
@@ -410,177 +397,170 @@ async function initializeExtension() {
   tabs.watch();
 
   options._inspect = new OmegaTargetCurrent.Inspect((url: string, tab: chrome.tabs.Tab) => {
-  if (url === tab.url) {
-    options.clearBadge();
-    tabs.processTab(tab);
-    state.remove('inspectUrl');
-    return;
-  }
-
-  state.set({ inspectUrl: url });
-
-  actionForUrl(url).then((action) => {
-    if (!action) return;
-
-    const tabUrlString = tab.pendingUrl || tab.url || '';
-    if (!tabUrlString) {
+    if (url === tab.url) {
+      options.clearBadge();
+      tabs.processTab(tab);
+      state.remove('inspectUrl');
       return;
     }
-    const parsedUrl = OmegaTargetCurrent.Url.parse(url);
-    const tabUrl = OmegaTargetCurrent.Url.parse(tabUrlString);
-    let urlDisp: string;
-    if (parsedUrl.hostname === tabUrl.hostname) {
-      urlDisp = parsedUrl.path;
-    } else {
-      urlDisp = parsedUrl.hostname;
-    }
 
-    const title =
-      chrome.i18n.getMessage('browserAction_titleInspect', urlDisp) +
-      '\n' +
-      action.title;
-    chrome.action.setTitle({ title: title, tabId: tab.id });
-    tabs.setTabBadge(tab, {
-      text: '#',
-      color: action.resultColor,
+    state.set({ inspectUrl: url });
+
+    actionForUrl(url).then((action) => {
+      if (!action) return;
+
+      const tabUrlString = tab.pendingUrl || tab.url || '';
+      if (!tabUrlString) {
+        return;
+      }
+      const parsedUrl = OmegaTargetCurrent.Url.parse(url);
+      const tabUrl = OmegaTargetCurrent.Url.parse(tabUrlString);
+      let urlDisp: string;
+      if (parsedUrl.hostname === tabUrl.hostname) {
+        urlDisp = parsedUrl.path;
+      } else {
+        urlDisp = parsedUrl.hostname;
+      }
+
+      const title =
+        chrome.i18n.getMessage('browserAction_titleInspect', urlDisp) + '\n' + action.title;
+      chrome.action.setTitle({ title: title, tabId: tab.id });
+      tabs.setTabBadge(tab, {
+        text: '#',
+        color: action.resultColor,
+      });
     });
   });
-});
 
-// Proxy change handling
-options.setProxyNotControllable(null);
-let timeout: NodeJS.Timeout | null = null;
+  // Proxy change handling
+  options.setProxyNotControllable(null);
+  let timeout: NodeJS.Timeout | null = null;
 
-proxyImpl.watchProxyChange((details: any) => {
-  if (options.externalApi.disabled) return;
-  if (!details) return;
+  proxyImpl.watchProxyChange((details: any) => {
+    if (options.externalApi.disabled) return;
+    if (!details) return;
 
-  const notControllableBefore = options.proxyNotControllable();
-  let internal = false;
-  let noRevert = false;
+    const notControllableBefore = options.proxyNotControllable();
+    let internal = false;
+    let noRevert = false;
 
-  switch (details['levelOfControl']) {
-    case 'controlled_by_other_extensions':
-    case 'not_controllable': {
-      const reason =
-        details['levelOfControl'] === 'not_controllable' ? 'policy' : 'app';
-      options.setProxyNotControllable(reason);
-      noRevert = true;
-      break;
+    switch (details['levelOfControl']) {
+      case 'controlled_by_other_extensions':
+      case 'not_controllable': {
+        const reason = details['levelOfControl'] === 'not_controllable' ? 'policy' : 'app';
+        options.setProxyNotControllable(reason);
+        noRevert = true;
+        break;
+      }
+      default:
+        options.setProxyNotControllable(null);
     }
-    default:
-      options.setProxyNotControllable(null);
-  }
 
-  if (details['levelOfControl'] === 'controlled_by_this_extension') {
-    internal = true;
-    if (!notControllableBefore) return;
-  }
-
-  Log.log('external proxy: ', details);
-
-  // Chromium will send chrome.proxy.settings.onChange on extension unload,
-  // just after the current extension has lost control of the proxy settings.
-  // This is just annoying, and may change the currentProfileName state
-  // surprisingly.
-  // To workaround this issue, wait for some time before setting the proxy.
-  // However this will cause some delay before the settings are processed.
-  if (timeout != null) {
-    clearTimeout(timeout);
-  }
-
-  let parsed: any = null;
-  timeout = setTimeout(() => {
-    if (parsed) {
-      options.setExternalProfile(parsed, {
-        noRevert: noRevert,
-        internal: internal,
-      });
+    if (details['levelOfControl'] === 'controlled_by_this_extension') {
+      internal = true;
+      if (!notControllableBefore) return;
     }
-  }, 500);
 
-  parsed = proxyImpl.parseExternalProfile(details, options._options);
-});
+    Log.log('external proxy: ', details);
 
-// Profile change handling
-let external = false;
-options.currentProfileChanged = async (reason: string) => {
-  Object.keys(iconCache).forEach((key) => delete iconCache[key]);
-
-  if (reason === 'external') {
-    external = true;
-  } else if (reason !== 'clearBadge') {
-    external = false;
-  }
-
-  let current = options.currentProfile();
-  let currentName = '';
-  let realCurrentName: string | undefined;
-
-  if (current) {
-    currentName = dispName(current.name);
-    if (current.profileType === 'VirtualProfile') {
-      realCurrentName = current.defaultProfileName;
-      currentName += ` [${dispName(realCurrentName)}]`;
-      // Use the actual backing profile for colors and comparisons
-      current = options.profile(realCurrentName);
+    // Chromium will send chrome.proxy.settings.onChange on extension unload,
+    // just after the current extension has lost control of the proxy settings.
+    // This is just annoying, and may change the currentProfileName state
+    // surprisingly.
+    // To workaround this issue, wait for some time before setting the proxy.
+    // However this will cause some delay before the settings are processed.
+    if (timeout != null) {
+      clearTimeout(timeout);
     }
-  }
 
-  const details = options.printProfile(
-    realCurrentName ? options.profile(realCurrentName) : current
-  );
+    let parsed: any = null;
+    timeout = setTimeout(() => {
+      if (parsed) {
+        options.setExternalProfile(parsed, {
+          noRevert: noRevert,
+          internal: internal,
+        });
+      }
+    }, 500);
 
-  let title: string;
-  let shortTitle: string;
-
-  if (currentName) {
-    title = chrome.i18n.getMessage('browserAction_titleWithResult', [
-      currentName,
-      '',
-      details,
-    ]);
-    shortTitle = 'Omega: ' + currentName; // TODO: I18n.
-  } else {
-    title = details;
-    shortTitle = 'Omega: ' + details; // TODO: I18n.
-  }
-
-  if (external && current.profileType !== 'SystemProfile') {
-    const message = chrome.i18n.getMessage('browserAction_titleExternalProxy');
-    title = message + '\n' + title;
-    shortTitle = 'Omega-Extern: ' + details; // TODO: I18n.
-    options.setBadge();
-  }
-
-  let icon: IconSet | null;
-  if (!current.name || !OmegaPac.Profiles.isInclusive(current)) {
-    icon = await drawIcon(current.color);
-  } else {
-    icon = await drawIcon(options.profile('direct').color, current.color);
-  }
-
-  tabs.resetAll({
-    icon: icon,
-    title: title,
-    shortTitle: shortTitle,
+    parsed = proxyImpl.parseExternalProfile(details, options._options);
   });
-};
 
-// Error encoding for messaging
-function encodeError(obj: any): any {
-  if (obj instanceof Error) {
-    return {
-      _error: 'error',
-      name: obj.name,
-      message: obj.message,
-      stack: obj.stack,
-      original: obj,
-    };
-  } else {
-    return obj;
+  // Profile change handling
+  let external = false;
+  options.currentProfileChanged = async (reason: string) => {
+    Object.keys(iconCache).forEach((key) => delete iconCache[key]);
+
+    if (reason === 'external') {
+      external = true;
+    } else if (reason !== 'clearBadge') {
+      external = false;
+    }
+
+    let current = options.currentProfile();
+    let currentName = '';
+    let realCurrentName: string | undefined;
+
+    if (current) {
+      currentName = dispName(current.name);
+      if (current.profileType === 'VirtualProfile') {
+        realCurrentName = current.defaultProfileName;
+        currentName += ` [${dispName(realCurrentName)}]`;
+        // Use the actual backing profile for colors and comparisons
+        current = options.profile(realCurrentName);
+      }
+    }
+
+    const details = options.printProfile(
+      realCurrentName ? options.profile(realCurrentName) : current,
+    );
+
+    let title: string;
+    let shortTitle: string;
+
+    if (currentName) {
+      title = chrome.i18n.getMessage('browserAction_titleWithResult', [currentName, '', details]);
+      shortTitle = 'Omega: ' + currentName; // TODO: I18n.
+    } else {
+      title = details;
+      shortTitle = 'Omega: ' + details; // TODO: I18n.
+    }
+
+    if (external && current.profileType !== 'SystemProfile') {
+      const message = chrome.i18n.getMessage('browserAction_titleExternalProxy');
+      title = message + '\n' + title;
+      shortTitle = 'Omega-Extern: ' + details; // TODO: I18n.
+      options.setBadge();
+    }
+
+    let icon: IconSet | null;
+    if (!current.name || !OmegaPac.Profiles.isInclusive(current)) {
+      icon = await drawIcon(current.color);
+    } else {
+      icon = await drawIcon(options.profile('direct').color, current.color);
+    }
+
+    tabs.resetAll({
+      icon: icon,
+      title: title,
+      shortTitle: shortTitle,
+    });
+  };
+
+  // Error encoding for messaging
+  function encodeError(obj: any): any {
+    if (obj instanceof Error) {
+      return {
+        _error: 'error',
+        name: obj.name,
+        message: obj.message,
+        stack: obj.stack,
+        original: obj,
+      };
+    } else {
+      return obj;
+    }
   }
-}
 
   // Refresh active page if enabled (uses storageWrapper which is now initialized)
   function refreshActivePageIfEnabled(): void {
@@ -611,84 +591,86 @@ let state: any;
 let refreshActivePageIfEnabled: () => void;
 
 // Initialization promise for waiting
-const initPromise = initializeExtension().then((result) => {
-  options = result.options;
-  tabs = result.tabs;
-  state = result.state;
-  refreshActivePageIfEnabled = result.refreshActivePageIfEnabled;
-  return result;
-}).catch(e => {
-  console.error('Failed to initialize extension:', e);
-  throw e;
-});
+const initPromise = initializeExtension()
+  .then((result) => {
+    options = result.options;
+    tabs = result.tabs;
+    state = result.state;
+    refreshActivePageIfEnabled = result.refreshActivePageIfEnabled;
+    return result;
+  })
+  .catch((e) => {
+    console.error('Failed to initialize extension:', e);
+    throw e;
+  });
 
 // Message handling (waits for initialization first)
 chrome.runtime.onMessage.addListener(
   (
     request: any,
     sender: chrome.runtime.MessageSender,
-    respond: (response?: any) => void
+    respond: (response?: any) => void,
   ): boolean | void => {
     if (!request || !request.method) return;
 
     // Wait for initialization, then for options.ready
-    initPromise.then(() => options.ready).then(() => {
-      let target: any;
-      let method: any;
+    initPromise
+      .then(() => options.ready)
+      .then(() => {
+        let target: any;
+        let method: any;
 
-      if (request.method === 'getState') {
-        target = state;
-        method = state.get;
-      } else if (request.method === 'setState') {
-        target = state;
-        method = state.set;
-      } else {
-        target = options;
-        method = target[request.method];
-      }
+        if (request.method === 'getState') {
+          target = state;
+          method = state.get;
+        } else if (request.method === 'setState') {
+          target = state;
+          method = state.set;
+        } else {
+          target = options;
+          method = target[request.method];
+        }
 
-      if (typeof method !== 'function') {
-        Log.error(`No such method ${request.method}!`);
-        respond({
-          error: {
-            reason: 'noSuchMethod',
-          },
-        });
-        return;
-      }
+        if (typeof method !== 'function') {
+          Log.error(`No such method ${request.method}!`);
+          respond({
+            error: {
+              reason: 'noSuchMethod',
+            },
+          });
+          return;
+        }
 
-      const promise = Promise.resolve().then(() =>
-        method.apply(target, request.args)
-      );
+        const promise = Promise.resolve().then(() => method.apply(target, request.args));
 
-      if (request.refreshActivePage && refreshActivePageIfEnabled) {
-        promise.then(refreshActivePageIfEnabled);
-      }
+        if (request.refreshActivePage && refreshActivePageIfEnabled) {
+          promise.then(refreshActivePageIfEnabled);
+        }
 
-      if (request.noReply) return;
+        if (request.noReply) return;
 
-      promise.then((result: any) => {
-        if (request.method === 'updateProfile') {
-          for (const key in result) {
-            if (Object.prototype.hasOwnProperty.call(result, key)) {
-              result[key] = encodeError(result[key]);
+        promise.then((result: any) => {
+          if (request.method === 'updateProfile') {
+            for (const key in result) {
+              if (Object.prototype.hasOwnProperty.call(result, key)) {
+                result[key] = encodeError(result[key]);
+              }
             }
           }
-        }
-        respond({ result: result });
-      });
+          respond({ result: result });
+        });
 
-      promise.catch((error: any) => {
-        Log.error(request.method + ' ==>', error);
-        respond({ error: encodeError(error) });
+        promise.catch((error: any) => {
+          Log.error(request.method + ' ==>', error);
+          respond({ error: encodeError(error) });
+        });
+      })
+      .catch((initError: any) => {
+        // Initialization failed
+        Log.error('Extension not initialized:', initError);
+        respond({ error: { reason: 'notInitialized', message: String(initError) } });
       });
-    }).catch((initError: any) => {
-      // Initialization failed
-      Log.error('Extension not initialized:', initError);
-      respond({ error: { reason: 'notInitialized', message: String(initError) } });
-    });
 
     return true; // Always async (waiting for init)
-  }
+  },
 );
-

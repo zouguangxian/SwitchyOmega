@@ -36,11 +36,13 @@ class OptionsSync {
 
   constructor(storage: Storage, bucket?: TokenBucket) {
     this.storage = storage;
-    this._bucket = bucket || new TokenBucket({
-      bucketSize: 10,
-      tokensPerInterval: 10,
-      interval: 'minute'
-    });
+    this._bucket =
+      bucket ||
+      new TokenBucket({
+        bucketSize: 10,
+        tokensPerInterval: 10,
+        interval: 'minute',
+      });
   }
 
   /**
@@ -71,23 +73,23 @@ class OptionsSync {
   merge: (key: string, newVal: any, oldVal: any) => any = (() => {
     const diff = jsondiffpatch.create({
       objectHash: (obj: any) => JSON.stringify(obj),
-      textDiff: { minLength: 1 / 0 }
+      textDiff: { minLength: 1 / 0 },
     });
-    
+
     return (key: string, newVal: any, oldVal: any): any => {
       if (newVal === oldVal) return oldVal;
-      
+
       if (oldVal?.syncOptions === 'disabled' || newVal?.syncOptions === 'disabled') {
         return oldVal;
       }
-      
+
       if (oldVal?.revision != null && newVal?.revision != null) {
         const result = Revision.compare(oldVal.revision, newVal.revision);
         if (result >= 0) return oldVal;
       }
-      
+
       if (diff.diff(oldVal, newVal) == null) return oldVal;
-      
+
       return newVal;
     };
   })();
@@ -103,7 +105,7 @@ class OptionsSync {
     if (this._timeout != null) {
       clearTimeout(this._timeout);
     }
-    
+
     for (const key in changes) {
       if (changes.hasOwnProperty(key)) {
         let value = changes[key];
@@ -114,9 +116,9 @@ class OptionsSync {
         this._pending[key] = value;
       }
     }
-    
+
     if (!this.enabled) return;
-    
+
     this._timeout = setTimeout(this._doPush.bind(this), this.debounce);
   }
 
@@ -131,87 +133,93 @@ class OptionsSync {
   private _doPush(): void {
     this._timeout = null;
     if (this._waiting) return;
-    
-    this._waiting = true;
-    this._bucket.removeTokens(1).then(() => {
-      this.storage.get(null)
-        .then((base) => {
-          const changes = this._pending;
-          this._pending = {};
-          this._waiting = false;
-          return Storage.operationsForChanges(changes, { base, merge: this.merge });
-        })
-        .then(({ set, remove }) => {
-          const doSet = 
-            Object.keys(set).length === 0
-              ? Promise.resolve(0)
-              : (() => {
-                  Log.log('OptionsSync::set', set);
-                  return this.storage.set(set).then(() => 1);
-                })();
-          
-          return doSet.then((cost) => {
-            if (remove.length > 0) {
-              if (this._bucket.tryRemoveTokens(cost)) {
-                Log.log('OptionsSync::remove', remove);
-                return this.storage.remove(remove);
-              } else {
-                return Promise.reject('bucket');
-              }
-            }
-            return Promise.resolve();
-          }).catch((e) => {
-            // Re-submit the changes for syncing, but with lower priority.
-            for (const key in set) {
-              if (set.hasOwnProperty(key) && !(key in this._pending)) {
-                this._pending[key] = set[key];
-              }
-            }
-            for (const key of remove) {
-              if (!(key in this._pending)) {
-                this._pending[key] = undefined;
-              }
-            }
 
-            if (e === 'bucket') {
-              this._doPush();
-              return Promise.resolve();
-            } else if (e instanceof Storage.RateLimitExceededError) {
-              Log.log('OptionsSync::rateLimitExceeded');
-              // Try to drain the bucket to wait more time before retrying.
-              this._drainBucket();
-              this.requestPush({});
-              return Promise.resolve();
-            } else if (e instanceof Storage.QuotaExceededError) {
-              // For now, we just disable syncing for all changed profiles.
-              // TODO(catus): Remove the largest profile each time and retry.
-              let valuesAffected = 0;
-              for (const key in set) {
-                if (set.hasOwnProperty(key)) {
-                  const value = set[key];
-                  if (key[0] === '+' && value.syncOptions !== 'disabled') {
-                    value.syncOptions = 'disabled';
-                    value.syncError = { reason: 'quotaPerItem' };
-                    valuesAffected++;
+    this._waiting = true;
+    this._bucket
+      .removeTokens(1)
+      .then(() => {
+        this.storage
+          .get(null)
+          .then((base) => {
+            const changes = this._pending;
+            this._pending = {};
+            this._waiting = false;
+            return Storage.operationsForChanges(changes, { base, merge: this.merge });
+          })
+          .then(({ set, remove }) => {
+            const doSet =
+              Object.keys(set).length === 0
+                ? Promise.resolve(0)
+                : (() => {
+                    Log.log('OptionsSync::set', set);
+                    return this.storage.set(set).then(() => 1);
+                  })();
+
+            return doSet
+              .then((cost) => {
+                if (remove.length > 0) {
+                  if (this._bucket.tryRemoveTokens(cost)) {
+                    Log.log('OptionsSync::remove', remove);
+                    return this.storage.remove(remove);
+                  } else {
+                    return Promise.reject('bucket');
                   }
                 }
-              }
-              if (valuesAffected > 0) {
-                this.requestPush({});
-              } else {
-                this._pending = {};
-              }
-              return Promise.resolve();
-            } else {
-              return Promise.reject(e);
-            }
+                return Promise.resolve();
+              })
+              .catch((e) => {
+                // Re-submit the changes for syncing, but with lower priority.
+                for (const key in set) {
+                  if (set.hasOwnProperty(key) && !(key in this._pending)) {
+                    this._pending[key] = set[key];
+                  }
+                }
+                for (const key of remove) {
+                  if (!(key in this._pending)) {
+                    this._pending[key] = undefined;
+                  }
+                }
+
+                if (e === 'bucket') {
+                  this._doPush();
+                  return Promise.resolve();
+                } else if (e instanceof Storage.RateLimitExceededError) {
+                  Log.log('OptionsSync::rateLimitExceeded');
+                  // Try to drain the bucket to wait more time before retrying.
+                  this._drainBucket();
+                  this.requestPush({});
+                  return Promise.resolve();
+                } else if (e instanceof Storage.QuotaExceededError) {
+                  // For now, we just disable syncing for all changed profiles.
+                  // TODO(catus): Remove the largest profile each time and retry.
+                  let valuesAffected = 0;
+                  for (const key in set) {
+                    if (set.hasOwnProperty(key)) {
+                      const value = set[key];
+                      if (key[0] === '+' && value.syncOptions !== 'disabled') {
+                        value.syncOptions = 'disabled';
+                        value.syncError = { reason: 'quotaPerItem' };
+                        valuesAffected++;
+                      }
+                    }
+                  }
+                  if (valuesAffected > 0) {
+                    this.requestPush({});
+                  } else {
+                    this._pending = {};
+                  }
+                  return Promise.resolve();
+                } else {
+                  return Promise.reject(e);
+                }
+              });
           });
-        });
-    }).catch((error) => {
-      this._waiting = false;
-      Log.log('OptionsSync::removeTokensError', error);
-      this.requestPush({});
-    });
+      })
+      .catch((error) => {
+        this._waiting = false;
+        Log.log('OptionsSync::removeTokensError', error);
+        this.requestPush({});
+      });
   }
 
   private _drainBucket(): void {
@@ -233,10 +241,8 @@ class OptionsSync {
    * @returns A promise
    */
   copyTo(local: Storage): Promise<void> {
-    return Promise.all([
-      local.get(null),
-      this.storage.get(null)
-    ]).then(([base, changes]: [any, any]) => {
+    return Promise.all([local.get(null), this.storage.get(null)]).then(
+      ([base, changes]: [any, any]) => {
         const mutableChanges = changes as Record<string, any>;
         for (const key in base) {
           if (base.hasOwnProperty(key) && !(key in mutableChanges)) {
@@ -246,14 +252,16 @@ class OptionsSync {
             }
           }
         }
-        return local.apply({
-          changes,
-          base,
-          merge: this.merge
-        }).then((operations) => {
-          this._logOperations('OptionsSync::copyTo', operations);
-        });
-      }
+        return local
+          .apply({
+            changes,
+            base,
+            merge: this.merge,
+          })
+          .then((operations) => {
+            this._logOperations('OptionsSync::copyTo', operations);
+          });
+      },
     );
   }
 
@@ -266,9 +274,10 @@ class OptionsSync {
   watchAndPull(local: Storage): () => void {
     let pullScheduled: NodeJS.Timeout | null = null;
     let pull: Record<string, any> = {};
-    
+
     const doPull = () => {
-      local.get(null)
+      local
+        .get(null)
         .then((base) => {
           const changes = pull;
           pull = {};
@@ -294,4 +303,3 @@ class OptionsSync {
 }
 
 export default OptionsSync;
-

@@ -51,11 +51,11 @@ const xhrWrapper = (...args: any[]): Promise<[any, string]> => {
 const fetchUrl = (
   dest_url: string,
   opt_bypass_cache?: boolean,
-  opt_type_hints?: string[]
+  opt_type_hints?: string[],
 ): Promise<string> => {
   const getResBody = ([response, body]: [XhrResponse, string]): string => {
     if (!opt_type_hints) return body;
-    
+
     const contentType = response.headers['content-type']?.toLowerCase();
     for (const hint of opt_type_hints) {
       const handler = hintHandlers[hint] || defaultHintHandler;
@@ -131,8 +131,7 @@ const hintHandlers: Record<string, HintHandler> = {
       // The content is not a PAC script if it does not contain FindProxyForURL.
       return undefined;
     }
-  }
+  },
 };
 
 export default fetchUrl;
-

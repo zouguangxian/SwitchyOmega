@@ -22,20 +22,20 @@ if (chrome.contextMenus) {
       title: chrome.i18n.getMessage('contextMenu_enableQuickSwitch') || 'Enable Quick Switch',
       type: 'checkbox',
       checked: false,
-      contexts: ["action"]
+      contexts: ['action'],
     });
   }
 
   chrome.contextMenus.create({
     id: 'reportIssues',
     title: chrome.i18n.getMessage('popup_reportIssues') || 'Report Issues',
-    contexts: ["action"]
+    contexts: ['action'],
   });
 
   chrome.contextMenus.create({
     id: 'errorLog',
     title: chrome.i18n.getMessage('popup_errorLog') || 'Error Log',
-    contexts: ["action"]
+    contexts: ['action'],
   });
 
   // Handle context menu clicks
@@ -61,4 +61,3 @@ if (chrome.contextMenus) {
     }
   });
 }
-

@@ -13,8 +13,8 @@ $script('lib/tether/tether.js', () => {
     const tr = chrome.i18n.getMessage.bind(chrome.i18n);
     const tour = new Shepherd.Tour({
       defaults: {
-        classes: 'shepherd-theme-arrows'
-      }
+        classes: 'shepherd-theme-arrows',
+      },
     });
 
     tour.addStep('condition-step', {
@@ -24,13 +24,13 @@ $script('lib/tether/tether.js', () => {
         {
           text: tr('options_guideSkip'),
           action: tour.cancel,
-          classes: 'shepherd-button-secondary'
+          classes: 'shepherd-button-secondary',
         },
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     const conditionTypeStep = tour.addStep('condition-type-step', {
@@ -38,14 +38,14 @@ $script('lib/tether/tether.js', () => {
       attachTo: '.condition-type-th bottom',
       advanceOn: {
         selector: '.close-condition-help',
-        event: 'click'
+        event: 'click',
       },
       buttons: [
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     conditionTypeStep.on('show', () => {
@@ -64,9 +64,9 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     const defaultStep = tour.addStep('switch-default-step', {
@@ -75,9 +75,9 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideNext'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     defaultStep.on('show', () => {
@@ -95,13 +95,12 @@ $script('lib/tether/tether.js', () => {
       buttons: [
         {
           text: tr('options_guideDone'),
-          action: tour.next
-        }
-      ]
+          action: tour.next,
+        },
+      ],
     });
 
     Shepherd.activeTour?.cancel();
     tour.start();
   });
 });
-

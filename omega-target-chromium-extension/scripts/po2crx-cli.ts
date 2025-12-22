@@ -34,7 +34,7 @@ async function convertPo2Crx(poFile: string, outputFile: string): Promise<void> 
     if (matchCount > 0) {
       placeholders = {};
       for (let i = 0; i < refs.length; i++) {
-        const placeholder = refs[i] || ('_unused_' + i);
+        const placeholder = refs[i] || '_unused_' + i;
         placeholders[placeholder] = { content: '$' + i };
       }
     }
@@ -55,18 +55,36 @@ async function convertPo2Crx(poFile: string, outputFile: string): Promise<void> 
 }
 
 async function convertMultiplePo2Crx(
-  locales: Array<{ po: string; messages: string }>
+  locales: Array<{ po: string; messages: string }>,
 ): Promise<void> {
   await Promise.all(locales.map(({ po, messages }) => convertPo2Crx(po, messages)));
 }
 
 const locales = [
-  { po: '../omega-locales/en_US/LC_MESSAGES/omega-web.po', messages: 'build/_locales/en/messages.json' },
-  { po: '../omega-locales/zh_CN/LC_MESSAGES/omega-web.po', messages: 'build/_locales/zh/messages.json' },
-  { po: '../omega-locales/cs/LC_MESSAGES/omega-web.po', messages: 'build/_locales/cs/messages.json' },
-  { po: '../omega-locales/fa/LC_MESSAGES/omega-web.po', messages: 'build/_locales/fa/messages.json' },
-  { po: '../omega-locales/zh_CN/LC_MESSAGES/omega-web.po', messages: 'build/_locales/zh_CN/messages.json' },
-  { po: '../omega-locales/zh_TW/LC_MESSAGES/omega-web.po', messages: 'build/_locales/zh_TW/messages.json' },
+  {
+    po: '../omega-locales/en_US/LC_MESSAGES/omega-web.po',
+    messages: 'build/_locales/en/messages.json',
+  },
+  {
+    po: '../omega-locales/zh_CN/LC_MESSAGES/omega-web.po',
+    messages: 'build/_locales/zh/messages.json',
+  },
+  {
+    po: '../omega-locales/cs/LC_MESSAGES/omega-web.po',
+    messages: 'build/_locales/cs/messages.json',
+  },
+  {
+    po: '../omega-locales/fa/LC_MESSAGES/omega-web.po',
+    messages: 'build/_locales/fa/messages.json',
+  },
+  {
+    po: '../omega-locales/zh_CN/LC_MESSAGES/omega-web.po',
+    messages: 'build/_locales/zh_CN/messages.json',
+  },
+  {
+    po: '../omega-locales/zh_TW/LC_MESSAGES/omega-web.po',
+    messages: 'build/_locales/zh_TW/messages.json',
+  },
 ];
 
 console.log('🌐 Converting locale files...');
@@ -78,4 +96,3 @@ convertMultiplePo2Crx(locales)
     console.error('❌ Locale conversion failed:', err);
     process.exit(1);
   });
-
