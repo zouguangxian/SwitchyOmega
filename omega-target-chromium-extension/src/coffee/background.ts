@@ -439,7 +439,7 @@ async function initializeExtension() {
 
       const title =
         chrome.i18n.getMessage('browserAction_titleInspect', urlDisp) + '\n' + action.title;
-      chrome.action.setTitle({ title: title, tabId: tab.id });
+      chrome.action.setTitle({ title: title, tabId: tab.id }, () => chrome.runtime.lastError);
       tabs.setTabBadge(tab, {
         text: '#',
         color: action.resultColor,
@@ -574,9 +574,9 @@ async function initializeExtension() {
       if (url.substr(0, 6) === 'about:') return;
       if (url.substr(0, 4) === 'moz-') return;
       if (activeTab?.pendingUrl) {
-        chrome.tabs.update(activeTab.id!, { url });
+        chrome.tabs.update(activeTab.id!, { url }, () => chrome.runtime.lastError);
       } else {
-        chrome.tabs.reload(activeTab!.id!, { bypassCache: true });
+        chrome.tabs.reload(activeTab!.id!, { bypassCache: true }, () => chrome.runtime.lastError);
       }
     });
   }

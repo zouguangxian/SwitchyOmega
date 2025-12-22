@@ -25,7 +25,14 @@ class ChromeTabs {
 
   ignoreError(): void {
     // Access chrome.runtime.lastError to acknowledge it
-    chrome.runtime.lastError;
+    void (chrome.runtime as any).lastError;
+  }
+
+  private ignoreTabGoneError(): void {
+    // MV3: many chrome.* APIs return Promises if callback is omitted, which can
+    // lead to unhandled rejections when the target tab disappears.
+    // Providing a callback and reading lastError keeps the console clean.
+    void (chrome.runtime as any).lastError;
   }
 
   watch(): void {
@@ -55,9 +62,9 @@ class ChromeTabs {
     });
 
     if (chrome.action.setPopup) {
-      chrome.action.setTitle({ title: action.title });
+      chrome.action.setTitle({ title: action.title }, this.ignoreTabGoneError);
     } else {
-      chrome.action.setTitle({ title: action.shortTitle });
+      chrome.action.setTitle({ title: action.shortTitle }, this.ignoreTabGoneError);
     }
     this.setIcon(action.icon);
   }
@@ -78,7 +85,10 @@ class ChromeTabs {
       for (const id in this._badgeTab) {
         if (this._badgeTab.hasOwnProperty(id)) {
           try {
-            chrome.action.setBadgeText?.({ text: '', tabId: parseInt(id) });
+            chrome.action.setBadgeText?.(
+              { text: '', tabId: parseInt(id) },
+              this.ignoreTabGoneError,
+            );
           } catch (e) {
             // Ignore errors
           }
@@ -90,10 +100,13 @@ class ChromeTabs {
     const tabUrl = tab.pendingUrl || tab.url;
     if (!tabUrl || tabUrl.indexOf('chrome') === 0) {
       if (this._defaultAction && tab.id != null) {
-        chrome.action.setTitle({
-          title: this._defaultAction.title,
-          tabId: tab.id,
-        });
+        chrome.action.setTitle(
+          {
+            title: this._defaultAction.title,
+            tabId: tab.id,
+          },
+          this.ignoreTabGoneError,
+        );
         this.clearIcon(tab.id);
       }
       return;
@@ -109,9 +122,12 @@ class ChromeTabs {
       if (tab.id != null) {
         this.setIcon(action.icon, tab.id);
         if (chrome.action.setPopup) {
-          chrome.action.setTitle({ title: action.title, tabId: tab.id });
+          chrome.action.setTitle({ title: action.title, tabId: tab.id }, this.ignoreTabGoneError);
         } else {
-          chrome.action.setTitle({ title: action.shortTitle, tabId: tab.id });
+          chrome.action.setTitle(
+            { title: action.shortTitle, tabId: tab.id },
+            this.ignoreTabGoneError,
+          );
         }
       }
     });
@@ -123,11 +139,14 @@ class ChromeTabs {
     }
     if (tab.id != null) {
       this._badgeTab[tab.id] = true;
-      chrome.action.setBadgeText?.({ text: badge.text, tabId: tab.id });
-      chrome.action.setBadgeBackgroundColor?.({
-        color: badge.color,
-        tabId: tab.id,
-      });
+      chrome.action.setBadgeText?.({ text: badge.text, tabId: tab.id }, this.ignoreTabGoneError);
+      chrome.action.setBadgeBackgroundColor?.(
+        {
+          color: badge.color,
+          tabId: tab.id,
+        },
+        this.ignoreTabGoneError,
+      );
     }
   }
 

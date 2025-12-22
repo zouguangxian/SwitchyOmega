@@ -81,6 +81,12 @@ class ChromeOptions extends OmegaTarget.Options {
   private _tabRequestInfoPorts: Record<number, ChromePort> | null = null;
   private _alarms: Record<string, () => void> | null = null;
 
+  // MV3: provide callbacks for chrome.action/chrome.tabs calls that target a tab
+  // to avoid Promise-based unhandled rejections when the tab disappears.
+  private ignoreLastError = (): void => {
+    void (chrome.runtime as any).lastError;
+  };
+
   fetchUrl = fetchUrl;
 
   updateProfile(
@@ -135,12 +141,12 @@ class ChromeOptions extends OmegaTarget.Options {
         : { text: '?', color: '#49afcd' };
     }
 
-    chrome.action.setBadgeText({ text: options.text });
-    chrome.action.setBadgeBackgroundColor({ color: options.color });
+    (chrome.action as any).setBadgeText({ text: options.text }, this.ignoreLastError);
+    (chrome.action as any).setBadgeBackgroundColor({ color: options.color }, this.ignoreLastError);
 
     if (options.title) {
       this._badgeTitle = options.title;
-      chrome.action.setTitle({ title: options.title });
+      (chrome.action as any).setTitle({ title: options.title }, this.ignoreLastError);
     } else {
       this._badgeTitle = null;
     }
@@ -156,7 +162,7 @@ class ChromeOptions extends OmegaTarget.Options {
     if (this._proxyNotControllable) {
       this.setBadge();
     } else {
-      chrome.action.setBadgeText?.({ text: '' });
+      (chrome.action as any).setBadgeText?.({ text: '' }, this.ignoreLastError);
     }
   }
 
@@ -215,7 +221,7 @@ class ChromeOptions extends OmegaTarget.Options {
               if (url.substr(0, 6) === 'about:') return;
               if (url.substr(0, 4) === 'moz-') return;
               if (tab.id != null) {
-                chrome.tabs.reload(tab.id);
+                chrome.tabs.reload(tab.id, undefined, this.ignoreLastError);
               }
             }
           });
@@ -253,14 +259,17 @@ class ChromeOptions extends OmegaTarget.Options {
         if (info.errorCount > 0) {
           info.badgeSet = true;
           const badge = { text: info.errorCount.toString(), color: '#f0ad4e' };
-          chrome.action.setBadgeText({ text: badge.text, tabId });
-          chrome.action.setBadgeBackgroundColor({
-            color: badge.color,
-            tabId,
-          });
+          (chrome.action as any).setBadgeText({ text: badge.text, tabId }, this.ignoreLastError);
+          (chrome.action as any).setBadgeBackgroundColor(
+            {
+              color: badge.color,
+              tabId,
+            },
+            this.ignoreLastError,
+          );
         } else if (info.badgeSet) {
           info.badgeSet = false;
-          chrome.action.setBadgeText({ text: '', tabId });
+          (chrome.action as any).setBadgeText({ text: '', tabId }, this.ignoreLastError);
         }
 
         this._tabRequestInfoPorts![tabId]?.postMessage({
