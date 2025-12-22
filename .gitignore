@@ -1,4 +1,17 @@
+# Node / JS
 node_modules
 bower_components
 **/dist/
 **/*.js.map
+
+# Yarn (Berry / v2+)
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+yarn-error.log
+
+# Lockfiles (this repo uses Yarn)
+package-lock.json
+**/package-lock.json

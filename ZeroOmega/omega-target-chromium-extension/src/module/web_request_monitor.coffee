@@ -1,0 +1,222 @@
+Heap = require('heap')
+Url = require('url')
+
+MAXREQUESTCACHE = 1000
+
+module.exports = class WebRequestMonitor
+  constructor: (@getSummaryId) ->
+    @_requests = {}
+    @_recentRequests = new Heap((a, b) -> a._startTime - b._startTime)
+    @_callbacks = []
+    @_tabCallbacks = []
+    @tabInfo = {}
+
+  _callbacks: null
+  watching: false
+  timer: null
+  watch: (callback) ->
+    @_callbacks.push(callback)
+    return if @watching
+    if not chrome.webRequest
+      console.log('Request monitor disabled! No webRequest permission.')
+      return
+    chrome.webRequest.onBeforeRequest.addListener(
+      @_requestStart.bind(this)
+      {urls: ['<all_urls>']}
+    )
+    chrome.webRequest.onHeadersReceived.addListener(
+      @_requestHeadersReceived.bind(this)
+      {urls: ['<all_urls>']}
+    )
+    chrome.webRequest.onBeforeRedirect.addListener(
+      @_requestRedirected.bind(this)
+      {urls: ['<all_urls>']}
+    )
+    extraInfoSpec = ["responseHeaders"]
+    unless globalThis.localStorage # chrome only
+      extraInfoSpec.push('extraHeaders')
+    chrome.webRequest.onCompleted.addListener(
+      @_requestDone.bind(this)
+      {urls: ['<all_urls>']}
+      extraInfoSpec
+    )
+    chrome.webRequest.onErrorOccurred.addListener(
+      @_requestError.bind(this)
+      {urls: ['<all_urls>']}
+    )
+    @watching = true
+
+  _requests: null
+  _recentRequests: null
+
+  _requestStart: (req) ->
+    return if req.tabId < 0
+    req._startTime = Date.now()
+    @_requests[req.requestId] = req
+    @_recentRequests.push(req)
+    @timer ?= setInterval(@_tick.bind(this), 1000)
+    for callback in @_callbacks
+      callback('start', req)
+
+  _tick: ->
+    now = Date.now()
+    while (req = @_recentRequests.peek())
+      reqInfo = @_requests[req.requestId]
+      if reqInfo and not reqInfo.noTimeout
+        if now - req._startTime < 5000
+          break
+        else
+          reqInfo.timeoutCalled = true
+          for callback in @_callbacks
+            callback('timeout', reqInfo)
+      @_recentRequests.pop()
+
+  _requestHeadersReceived: (req) ->
+    reqInfo = @_requests[req.requestId]
+    return unless reqInfo
+    reqInfo.noTimeout = true
+    if reqInfo.timeoutCalled
+      for callback in @_callbacks
+        callback('ongoing', req)
+
+  _requestRedirected: (req) ->
+    url = req.redirectUrl
+    return unless url
+    if url.indexOf('data:') == 0 || url.indexOf('about:') == 0
+      @_requestDone(req)
+
+  _requestError: (req) ->
+    reqInfo = @_requests[req.requestId]
+    delete @_requests[req.requestId]
+
+    return if req.tabId < 0
+    return if req.error == 'net::ERR_INCOMPLETE_CHUNKED_ENCODING'
+    return if req.error.indexOf('BLOCKED') >= 0
+    return if req.error.indexOf('net::ERR_FILE_') == 0
+    # Blocked by other extensions in Firefox.
+    return if req.error.indexOf('NS_ERROR_ABORT') == 0
+    return if req.url.indexOf('file:') == 0
+    return if req.url.indexOf('chrome') == 0
+    return if req.url.indexOf('about:') == 0
+    return if req.url.indexOf('moz-') == 0
+    # Some ad-blocking extensions may redirect requests to 127.0.0.1.
+    return if req.url.indexOf('://127.0.0.1') > 0
+    return unless reqInfo
+    if req.error == 'net::ERR_ABORTED'
+      if reqInfo.timeoutCalled and not reqInfo.noTimeout
+        for callback in @_callbacks
+          callback('timeoutAbort', req)
+      return
+    for callback in @_callbacks
+      callback('error', req)
+
+  _requestDone: (req) ->
+    for callback in @_callbacks
+      callback('done', req)
+    delete @_requests[req.requestId]
+
+  eventCategory:
+    start: 'ongoing'
+    ongoing: 'ongoing'
+    timeout: 'error'
+    error: 'error'
+    timeoutAbort: 'error'
+    done: 'done'
+
+  tabsWatching: false
+  _tabCallbacks: null
+
+  watchTabs: (callback) ->
+    @_tabCallbacks.push(callback)
+    return if @tabsWatching
+    @watch(@setTabRequestInfo.bind(this))
+    @tabsWatching = true
+    chrome.tabs.onCreated.addListener (tab) =>
+      return unless tab.id
+      @tabInfo[tab.id] = @_newTabInfo()
+    chrome.tabs.onRemoved.addListener (tabId) =>
+      delete @tabInfo[tabId]
+    chrome.tabs.onReplaced?.addListener (added, removed) =>
+      @tabInfo[added] ?= @_newTabInfo()
+      delete @tabInfo[removed]
+    chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) =>
+      info = @tabInfo[tab.id] ?= @_newTabInfo()
+      return unless info
+      for callback in @_tabCallbacks
+        callback(tab.id, info, null, 'updated')
+    chrome.tabs.query {}, (tabs) =>
+      for tab in tabs
+        @tabInfo[tab.id] ?= @_newTabInfo()
+
+  _newTabInfo: -> {
+    requests: {} # {requestId: {}}
+    requestCount: 0
+    requestStatus: {} # {requestId: 'start'/'done'/'....'}
+
+    ongoingCount: 0
+    errorCount: 0
+    doneCount: 0
+
+    summary: {}
+  }
+
+  setTabRequestInfo: (status, req) ->
+    info = @tabInfo[req.tabId]
+    if info
+      if status == 'start' and req.type == 'main_frame'
+        if req.url.indexOf('chrome://errorpage/') != 0
+          for own key, value of @_newTabInfo()
+            info[key] = value
+      if info.requestCount > MAXREQUESTCACHE
+        # clear done or timeout request, decrease  memory
+        nowTimeStamp = Date.now()
+        Object.keys(info.requests).forEach((requestId) ->
+          return if requestId == req.requestId
+          if info.requestStatus[requestId] is 'done'
+            delete info.requests[requestId]
+            delete info.requestStatus[requestId]
+          _request = info.requests[requestId]
+          if _request?.timeStamp
+            duration = nowTimeStamp - _request.timeStamp
+            if duration > 10 * 60 * 1000 # 10 min timeout
+              delete info.requests[requestId]
+              delete info.requestStatus[requestId]
+        )
+        info.requestCount = Object.keys(info.requests).length
+        # if it still exceed MAXREQUESTCACHE, just clean all by reset it
+        if info.requestCount > MAXREQUESTCACHE
+          @tabInfo[tab.id] = @_newTabInfo()
+          return
+      reqInfo = info.requests[req.requestId] || {}
+      statusObj = {}
+      statusObj[status] = req.timeStamp || Date.now()
+      statusInfo = Object.assign({}, reqInfo.statusInfo, statusObj)
+      info.requests[req.requestId] = Object.assign(
+        {}, info.requests[req.requestId], req, {
+          statusInfo: statusInfo,
+        }
+      )
+      if (oldStatus = info.requestStatus[req.requestId])
+        info[@eventCategory[oldStatus] + 'Count']--
+      else
+        return if status == 'timeoutAbort'
+        info.requestCount++
+      info.requestStatus[req.requestId] = status
+      info[@eventCategory[status] + 'Count']++
+      id = @getSummaryId?(req)
+      if id?
+        if @eventCategory[status] == 'error'
+          if @eventCategory[oldStatus] != 'error'
+            summaryItem = info.summary[id]
+            if not summaryItem?
+              hostname = Url.parse(req.url).hostname
+              summaryItem = info.summary[id] = {
+                baseDomain: OmegaPac.wildcardForDomain(hostname)
+                errorCount: 0
+              }
+            summaryItem.errorCount++
+        else if @eventCategory[oldStatus] == 'error'
+          summaryItem = info.summary[id]
+          summaryItem.errorCount-- if summaryItem?
+      for callback in @_tabCallbacks
+        callback(req.tabId, info, req, status)

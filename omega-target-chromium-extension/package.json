@@ -17,15 +17,14 @@
   },
   "dependencies": {
     "heap": "^0.2.6",
-    "omega-pac": "../omega-pac",
-    "omega-target": "../omega-target",
-    "omega-web": "../omega-web",
+    "omega-pac": "workspace:*",
+    "omega-target": "workspace:*",
+    "omega-web": "workspace:*",
     "querystring-es3": "^0.2.1",
     "xhr": "^1.16.0"
   },
   "scripts": {
-    "dev": "npm link omega-target && npm link omega-web && npm link omega-pac",
-    "build": "npm run build:js && npm run build:copy && npm run build:locales",
+    "build": "yarn build:js && yarn build:copy && yarn build:locales",
     "build:js": "tsx build.ts",
     "build:copy": "tsx scripts/copy-cli.ts",
     "build:locales": "tsx scripts/po2crx-cli.ts",

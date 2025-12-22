@@ -94,39 +94,48 @@ below.
 
 ## Building the project
 
-SwitchyOmega uses TypeScript and modern build tools (tsup, esbuild). 
-Node.js >= 18 is required.
+SwitchyOmega uses TypeScript and a modern toolchain (tsup, esbuild) with Yarn workspaces.
 
-To build the project:
+### Install
 
-    # Install node and npm first, then:
-    
-    # Install global dependencies
-    sudo npm install -g grunt-cli bower
-    
-    # In the project folder:
-    cd omega-build
-    npm run deps # Installs npm dependencies in all modules
-    npm run dev  # Creates npm links for local development
-    # Note: the previous command may require sudo in some environments.
-    
-    # Build all modules in correct order:
-    npm run build
-    
-    # After building, the extension is ready:
-    cd ../omega-target-chromium-extension
-    ls build/
-    # The build/ folder can be loaded as an unpacked extension in Chrome/Edge.
+**Requirements**
+- Node.js + Yarn (or install via **proto** for fully pinned versions)
 
-**Build order** (automatic when using `omega-build`):
+**Recommended (reproducible): proto**
+
+Install [proto](https://moonrepo.dev/docs/proto) and run:
+
+    proto install
+    yarn install
+
+**Install dependencies**
+
+    yarn install
+
+This will also install `omega-web` front-end dependencies (Bower) automatically.
+
+### Build
+
+    yarn build
+
+After building, the extension is ready at:
+
+    omega-target-chromium-extension/build/
+
+Load that folder as an unpacked extension in Chrome/Edge.
+
+### Local development
+
+    # Watch/rebuild a single module (run inside that module directory)
+    # omega-target: yarn watch
+    # omega-web: yarn watch
+    # omega-target-chromium-extension: yarn watch
+
+**Build order**:
 1. `omega-pac` - PAC script generator
 2. `omega-target` - Options manager (produces `omega_target.min.js`)
 3. `omega-web` - Web UI (produces `build/` directory)
 4. `omega-target-chromium-extension` - Chrome extension (bundles everything)
-
-**Development workflow:**
-- Run `npm run watch` in individual modules for live rebuilding
-- Or use the centralized build via `omega-build` package
 
 License
 -------

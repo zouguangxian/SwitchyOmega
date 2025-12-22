@@ -1,7 +1,0 @@
-$schema: './cache/schemas/tasks.json'
-
-tasks:
-  build:
-    deps:
-      - '^:build'
-

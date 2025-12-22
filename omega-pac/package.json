@@ -33,8 +33,7 @@
   "scripts": {
     "build": "tsc -p .",
     "clean": "rimraf dist",
-    "dev": "npm link",
-    "prepare": "npm run build",
-    "test": "npm run build && TZ=Europe/London mocha \"dist/test/**/*.test.js\""
+    "prepare": "yarn build",
+    "test": "yarn build && TZ=Europe/London mocha \"dist/test/**/*.test.js\""
   }
 }

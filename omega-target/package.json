@@ -23,13 +23,12 @@
   "dependencies": {
     "jsondiffpatch": "^0.4.1",
     "limiter": "^2.1.0",
-    "omega-pac": "../omega-pac"
+    "omega-pac": "workspace:*"
   },
   "scripts": {
     "build": "tsup",
     "watch": "tsup --watch",
-    "dev": "npm link omega-pac && npm link",
-    "test": "npm run build && mocha --require ts-node/register test/**/*.ts",
+    "test": "yarn build && mocha --require ts-node/register test/**/*.ts",
     "clean": "rm -rf dist"
   }
 }

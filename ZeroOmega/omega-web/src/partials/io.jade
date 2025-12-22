@@ -1,0 +1,124 @@
+.page-header
+  h2 {{'options_tab_importExport' | tr}}
+section.settings-group
+  h3 {{'options_group_importExportProfile' | tr}}
+  .help-block
+    .text-info
+      span.glyphicon.glyphicon-info-sign
+      = ' '
+      | {{'options_exportProfileHelp' | tr}}
+  div.checkbox(ng-show='!(options["-showConditionTypes"] > 0)')
+    label
+      input(type='checkbox' ng-model='options["-exportLegacyRuleList"]')
+      span {{'options_exportLegacyRuleList' | tr}}
+    p.help-block(omega-html="'options_exportLegacyRuleListHelp' | tr")
+section.settings-group
+  h3 {{'options_group_importExportSettings' | tr}}
+  p
+    button.btn.btn-default(ng-click='exportOptions()')
+      span.glyphicon.glyphicon-floppy-save
+      = ' '
+      | {{'options_makeBackup' | tr}}
+    span.help-inline {{'options_makeBackupHelp' | tr}}
+  p
+    input#restore-local-file(type='file' omega-upload='restoreLocal($content)'
+      omega-error='restoreLocalError($error)')
+    button.btn.btn-default(ng-click='triggerFileInput()'
+      ladda='restoringLocal' data-spinner-color="#000000")
+      span.glyphicon.glyphicon-folder-open
+      = ' '
+      | {{'options_restoreLocal' | tr}}
+    span.help-inline {{'options_restoreLocalHelp' | tr}}
+  div
+    label {{'options_restoreOnline' | tr}}
+    .input-group.width-limit
+      input.form-control(type='url' ng-model='restoreOnlineUrl' placeholder="{{'options_restoreOnlinePlaceholder' | tr}}")
+      span.input-group-btn
+        button.btn.btn-default(ng-click='restoreOnline()' ladda='restoringOnline' data-spinner-color="#000000")
+          | {{'options_restoreOnlineSubmit' | tr}}
+section.settings-group
+  h3 {{'options_group_syncing' | tr}}
+  div
+    form.sync-form
+      div.form-group
+        label {{'Gist Id'}}
+        .input-group.width-limit
+          span.input-group-addon {{'ID'}}
+          input.form-control(type='text' ng-model='gistId' ng-readonly='syncOptions == "sync"' placeholder="Gist Id e.g. https://gist.github.com/{username}/{Gist Id}")
+          span.glyphicon.glyphicon-remove.btn.clean-btn(ng-click='cleanInput("gistId")' ng-if='syncOptions != "sync"')
+        span.help-block
+          a(href="https://gist.github.com/" role="button" target="_blank")
+            | {{'Create a secret Gist. '}}
+          strong
+            | {{" Note: If it's a public Gist, your options can be searched by others。"}}
+      div.form-group
+        label {{'Gist Token'}}
+        .input-group.width-limit
+          span.input-group-addon {{'TOKEN'}}
+          input.form-control(type='text' ng-model='gistToken' ng-readonly='syncOptions == "sync"' placeholder="Gist Token")
+          span.glyphicon.glyphicon-remove.btn.clean-btn(ng-click='cleanInput("gistToken")' ng-if='syncOptions != "sync"')
+        span.help-block
+          a(href="https://github.com/settings/tokens/new" role="button" target="_blank")
+            | {{ 'Create a token that manages the Gist.' }}
+            strong
+              | {{ '(Gist permission is required.)'}}
+  div(ng-show='syncOptions == "pristine" || syncOptions == "disabled"')
+    div.checkbox
+      label
+        input#use-built-in-sync-enhance(type='checkbox' ng-model='useBuiltInSync')
+        span {{'options_useBuiltInSyncEnhance' | tr}}
+      details.use-built-in-sync-enhance-tip
+        summary
+          span.glyphicon.glyphicon-question-sign
+        ol(omega-html='"options_useBuiltInSyncEnhanceTip" | tr')
+          
+    p.help-block(omega-html='"options_syncPristineHelp" | tr')
+    p
+      button.btn.btn-default(ng-click='enableOptionsSync()' ladda='enableOptionsSyncing' data-spinner-color="currentColor")
+        span.glyphicon.glyphicon-cloud-upload
+        = ' '
+        | {{'options_syncEnable' | tr}}
+  div(ng-show='syncOptions == "sync"')
+    p.alert.alert-success.width-limit
+      button.btn.btn-sm.btn-success(ng-click='checkOptionsSyncChange()' ladda='enableOptionsSyncing')
+        span.glyphicon.glyphicon-refresh
+      span {{'   last sync date: '}}
+      | {{ lastGistSync | date:'medium'}}
+      | {{'('}}
+      | {{lastGistState}}
+      | {{')'}}
+      a(href="{{gistUrl}}" role="button" target="_blank")
+        | {{' '}}
+        span.glyphicon.glyphicon-link
+      br
+      br
+      span.glyphicon.glyphicon-ok
+      = ' '
+      | {{"options_syncSyncAlert" | tr}}
+    p
+      button.btn.btn-warning(ng-click='disableOptionsSync()')
+        span.glyphicon.glyphicon-remove-sign
+        = ' '
+        | {{'options_syncDisable' | tr}}
+  div(ng-show='syncOptions == "conflict"')
+    div.checkbox
+      label
+        input#use-built-in-sync-enhance(type='checkbox' ng-model='useBuiltInSync')
+        span {{'options_useBuiltInSyncEnhance' | tr}}
+    p.alert.alert-danger.width-limit
+      span.glyphicon.glyphicon-info-sign
+      = ' '
+      | {{"options_syncConflictAlert" | tr}}
+    p.help-block(omega-html='"options_syncConflictHelp" | tr')
+    p
+      button.btn.btn-danger(ng-click='enableOptionsSync({force: true})' ladda='enableOptionsSyncing' )
+        span.glyphicon.glyphicon-cloud-download
+        = ' '
+        | {{'options_syncEnableForce' | tr}}
+      = ' '
+      button.btn.btn-link(ng-click='resetOptionsSync()')
+        span.glyphicon.glyphicon-erase
+        = ' '
+        | {{'options_syncReset' | tr}}
+  div(ng-show='syncOptions == "unsupported"')
+    p.help-block(omega-html='"options_syncUnsupportedHelp" | tr')

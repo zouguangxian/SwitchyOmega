@@ -10,6 +10,15 @@ interface CopyConfig {
   expand?: boolean;
 }
 
+function firstExistingPath(...candidates: string[]): string {
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  throw new Error(
+    `None of the candidate paths exist:\n${candidates.map((c) => `- ${c}`).join('\n')}`
+  );
+}
+
 /**
  * Copy files from source to destination
  * Supports both single files and glob patterns
@@ -46,18 +55,29 @@ export async function copyFiles(config: CopyConfig): Promise<void> {
  */
 export async function copyAllFiles(): Promise<void> {
   console.log('📦 Copying files...');
+
+  // Support both npm-style installs (node_modules in each package) and Yarn workspaces
+  const repoRoot = path.resolve(__dirname, '..');
+  const omegaWebBuildDir = firstExistingPath(
+    path.join(repoRoot, 'omega-web', 'build'),
+    path.join('node_modules', 'omega-web', 'build')
+  );
+  const omegaTargetMinJs = firstExistingPath(
+    path.join(repoRoot, 'omega-target', 'omega_target.min.js'),
+    path.join('node_modules', 'omega-target', 'omega_target.min.js')
+  );
   
   // Copy omega-web build
   await copyFiles({
     src: '**/*',
     dest: 'build/',
-    cwd: 'node_modules/omega-web/build',
+    cwd: omegaWebBuildDir,
     expand: true
   });
   
   // Copy omega-target bundle
   await copyFiles({
-    src: 'node_modules/omega-target/omega_target.min.js',
+    src: omegaTargetMinJs,
     dest: 'build/js/omega_target.min.js'
   });
   
