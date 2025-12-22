@@ -7,6 +7,14 @@ function loadMainScripts() {
   $script(['js/index.js', 'js/profiles.js', 'js/keyboard.js'], 'om-main');
 }
 
+function doneAfterMain(signalName) {
+  // Avoid race: OmegaTargetPopup.getState may resolve before om-main scripts have
+  // registered their `$script.ready('om-state', ...)` handlers.
+  $script.ready('om-main', function () {
+    $script.done(signalName);
+  });
+}
+
 $script('../js/omega_target_popup.js', 'om-target', function () {
   OmegaTargetPopup.getState(
     [
@@ -22,12 +30,13 @@ $script('../js/omega_target_popup.js', 'om-target', function () {
     function (err, state) {
       window.OmegaPopup.state = state || {};
       loadMainScripts();
-      $script.done('om-state');
+      doneAfterMain('om-state');
     },
   );
 
   OmegaTargetPopup.getActivePageInfo(function (err, info) {
     window.OmegaPopup.pageInfo = info;
-    $script.done('om-page-info');
+    loadMainScripts();
+    doneAfterMain('om-page-info');
   });
 });
