@@ -8,8 +8,7 @@ RUN <<-'EOF' bash
 	apt-get install -y --no-install-recommends \
 		ca-certificates \
 		curl \
-		shfmt \
-		xvfb
+		shfmt
 	rm -rf /var/lib/apt/lists/*
 EOF
 
