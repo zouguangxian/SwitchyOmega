@@ -4,7 +4,9 @@
   "private": true,
   "main": "./index",
   "devDependencies": {
+    "@types/archiver": "^6.0.2",
     "@types/node": "^18.0.0",
+    "archiver": "^7.0.1",
     "buffer": "^6.0.3",
     "chai": "~1.9.1",
     "chrome-types": "^0.1.286",
@@ -28,6 +30,7 @@
     "build:js": "tsx build.ts",
     "build:copy": "tsx scripts/copy-cli.ts",
     "build:locales": "tsx scripts/po2crx-cli.ts",
+    "package": "tsx scripts/package-cli.ts",
     "watch": "tsx build.ts --watch",
     "clean": "rm -rf build dist"
   }

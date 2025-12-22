@@ -1,8 +1,7 @@
 # Node / JS
 node_modules
 bower_components
-**/dist/
-**/*.js.map
+*.js.map
 
 # Yarn (Berry / v2+)
 .yarn/cache/
@@ -14,4 +13,6 @@ yarn-error.log
 
 # Lockfiles (this repo uses Yarn)
 package-lock.json
-**/package-lock.json
+
+build/
+dist/

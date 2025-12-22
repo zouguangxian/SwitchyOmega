@@ -9,7 +9,8 @@
     "postinstall": "yarn workspace omega-web run bower:install",
     "build": "yarn workspaces foreach -At run build",
     "watch": "yarn workspaces foreach -Apt run watch",
-    "clean": "yarn workspaces foreach -At run clean"
+    "clean": "yarn workspaces foreach -At run clean",
+    "package": "yarn workspace omega-target-chromium-extension run package"
   },
   "engines": {
     "node": "24.11.0"
