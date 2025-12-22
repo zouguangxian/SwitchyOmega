@@ -8,7 +8,6 @@ import Log from './log';
 import OptionsSync from './options_sync';
 import Storage from './storage';
 
-
 import type {
   Profile,
   SwitchProfile,

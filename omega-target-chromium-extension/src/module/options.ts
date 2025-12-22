@@ -6,7 +6,6 @@ import * as OmegaTarget from 'omega-target';
 
 import type { Profile } from 'omega-target';
 
-
 import ChromePort from './chrome_port';
 import fetchUrl from './fetch_url';
 import { storageWrapper } from './storage_wrapper';

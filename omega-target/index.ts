@@ -8,7 +8,6 @@ import Options from './src/options';
 import OptionsSync from './src/options_sync';
 import Storage from './src/storage';
 
-
 export { Log, Storage, BrowserStorage, Options, OptionsSync, OmegaPac };
 
 // Re-export core domain types
