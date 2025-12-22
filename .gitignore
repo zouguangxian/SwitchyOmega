@@ -16,3 +16,6 @@ package-lock.json
 
 build/
 dist/
+
+# Editor / legacy tooling
+.tern-project

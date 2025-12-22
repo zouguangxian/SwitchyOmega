@@ -39,7 +39,6 @@ RUN <<-'EOF' bash
 	# Enable proto auto-install globally (so running tools from any directory works)
 	cat > "$HOME/.proto/.prototools" <<'PROTOTOOLS'
 node = "24.11.0"
-npm = "11.6.1"
 yarn = "4.12.0"
 
 [settings]
@@ -48,6 +47,5 @@ PROTOTOOLS
 
 	# Pre-warm tool installs during image build (still avoiding explicit `proto install`)
 	~/.proto/bin/proto run node -- --version
-	~/.proto/bin/proto run npm -- --version
 	~/.proto/bin/proto run yarn -- --version
 EOF
