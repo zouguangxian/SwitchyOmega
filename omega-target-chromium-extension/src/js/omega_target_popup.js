@@ -103,7 +103,9 @@ OmegaTargetPopup = {
             var url = options_url + hash;
             props.url = url;
           }
-          chrome.tabs.update(tabs[0].id, props);
+          chrome.tabs.update(tabs[0].id, props, function () {
+            void chrome.runtime.lastError;
+          });
         } else {
           chrome.tabs.create({
             url: options_url,

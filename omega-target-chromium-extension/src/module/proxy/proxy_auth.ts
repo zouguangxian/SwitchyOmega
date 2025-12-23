@@ -60,16 +60,18 @@ class ProxyAuth {
     const isMV3 = manifest.manifest_version === 3;
 
     if (isMV3) {
-      this.log.error('──────────────────────────────────────────────────────────────');
-      this.log.error('⚠️  PROXY AUTHENTICATION NOT SUPPORTED IN MANIFEST V3');
-      this.log.error('──────────────────────────────────────────────────────────────');
-      this.log.error('Chrome MV3 does not support webRequest blocking in service workers.');
-      this.log.error('');
-      this.log.error('WORKAROUND: Include credentials directly in the proxy URL:');
-      this.log.error('  Example: http://username:password@proxy.example.com:8080');
-      this.log.error('');
-      this.log.error('See MV3_LIMITATIONS.md for more details and alternatives.');
-      this.log.error('──────────────────────────────────────────────────────────────');
+      // Use log() instead of error() so this doesn't show up as a "red error"
+      // (it's a known MV3 limitation, not a runtime failure).
+      this.log.log('──────────────────────────────────────────────────────────────');
+      this.log.log('⚠️  PROXY AUTHENTICATION NOT SUPPORTED IN MANIFEST V3');
+      this.log.log('──────────────────────────────────────────────────────────────');
+      this.log.log('Chrome MV3 does not support webRequest blocking in service workers.');
+      this.log.log('');
+      this.log.log('WORKAROUND: Include credentials directly in the proxy URL:');
+      this.log.log('  Example: http://username:password@proxy.example.com:8080');
+      this.log.log('');
+      this.log.log('See MV3_LIMITATIONS.md for more details and alternatives.');
+      this.log.log('──────────────────────────────────────────────────────────────');
       return;
     }
 

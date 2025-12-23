@@ -133,6 +133,15 @@ const unhandledPromises = new Map<Promise<any>, number>();
 let unhandledPromisesNextId = 1;
 
 self.addEventListener('unhandledrejection', (event) => {
+  // MV3: benign race when calling tab-scoped APIs and the tab is already gone.
+  const reason: any = event.reason;
+  const msg = typeof reason?.message === 'string' ? reason.message : String(reason);
+  if (msg.includes('No tab with id')) {
+    // Swallow to avoid noisy console spam; this is expected in MV3.
+    event.preventDefault?.();
+    return;
+  }
+
   const id = unhandledPromisesNextId++;
   Log.error(`[${id}] Unhandled rejection:\n`, event.reason);
   unhandledPromises.set(event.promise, id);
