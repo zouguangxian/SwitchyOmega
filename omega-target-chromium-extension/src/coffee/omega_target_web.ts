@@ -229,7 +229,7 @@ angular.module('omegaTarget', []).factory('omegaTarget', [
             if (hash) {
               props.url = url;
             }
-            chrome.tabs.update(tabs[0].id, props);
+            chrome.tabs.update(tabs[0].id, props, () => void chrome.runtime.lastError);
           } else {
             chrome.tabs.create({ url });
           }
@@ -285,9 +285,13 @@ angular.module('omegaTarget', []).factory('omegaTarget', [
           const url = tab?.pendingUrl || tab?.url;
           if (url && !isChromeUrl(url) && tab?.id) {
             if (tab.pendingUrl) {
-              chrome.tabs.update(tab.id, { url });
+              chrome.tabs.update(tab.id, { url }, () => void chrome.runtime.lastError);
             } else {
-              chrome.tabs.reload(tab.id, { bypassCache: true });
+              chrome.tabs.reload(
+                tab.id,
+                { bypassCache: true },
+                () => void chrome.runtime.lastError,
+              );
             }
           }
           d.resolve();

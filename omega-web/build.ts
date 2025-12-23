@@ -167,7 +167,8 @@ const vendorAssets = [
   },
   {
     label: 'tether',
-    src: 'bower_components/tether/js/tether.js',
+    // Use the bundled/minified build so we don't need to load utils.js separately.
+    src: 'bower_components/tether/js/tether.min.js',
     dest: path.join(buildDir, 'lib', 'tether', 'tether.js'),
   },
   {

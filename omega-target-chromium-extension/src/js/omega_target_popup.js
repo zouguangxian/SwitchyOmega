@@ -88,7 +88,7 @@ OmegaTargetPopup = {
     callBackgroundNoReply('applyProfile', [name], cb);
   },
   openOptions: function (hash, cb) {
-    var options_url = chrome.extension.getURL('options.html');
+    var options_url = chrome.runtime.getURL('options.html');
 
     chrome.tabs.query(
       {
