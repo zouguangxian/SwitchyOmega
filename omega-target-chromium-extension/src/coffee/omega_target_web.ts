@@ -93,12 +93,20 @@ angular.module('omegaTarget', []).factory('omegaTarget', [
     const connectBackground = (name: string, message: any, callback: (msg: any) => void): void => {
       const port = chrome.runtime.connect({ name });
       const onDisconnect = () => {
+        // Consume lastError to prevent "Unchecked runtime.lastError" noise when the
+        // receiving end isn't listening (common in MV3 when SW restarts or the
+        // feature is disabled).
+        void chrome.runtime.lastError;
         port.onDisconnect.removeListener(onDisconnect);
         port.onMessage.removeListener(callback);
       };
       port.onDisconnect.addListener(onDisconnect);
 
-      port.postMessage(message);
+      try {
+        port.postMessage(message);
+      } catch (_) {
+        void chrome.runtime.lastError;
+      }
       port.onMessage.addListener(callback);
     };
 
